@@ -3,7 +3,7 @@
 import { z } from "zod";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { getMpPayment } from "@/lib/mercadopago";
-import { bumpSold } from "@/lib/orders-helpers";
+import { markOrderPaid } from "@/lib/orders-helpers";
 
 const isUuid = (s: string) =>
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
@@ -66,8 +66,7 @@ export async function createOrder(
       buyer_cpf: buyerCpf || null,
       payment_method: "pix",
       payment_provider: mp ? "mercadopago" : "mock",
-      status: mp ? "pending" : "paid",
-      paid_at: mp ? null : new Date().toISOString(),
+      status: "pending",
       subtotal,
       fee,
       total,
@@ -96,9 +95,9 @@ export async function createOrder(
     return { ok: false, error: itemsErr.message };
   }
 
-  // Sem Mercado Pago configurado → aprova na hora (mock) + baixa estoque
+  // Sem Mercado Pago configurado → aprova na hora (mock): estoque + ingressos + e-mail
   if (!mp) {
-    await bumpSold(svc, order.id);
+    await markOrderPaid(svc, order.id);
     return { ok: true, orderId: order.id, paid: true };
   }
 
