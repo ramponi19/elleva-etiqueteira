@@ -6,6 +6,7 @@ import Icon from "@/components/shared/icon";
 import { useCart } from "@/lib/cart";
 import { fmtBRL } from "@/lib/format";
 import { createOrder, getOrderStatus } from "@/lib/actions/orders";
+import CardForm from "@/components/marketing/card-form";
 
 type Pix = { qrBase64: string; copyPaste: string; orderId: string };
 
@@ -227,12 +228,23 @@ export default function CheckoutPage() {
                 {error}
               </p>
             )}
-            <button className="btn btn-gold btn-block" style={{ marginTop: 22, opacity: loading ? 0.6 : 1 }} onClick={finalize} disabled={loading}>
-              {loading ? "Processando..." : "Finalizar compra"}
-            </button>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginTop: 14, fontSize: 12, color: "#8894A8" }}>
-              <Icon icon="solar:lock-keyhole-bold-duotone" style={{ color: "var(--gold-500)", fontSize: 16 }} /> Pagamento criptografado
-            </div>
+
+            {pay === "card" ? (
+              <CardForm
+                buyer={{ name, email, cpf }}
+                items={items}
+                onSuccess={() => { clear(); setConfirmed(true); }}
+              />
+            ) : (
+              <>
+                <button className="btn btn-gold btn-block" style={{ marginTop: 22, opacity: loading ? 0.6 : 1 }} onClick={finalize} disabled={loading}>
+                  {loading ? "Processando..." : "Pagar com Pix"}
+                </button>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginTop: 14, fontSize: 12, color: "#8894A8" }}>
+                  <Icon icon="solar:lock-keyhole-bold-duotone" style={{ color: "var(--gold-500)", fontSize: 16 }} /> Pagamento criptografado
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
