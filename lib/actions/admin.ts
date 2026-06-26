@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { getAuth } from "@/lib/auth";
 import { createServiceClient } from "@/lib/supabase/server";
+import { getMpRefund } from "@/lib/mercadopago";
+import { reverseSold, cancelTickets } from "@/lib/orders-helpers";
 
 export type Role = "customer" | "producer" | "admin";
 
@@ -45,6 +47,49 @@ export async function createCoupon(input: {
     return { ok: false, error: error.message.includes("duplicate") ? "Cupom já existe." : error.message };
   }
   revalidatePath("/admin/cupons");
+  return { ok: true };
+}
+
+/** Cancela (pending) ou reembolsa (paid) um pedido — admin. */
+export async function cancelOrder(
+  orderId: string
+): Promise<{ ok: boolean; error?: string }> {
+  const { role } = await getAuth();
+  if (role !== "admin") return { ok: false, error: "Sem permissão." };
+
+  const svc = await createServiceClient();
+  const { data: order } = await svc
+    .from("orders")
+    .select("status, payment_id, payment_provider")
+    .eq("id", orderId)
+    .single();
+  if (!order) return { ok: false, error: "Pedido não encontrado." };
+
+  if (order.status === "refunded" || order.status === "cancelled") {
+    return { ok: false, error: "Pedido já cancelado." };
+  }
+
+  if (order.status === "paid") {
+    // tenta reembolsar no Mercado Pago
+    if (order.payment_provider === "mercadopago" && order.payment_id) {
+      const refund = getMpRefund();
+      if (refund) {
+        try {
+          await refund.create({ payment_id: order.payment_id });
+        } catch (e) {
+          return { ok: false, error: e instanceof Error ? e.message : "Falha ao reembolsar no Mercado Pago." };
+        }
+      }
+    }
+    await svc.from("orders").update({ status: "refunded" }).eq("id", orderId);
+    await cancelTickets(svc, orderId);
+    await reverseSold(svc, orderId);
+  } else {
+    await svc.from("orders").update({ status: "cancelled" }).eq("id", orderId);
+  }
+
+  revalidatePath("/admin/pedidos");
+  revalidatePath("/admin");
   return { ok: true };
 }
 

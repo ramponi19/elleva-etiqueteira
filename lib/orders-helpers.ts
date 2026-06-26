@@ -132,6 +132,39 @@ export async function maybeMarkSoldOut(svc: Svc, orderId: string) {
   }
 }
 
+/** Reverte estoque (decrementa sold) dos itens do pedido. */
+export async function reverseSold(svc: Svc, orderId: string) {
+  const { data: its } = await svc
+    .from("order_items")
+    .select("tier_id, quantity, event_id")
+    .eq("order_id", orderId);
+  const eventIds = new Set<string>();
+  for (const it of its ?? []) {
+    if (!it.tier_id) continue;
+    const { data: tier } = await svc
+      .from("ticket_tiers")
+      .select("sold")
+      .eq("id", it.tier_id)
+      .single();
+    if (tier) {
+      await svc
+        .from("ticket_tiers")
+        .update({ sold: Math.max(0, (tier.sold ?? 0) - it.quantity) })
+        .eq("id", it.tier_id);
+    }
+    if (it.event_id) eventIds.add(it.event_id);
+  }
+  // libera eventos que estavam esgotados
+  for (const id of eventIds) {
+    await svc.from("events").update({ status: "published" }).eq("id", id).eq("status", "sold_out");
+  }
+}
+
+/** Cancela os ingressos do pedido. */
+export async function cancelTickets(svc: Svc, orderId: string) {
+  await svc.from("tickets").update({ status: "cancelled" }).eq("order_id", orderId);
+}
+
 /** Marca pedido como pago (idempotente): estoque + ingressos + e-mail. */
 export async function markOrderPaid(svc: Svc, orderId: string) {
   const { data: order } = await svc

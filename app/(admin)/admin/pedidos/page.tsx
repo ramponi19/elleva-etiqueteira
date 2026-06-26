@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { fmtBRL } from "@/lib/format";
 import PageHeader from "@/components/app/page-header";
+import OrderCancelButton from "@/components/app/order-cancel-button";
 
 export const metadata: Metadata = { title: "Pedidos · Admin" };
 
@@ -31,6 +32,7 @@ export default async function AdminPedidos() {
                 <span style={{ fontFamily: "var(--font-display)", fontSize: 16, fontWeight: 500, minWidth: 90, textAlign: "right" }}>
                   {fmtBRL(Number(o.total))}
                 </span>
+                <OrderCancelButton orderId={o.id} status={o.status} />
               </div>
             </div>
           ))}

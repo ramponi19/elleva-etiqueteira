@@ -8,6 +8,7 @@ const NAV = [
   { href: "/admin/clientes", label: "Clientes", icon: "solar:users-group-rounded-bold-duotone" },
   { href: "/admin/cupons", label: "Cupons", icon: "solar:ticket-sale-bold-duotone" },
   { href: "/admin/validar", label: "Validar ingresso", icon: "solar:qr-code-bold-duotone" },
+  { href: "/admin/checkin", label: "Check-in", icon: "solar:clipboard-list-bold-duotone" },
 ];
 
 export default async function AdminLayout({
