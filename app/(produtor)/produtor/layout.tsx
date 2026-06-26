@@ -5,6 +5,7 @@ const NAV = [
   { href: "/produtor", label: "Visão geral", icon: "solar:chart-2-bold-duotone" },
   { href: "/produtor/eventos", label: "Meus eventos", icon: "solar:ticket-bold-duotone" },
   { href: "/produtor/vendas", label: "Vendas", icon: "solar:wallet-money-bold-duotone" },
+  { href: "/produtor/validar", label: "Validar ingresso", icon: "solar:qr-code-bold-duotone" },
 ];
 
 export default async function ProdutorLayout({
