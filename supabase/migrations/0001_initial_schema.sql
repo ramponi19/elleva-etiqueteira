@@ -146,7 +146,8 @@ alter table public.print_jobs enable row level security;
 
 -- Helper: get current user's org_id
 create or replace function public.my_org_id()
-returns uuid language sql stable security definer as $$
+returns uuid language sql stable security definer
+set search_path = '' as $$
   select org_id from public.profiles where id = auth.uid()
 $$;
 
@@ -210,8 +211,19 @@ create policy "Org members can create print jobs"
   on public.print_jobs for insert
   with check (org_id = public.my_org_id());
 
-create policy "Admins can manage print jobs"
-  on public.print_jobs for update, delete
+create policy "Admins can update print jobs"
+  on public.print_jobs for update
+  using (
+    org_id = public.my_org_id()
+    and exists (
+      select 1 from public.profiles
+      where id = auth.uid()
+        and role in ('owner', 'admin')
+    )
+  );
+
+create policy "Admins can delete print jobs"
+  on public.print_jobs for delete
   using (
     org_id = public.my_org_id()
     and exists (
@@ -225,7 +237,8 @@ create policy "Admins can manage print jobs"
 -- AUTO-CREATE PROFILE ON SIGN UP
 -- ============================================================
 create or replace function public.handle_new_user()
-returns trigger language plpgsql security definer as $$
+returns trigger language plpgsql security definer
+set search_path = '' as $$
 begin
   insert into public.profiles (id, full_name, avatar_url)
   values (
