@@ -5,14 +5,45 @@ import Link from "next/link";
 import Icon from "@/components/shared/icon";
 import { useCart } from "@/lib/cart";
 import { fmtBRL } from "@/lib/format";
+import { createOrder } from "@/lib/actions/orders";
 
 export default function CheckoutPage() {
   const { items, subtotal, fee, total, removeItem, clear } = useCart();
   const [confirmed, setConfirmed] = useState(false);
   const [pay, setPay] = useState<"pix" | "card">("pix");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [cpf, setCpf] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const finalize = () => {
+  const finalize = async () => {
     if (!items.length) return;
+    setError(null);
+    if (!name.trim() || !email.trim()) {
+      setError("Preencha nome e e-mail para continuar.");
+      return;
+    }
+    setLoading(true);
+    const res = await createOrder({
+      buyerName: name,
+      buyerEmail: email,
+      buyerCpf: cpf,
+      paymentMethod: pay,
+      items: items.map((i) => ({
+        eventId: i.eventId,
+        eventTitle: i.eventTitle,
+        tierId: i.tierId,
+        tierName: i.tierName,
+        price: i.price,
+        qty: i.qty,
+      })),
+    });
+    setLoading(false);
+    if (!res.ok) {
+      setError(res.error);
+      return;
+    }
     setConfirmed(true);
     clear();
   };
@@ -64,9 +95,9 @@ export default function CheckoutPage() {
                     <Icon icon="solar:ticket-bold-duotone" style={{ fontSize: 26, color: "var(--gold-500)" }} />
                   </div>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontFamily: "var(--font-display)", fontSize: 17, fontWeight: 500 }}>{item.evt}</div>
+                    <div style={{ fontFamily: "var(--font-display)", fontSize: 17, fontWeight: 500 }}>{item.eventTitle}</div>
                     <div style={{ fontSize: 13, color: "var(--text-tertiary)", marginTop: 3 }}>
-                      {item.tier} · {item.qty} ingresso(s)
+                      {item.tierName} · {item.qty} ingresso(s)
                     </div>
                   </div>
                   <span style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 500 }}>
@@ -83,15 +114,15 @@ export default function CheckoutPage() {
             <div className="field-grid" style={{ marginTop: 18 }}>
               <div style={{ gridColumn: "1 / -1" }}>
                 <label className="field-label">NOME COMPLETO</label>
-                <input className="input" placeholder="Seu nome" />
+                <input className="input" placeholder="Seu nome" value={name} onChange={(e) => setName(e.target.value)} />
               </div>
               <div>
                 <label className="field-label">E-MAIL</label>
-                <input className="input" placeholder="voce@email.com" />
+                <input className="input" type="email" placeholder="voce@email.com" value={email} onChange={(e) => setEmail(e.target.value)} />
               </div>
               <div>
                 <label className="field-label">CPF</label>
-                <input className="input" placeholder="000.000.000-00" />
+                <input className="input" placeholder="000.000.000-00" value={cpf} onChange={(e) => setCpf(e.target.value)} />
               </div>
             </div>
 
@@ -117,8 +148,13 @@ export default function CheckoutPage() {
               <span style={{ color: "#F6F3EB", fontSize: 15 }}>Total</span>
               <span style={{ fontFamily: "var(--font-display)", fontSize: 28, fontWeight: 500, color: "#F6F3EB" }}>{fmtBRL(total)}</span>
             </div>
-            <button className="btn btn-gold btn-block" style={{ marginTop: 22 }} onClick={finalize}>
-              Finalizar compra
+            {error && (
+              <p style={{ marginTop: 16, fontSize: 13, color: "#F3B4B4", background: "rgba(243,180,180,.12)", border: "1px solid rgba(243,180,180,.25)", borderRadius: 10, padding: "8px 12px" }}>
+                {error}
+              </p>
+            )}
+            <button className="btn btn-gold btn-block" style={{ marginTop: 22, opacity: loading ? 0.6 : 1 }} onClick={finalize} disabled={loading}>
+              {loading ? "Processando..." : "Finalizar compra"}
             </button>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginTop: 14, fontSize: 12, color: "#8894A8" }}>
               <Icon icon="solar:lock-keyhole-bold-duotone" style={{ color: "var(--gold-500)", fontSize: 16 }} /> Pagamento criptografado

@@ -9,9 +9,12 @@ import {
 } from "react";
 
 export interface CartItem {
-  evt: string;   // título do evento
-  tier: string;  // nome do tier
-  price: number; // preço unitário (BRL)
+  eventId: string;    // uuid do evento (para persistência)
+  eventSlug: string;  // slug (rota)
+  eventTitle: string; // título do evento
+  tierId: string;     // uuid do tier
+  tierName: string;   // nome do tier
+  price: number;      // preço unitário (BRL)
   qty: number;
 }
 

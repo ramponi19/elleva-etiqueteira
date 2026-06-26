@@ -25,8 +25,11 @@ export default function TicketSelector({
 
   const addToCart = () => {
     const items = tiers.filter((t) => (qty[t.id] || 0) > 0).map((t) => ({
-      evt: event.title,
-      tier: t.name,
+      eventId: event.uuid,
+      eventSlug: event.id,
+      eventTitle: event.title,
+      tierId: t.id,
+      tierName: t.name,
       price: t.price,
       qty: qty[t.id],
     }));
