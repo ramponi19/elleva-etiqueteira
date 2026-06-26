@@ -35,9 +35,16 @@ export default function Hero({ event }: { event: EventItem }) {
             </div>
           </div>
 
-          <Link href={`/evento/${event.id}`} className="poster">
-            <Icon icon={event.icon} style={{ fontSize: 64, color: "var(--gold-500)" }} />
-            <span className="poster-label">PÔSTER 4:5</span>
+          <Link href={`/evento/${event.id}`} className="poster" style={event.cover ? { padding: 0, overflow: "hidden" } : undefined}>
+            {event.cover ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={event.cover} alt={event.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            ) : (
+              <>
+                <Icon icon={event.icon} style={{ fontSize: 64, color: "var(--gold-500)" }} />
+                <span className="poster-label">PÔSTER 4:5</span>
+              </>
+            )}
           </Link>
         </div>
       </div>

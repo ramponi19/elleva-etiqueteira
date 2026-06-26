@@ -26,7 +26,7 @@ export default async function EditarEvento({
 
   const { data: ev } = await supabase
     .from("events")
-    .select("id, title, description, category, venue, city, starts_at, status, ticket_tiers(name, description, price, capacity, sort_order)")
+    .select("id, title, description, category, venue, city, starts_at, status, cover_url, ticket_tiers(name, description, price, capacity, sort_order)")
     .eq("id", id)
     .single();
 
@@ -52,6 +52,7 @@ export default async function EditarEvento({
     date,
     time,
     status: ev.status,
+    coverUrl: ev.cover_url ?? "",
     tiers: tiers.length ? tiers : [{ name: "Pista", description: "", price: "", capacity: "" }],
   };
 

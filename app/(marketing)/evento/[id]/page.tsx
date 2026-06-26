@@ -41,10 +41,17 @@ export default async function EventPage({
       <div className="event-layout" style={{ marginTop: 8 }}>
         {/* left: banner + info */}
         <div>
-          <div className="banner">
-            <div className="banner-glow" />
-            <Icon icon={event.icon} style={{ fontSize: 72, color: "var(--gold-500)", position: "relative" }} />
-            <span className="poster-label" style={{ position: "relative" }}>BANNER 16:9</span>
+          <div className="banner" style={event.cover ? { padding: 0 } : undefined}>
+            {event.cover ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={event.cover} alt={event.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            ) : (
+              <>
+                <div className="banner-glow" />
+                <Icon icon={event.icon} style={{ fontSize: 72, color: "var(--gold-500)", position: "relative" }} />
+                <span className="poster-label" style={{ position: "relative" }}>BANNER 16:9</span>
+              </>
+            )}
           </div>
 
           <span className="eyebrow eyebrow-gold" style={{ marginTop: 32 }}>{event.catLabel}</span>

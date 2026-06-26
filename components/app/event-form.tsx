@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Icon from "@/components/shared/icon";
 import { createEvent, updateEvent } from "@/lib/actions/events";
+import { createClient } from "@/lib/supabase/client";
 
 const CATEGORIES = ["SHOW", "FESTA", "ESPORTE", "TEATRO", "CORPORATIVO", "CURSO"];
 
@@ -24,12 +25,13 @@ export interface EventFormInitial {
   date: string;
   time: string;
   status: string;
+  coverUrl: string;
   tiers: TierInput[];
 }
 
 const empty: EventFormInitial = {
   title: "", description: "", category: "SHOW", venue: "", city: "",
-  date: "", time: "", status: "published",
+  date: "", time: "", status: "published", coverUrl: "",
   tiers: [{ name: "Pista", description: "", price: "", capacity: "" }],
 };
 
@@ -40,7 +42,28 @@ export default function EventForm({ initial }: { initial?: EventFormInitial }) {
 
   const [form, setForm] = useState<EventFormInitial>(data);
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  async function uploadCover(file: File) {
+    setError(null);
+    setUploading(true);
+    try {
+      const supabase = createClient();
+      const ext = file.name.split(".").pop() || "jpg";
+      const path = `${Date.now()}-${Math.round(Math.random() * 1e6)}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("event-covers")
+        .upload(path, file, { upsert: false, contentType: file.type });
+      if (upErr) throw upErr;
+      const { data: pub } = supabase.storage.from("event-covers").getPublicUrl(path);
+      setForm((f) => ({ ...f, coverUrl: pub.publicUrl }));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Falha no upload da imagem");
+    } finally {
+      setUploading(false);
+    }
+  }
 
   const set = (k: keyof EventFormInitial, v: string) => setForm((f) => ({ ...f, [k]: v }));
   const setTier = (i: number, k: keyof TierInput, v: string) =>
@@ -61,6 +84,7 @@ export default function EventForm({ initial }: { initial?: EventFormInitial }) {
       date: form.date,
       time: form.time,
       status: form.status as "published" | "draft",
+      coverUrl: form.coverUrl,
       tiers: form.tiers.map((t) => ({
         name: t.name,
         description: t.description,
@@ -89,6 +113,41 @@ export default function EventForm({ initial }: { initial?: EventFormInitial }) {
       <div>
         <label style={label}>Descrição</label>
         <textarea className="input" rows={3} value={form.description} onChange={(e) => set("description", e.target.value)} placeholder="Sobre o evento" />
+      </div>
+
+      <div>
+        <label style={label}>Capa do evento</label>
+        <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
+          <div style={{ width: 120, height: 80, borderRadius: 10, overflow: "hidden", background: "linear-gradient(155deg,#1E2E42,#0E1824)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            {form.coverUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={form.coverUrl} alt="Capa" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            ) : (
+              <Icon icon="solar:gallery-bold-duotone" style={{ fontSize: 28, color: "var(--gold-500)" }} />
+            )}
+          </div>
+          <div>
+            <label className="btn btn-ghost btn-sm" style={{ cursor: "pointer" }}>
+              {uploading ? "Enviando..." : form.coverUrl ? "Trocar imagem" : "Enviar imagem"}
+              <input
+                type="file"
+                accept="image/*"
+                style={{ display: "none" }}
+                disabled={uploading}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) uploadCover(file);
+                }}
+              />
+            </label>
+            {form.coverUrl && (
+              <button type="button" onClick={() => setForm((f) => ({ ...f, coverUrl: "" }))} style={{ marginLeft: 8, background: "none", border: "none", color: "var(--text-tertiary)", fontSize: 13, cursor: "pointer" }}>
+                Remover
+              </button>
+            )}
+            <p style={{ fontSize: 11, color: "var(--text-tertiary)", marginTop: 6 }}>JPG/PNG · recomendado 16:9</p>
+          </div>
+        </div>
       </div>
 
       <div className="field-grid">

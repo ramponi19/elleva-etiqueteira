@@ -21,6 +21,7 @@ const EventSchema = z.object({
   date: z.string().min(1, "Data obrigatória"),
   time: z.string().min(1, "Horário obrigatório"),
   icon: z.string().optional(),
+  coverUrl: z.string().url().optional().or(z.literal("").transform(() => undefined)),
   status: z.enum(["draft", "published"]).default("published"),
   tiers: z.array(TierSchema).min(1, "Adicione ao menos um lote"),
 });
@@ -72,6 +73,7 @@ export async function createEvent(input: EventInput): Promise<EventFormState> {
       city: v.city,
       starts_at,
       icon: v.icon || "solar:ticket-bold-duotone",
+      cover_url: v.coverUrl ?? null,
       status: v.status,
       producer_id: auth.user.id,
     })
@@ -118,6 +120,7 @@ export async function updateEvent(id: string, input: EventInput): Promise<EventF
       city: v.city,
       starts_at,
       icon: v.icon || "solar:ticket-bold-duotone",
+      cover_url: v.coverUrl ?? null,
       status: v.status,
     })
     .eq("id", id);
