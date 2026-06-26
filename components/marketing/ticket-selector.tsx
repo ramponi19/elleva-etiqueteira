@@ -5,9 +5,15 @@ import { useRouter } from "next/navigation";
 import Icon from "@/components/shared/icon";
 import { useCart } from "@/lib/cart";
 import { fmtBRL } from "@/lib/format";
-import { TIERS, type EventItem } from "@/lib/events";
+import type { EventItem, Tier } from "@/lib/events";
 
-export default function TicketSelector({ event }: { event: EventItem }) {
+export default function TicketSelector({
+  event,
+  tiers,
+}: {
+  event: EventItem;
+  tiers: Tier[];
+}) {
   const router = useRouter();
   const { addItems } = useCart();
   const [qty, setQty] = useState<Record<string, number>>({});
@@ -15,10 +21,10 @@ export default function TicketSelector({ event }: { event: EventItem }) {
   const inc = (id: string) => setQty((q) => ({ ...q, [id]: (q[id] || 0) + 1 }));
   const dec = (id: string) => setQty((q) => ({ ...q, [id]: Math.max(0, (q[id] || 0) - 1) }));
 
-  const subtotal = TIERS.reduce((a, t) => a + (qty[t.id] || 0) * t.price, 0);
+  const subtotal = tiers.reduce((a, t) => a + (qty[t.id] || 0) * t.price, 0);
 
   const addToCart = () => {
-    const items = TIERS.filter((t) => (qty[t.id] || 0) > 0).map((t) => ({
+    const items = tiers.filter((t) => (qty[t.id] || 0) > 0).map((t) => ({
       evt: event.title,
       tier: t.name,
       price: t.price,
@@ -34,7 +40,7 @@ export default function TicketSelector({ event }: { event: EventItem }) {
       <h4 className="h4" style={{ fontSize: 18 }}>Selecione seus ingressos</h4>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 20 }}>
-        {TIERS.map((t) => (
+        {tiers.map((t) => (
           <div className="tier" key={t.id}>
             <div style={{ flex: 1 }}>
               <div className="tier-name">{t.name}</div>

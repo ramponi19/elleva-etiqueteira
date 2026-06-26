@@ -3,10 +3,13 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Icon from "@/components/shared/icon";
 import TicketSelector from "@/components/marketing/ticket-selector";
-import { EVENTS, getEvent } from "@/lib/events";
+import { getEvent, getEventSlugs } from "@/lib/events";
 
-export function generateStaticParams() {
-  return EVENTS.map((e) => ({ id: e.id }));
+export const revalidate = 300;
+
+export async function generateStaticParams() {
+  const slugs = await getEventSlugs();
+  return slugs.map((id) => ({ id }));
 }
 
 export async function generateMetadata({
@@ -15,8 +18,8 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id } = await params;
-  const event = getEvent(id);
-  return { title: event?.title ?? "Evento" };
+  const data = await getEvent(id);
+  return { title: data?.event.title ?? "Evento" };
 }
 
 export default async function EventPage({
@@ -25,8 +28,9 @@ export default async function EventPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const event = getEvent(id);
-  if (!event) notFound();
+  const data = await getEvent(id);
+  if (!data) notFound();
+  const { event, tiers } = data;
 
   return (
     <div className="container" style={{ padding: "32px 48px 64px" }}>
@@ -70,7 +74,7 @@ export default async function EventPage({
         </div>
 
         {/* right: ticket selector */}
-        <TicketSelector event={event} />
+        <TicketSelector event={event} tiers={tiers} />
       </div>
     </div>
   );

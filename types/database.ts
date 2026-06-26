@@ -7,301 +7,161 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
-      invitations: {
+      events: {
         Row: {
+          category: string
+          city: string
+          cover_url: string | null
           created_at: string
-          email: string
-          expires_at: string
-          id: string
-          invited_by: string | null
-          org_id: string
-          role: string
-          status: string
-          token: string
-        }
-        Insert: {
-          created_at?: string
-          email: string
-          expires_at?: string
-          id?: string
-          invited_by?: string | null
-          org_id: string
-          role?: string
-          status?: string
-          token?: string
-        }
-        Update: {
-          created_at?: string
-          email?: string
-          expires_at?: string
-          id?: string
-          invited_by?: string | null
-          org_id?: string
-          role?: string
-          status?: string
-          token?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "invitations_invited_by_fkey"
-            columns: ["invited_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "invitations_org_id_fkey"
-            columns: ["org_id"]
-            isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      label_templates: {
-        Row: {
-          content: string
-          created_at: string
-          created_by: string | null
           description: string | null
-          format: string
-          height_mm: number
+          icon: string | null
           id: string
-          is_archived: boolean
-          name: string
-          org_id: string
+          slug: string
+          starts_at: string
+          status: string
+          title: string
           updated_at: string
-          variables: Json
-          version: number
-          width_mm: number
+          venue: string
         }
         Insert: {
-          content: string
+          category: string
+          city: string
+          cover_url?: string | null
           created_at?: string
-          created_by?: string | null
           description?: string | null
-          format?: string
-          height_mm: number
+          icon?: string | null
           id?: string
-          is_archived?: boolean
-          name: string
-          org_id: string
+          slug: string
+          starts_at: string
+          status?: string
+          title: string
           updated_at?: string
-          variables?: Json
-          version?: number
-          width_mm: number
+          venue: string
         }
         Update: {
-          content?: string
+          category?: string
+          city?: string
+          cover_url?: string | null
           created_at?: string
-          created_by?: string | null
           description?: string | null
-          format?: string
-          height_mm?: number
+          icon?: string | null
           id?: string
-          is_archived?: boolean
-          name?: string
-          org_id?: string
-          updated_at?: string
-          variables?: Json
-          version?: number
-          width_mm?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "label_templates_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "label_templates_org_id_fkey"
-            columns: ["org_id"]
-            isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      organizations: {
-        Row: {
-          created_at: string
-          id: string
-          name: string
-          plan: string
-          slug: string
-          stripe_customer_id: string | null
-          stripe_subscription_id: string | null
-          subscription_status: string | null
-          trial_ends_at: string | null
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          name: string
-          plan?: string
-          slug: string
-          stripe_customer_id?: string | null
-          stripe_subscription_id?: string | null
-          subscription_status?: string | null
-          trial_ends_at?: string | null
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          name?: string
-          plan?: string
           slug?: string
-          stripe_customer_id?: string | null
-          stripe_subscription_id?: string | null
-          subscription_status?: string | null
-          trial_ends_at?: string | null
+          starts_at?: string
+          status?: string
+          title?: string
           updated_at?: string
+          venue?: string
         }
         Relationships: []
       }
-      print_jobs: {
+      order_items: {
         Row: {
-          completed_at: string | null
           created_at: string
-          error_message: string | null
+          event_id: string | null
+          event_title: string
           id: string
-          org_id: string
-          printer_id: string | null
+          order_id: string
           quantity: number
-          requested_by: string | null
-          started_at: string | null
-          status: string
-          template_id: string
-          updated_at: string
-          variables_data: Json
+          tier_id: string | null
+          tier_name: string
+          unit_price: number
         }
         Insert: {
-          completed_at?: string | null
           created_at?: string
-          error_message?: string | null
+          event_id?: string | null
+          event_title: string
           id?: string
-          org_id: string
-          printer_id?: string | null
-          quantity?: number
-          requested_by?: string | null
-          started_at?: string | null
-          status?: string
-          template_id: string
-          updated_at?: string
-          variables_data?: Json
+          order_id: string
+          quantity: number
+          tier_id?: string | null
+          tier_name: string
+          unit_price: number
         }
         Update: {
-          completed_at?: string | null
           created_at?: string
-          error_message?: string | null
+          event_id?: string | null
+          event_title?: string
           id?: string
-          org_id?: string
-          printer_id?: string | null
+          order_id?: string
           quantity?: number
-          requested_by?: string | null
-          started_at?: string | null
-          status?: string
-          template_id?: string
-          updated_at?: string
-          variables_data?: Json
+          tier_id?: string | null
+          tier_name?: string
+          unit_price?: number
         }
         Relationships: [
           {
-            foreignKeyName: "print_jobs_org_id_fkey"
-            columns: ["org_id"]
+            foreignKeyName: "order_items_event_id_fkey"
+            columns: ["event_id"]
             isOneToOne: false
-            referencedRelation: "organizations"
+            referencedRelation: "events"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "print_jobs_printer_id_fkey"
-            columns: ["printer_id"]
+            foreignKeyName: "order_items_order_id_fkey"
+            columns: ["order_id"]
             isOneToOne: false
-            referencedRelation: "printers"
+            referencedRelation: "orders"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "print_jobs_requested_by_fkey"
-            columns: ["requested_by"]
+            foreignKeyName: "order_items_tier_id_fkey"
+            columns: ["tier_id"]
             isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "print_jobs_template_id_fkey"
-            columns: ["template_id"]
-            isOneToOne: false
-            referencedRelation: "label_templates"
+            referencedRelation: "ticket_tiers"
             referencedColumns: ["id"]
           },
         ]
       }
-      printers: {
+      orders: {
         Row: {
+          buyer_cpf: string | null
+          buyer_email: string
+          buyer_name: string
           created_at: string
-          dpi: number | null
+          fee: number
           id: string
-          ip_address: unknown
-          last_seen_at: string | null
-          location: string | null
-          metadata: Json | null
-          model: string | null
-          name: string
-          org_id: string
-          serial_number: string | null
+          payment_method: string
           status: string
+          subtotal: number
+          total: number
           updated_at: string
+          user_id: string | null
         }
         Insert: {
+          buyer_cpf?: string | null
+          buyer_email: string
+          buyer_name: string
           created_at?: string
-          dpi?: number | null
+          fee?: number
           id?: string
-          ip_address?: unknown
-          last_seen_at?: string | null
-          location?: string | null
-          metadata?: Json | null
-          model?: string | null
-          name: string
-          org_id: string
-          serial_number?: string | null
+          payment_method?: string
           status?: string
+          subtotal?: number
+          total?: number
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
+          buyer_cpf?: string | null
+          buyer_email?: string
+          buyer_name?: string
           created_at?: string
-          dpi?: number | null
+          fee?: number
           id?: string
-          ip_address?: unknown
-          last_seen_at?: string | null
-          location?: string | null
-          metadata?: Json | null
-          model?: string | null
-          name?: string
-          org_id?: string
-          serial_number?: string | null
+          payment_method?: string
           status?: string
+          subtotal?: number
+          total?: number
           updated_at?: string
+          user_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "printers_org_id_fkey"
-            columns: ["org_id"]
-            isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -309,8 +169,6 @@ export type Database = {
           created_at: string
           full_name: string | null
           id: string
-          org_id: string | null
-          role: string
           updated_at: string
         }
         Insert: {
@@ -318,8 +176,6 @@ export type Database = {
           created_at?: string
           full_name?: string | null
           id: string
-          org_id?: string | null
-          role?: string
           updated_at?: string
         }
         Update: {
@@ -327,34 +183,59 @@ export type Database = {
           created_at?: string
           full_name?: string | null
           id?: string
-          org_id?: string | null
-          role?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      ticket_tiers: {
+        Row: {
+          capacity: number | null
+          created_at: string
+          description: string | null
+          event_id: string
+          id: string
+          name: string
+          price: number
+          sold: number
+          sort_order: number
+        }
+        Insert: {
+          capacity?: number | null
+          created_at?: string
+          description?: string | null
+          event_id: string
+          id?: string
+          name: string
+          price: number
+          sold?: number
+          sort_order?: number
+        }
+        Update: {
+          capacity?: number | null
+          created_at?: string
+          description?: string | null
+          event_id?: string
+          id?: string
+          name?: string
+          price?: number
+          sold?: number
+          sort_order?: number
         }
         Relationships: [
           {
-            foreignKeyName: "profiles_org_id_fkey"
-            columns: ["org_id"]
+            foreignKeyName: "ticket_tiers_event_id_fkey"
+            columns: ["event_id"]
             isOneToOne: false
-            referencedRelation: "organizations"
+            referencedRelation: "events"
             referencedColumns: ["id"]
           },
         ]
       }
     }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      accept_invitation: { Args: { invitation_token: string }; Returns: Json }
-      my_org_id: { Args: never; Returns: string }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
+    Views: { [_ in never]: never }
+    Functions: { [_ in never]: never }
+    Enums: { [_ in never]: never }
+    CompositeTypes: { [_ in never]: never }
   }
 }
 
@@ -439,40 +320,6 @@ export type TablesUpdate<
       }
       ? U
       : never
-    : never
-
-export type Enums<
-  DefaultSchemaEnumNameOrOptions extends
-    | keyof DefaultSchema["Enums"]
-    | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
-> = DefaultSchemaEnumNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
-  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
-    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
-    : never
-
-export type CompositeTypes<
-  PublicCompositeTypeNameOrOptions extends
-    | keyof DefaultSchema["CompositeTypes"]
-    | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
-> = PublicCompositeTypeNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
-    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
 
 export const Constants = {

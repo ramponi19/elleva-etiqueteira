@@ -3,14 +3,17 @@ import Hero from "@/components/marketing/hero";
 import EventCard from "@/components/marketing/event-card";
 import ProducerCTA from "@/components/marketing/producer-cta";
 import Icon from "@/components/shared/icon";
-import { EVENTS, CATEGORIES } from "@/lib/events";
+import { getEvents, CATEGORIES } from "@/lib/events";
 
-export default function HomePage() {
-  const featured = EVENTS[0];
+export const revalidate = 300;
+
+export default async function HomePage() {
+  const events = await getEvents();
+  const featured = events[0];
 
   return (
     <>
-      <Hero event={featured} />
+      {featured && <Hero event={featured} />}
 
       {/* more events */}
       <section className="container" style={{ padding: "40px 48px 16px" }}>
@@ -23,7 +26,7 @@ export default function HomePage() {
           </Link>
         </div>
         <div className="ev-grid">
-          {EVENTS.map((ev) => (
+          {events.map((ev) => (
             <EventCard key={ev.id} event={ev} />
           ))}
         </div>
