@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Icon from "@/components/shared/icon";
 import { useCart } from "@/lib/cart";
 import { fmtBRL } from "@/lib/format";
-import { createOrder } from "@/lib/actions/orders";
+import { createOrder, getOrderStatus } from "@/lib/actions/orders";
+
+type Pix = { qrBase64: string; copyPaste: string; orderId: string };
 
 export default function CheckoutPage() {
   const { items, subtotal, fee, total, removeItem, clear } = useCart();
@@ -16,6 +18,28 @@ export default function CheckoutPage() {
   const [cpf, setCpf] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [pix, setPix] = useState<Pix | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  // Polling do status enquanto aguarda o Pix
+  useEffect(() => {
+    if (!pix) return;
+    const t = setInterval(async () => {
+      const status = await getOrderStatus(pix.orderId);
+      if (status === "paid") {
+        clearInterval(t);
+        clear();
+        setConfirmed(true);
+        setPix(null);
+      } else if (status === "cancelled") {
+        clearInterval(t);
+        setPix(null);
+        setError("O pagamento não foi concluído. Tente novamente.");
+      }
+    }, 4000);
+    return () => clearInterval(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pix]);
 
   const finalize = async () => {
     if (!items.length) return;
@@ -29,7 +53,6 @@ export default function CheckoutPage() {
       buyerName: name,
       buyerEmail: email,
       buyerCpf: cpf,
-      paymentMethod: pay,
       items: items.map((i) => ({
         eventId: i.eventId,
         eventTitle: i.eventTitle,
@@ -44,8 +67,12 @@ export default function CheckoutPage() {
       setError(res.error);
       return;
     }
-    setConfirmed(true);
-    clear();
+    if (res.paid) {
+      clear();
+      setConfirmed(true);
+      return;
+    }
+    setPix({ ...res.pix, orderId: res.orderId });
   };
 
   if (confirmed) {
@@ -64,6 +91,53 @@ export default function CheckoutPage() {
           <Link href="/" className="btn btn-navy btn-lg" style={{ marginTop: 32 }}>
             Voltar para a home
           </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (pix) {
+    return (
+      <div className="container" style={{ maxWidth: 1100, padding: "40px 48px 64px" }}>
+        <div style={{ maxWidth: 460, margin: "0 auto", textAlign: "center" }}>
+          <span className="eyebrow eyebrow-gold no-rule" style={{ justifyContent: "center" }}>Pague com Pix</span>
+          <h1 className="h1" style={{ fontSize: 36, marginTop: 14 }}>
+            Escaneie o <span className="serif accent-gold">QR code</span>
+          </h1>
+          <p className="body" style={{ marginTop: 8 }}>
+            Total: <strong>{fmtBRL(total)}</strong> · O pedido confirma automaticamente após o pagamento.
+          </p>
+
+          <div style={{ background: "var(--bg-elevated)", border: "1px solid var(--border)", borderRadius: "var(--r-xl)", padding: 24, marginTop: 24, display: "inline-block" }}>
+            {pix.qrBase64 ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={`data:image/png;base64,${pix.qrBase64}`} alt="QR code Pix" width={240} height={240} style={{ display: "block" }} />
+            ) : (
+              <p className="body" style={{ width: 240 }}>QR indisponível — use o código abaixo.</p>
+            )}
+          </div>
+
+          <div style={{ marginTop: 20, textAlign: "left" }}>
+            <label className="field-label">PIX COPIA E COLA</label>
+            <div style={{ display: "flex", gap: 8 }}>
+              <input className="input" readOnly value={pix.copyPaste} style={{ fontFamily: "var(--font-mono)", fontSize: 12 }} />
+              <button
+                className="btn btn-navy btn-md"
+                onClick={() => {
+                  navigator.clipboard?.writeText(pix.copyPaste);
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 2000);
+                }}
+              >
+                {copied ? "Copiado!" : "Copiar"}
+              </button>
+            </div>
+          </div>
+
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginTop: 24, color: "var(--text-tertiary)", fontSize: 14 }}>
+            <Icon icon="svg-spinners:ring-resize" style={{ fontSize: 18, color: "var(--text-gold)" }} />
+            Aguardando confirmação do pagamento...
+          </div>
         </div>
       </div>
     );

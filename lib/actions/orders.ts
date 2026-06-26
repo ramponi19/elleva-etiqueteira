@@ -2,9 +2,13 @@
 
 import { z } from "zod";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
+import { getMpPayment } from "@/lib/mercadopago";
+import { bumpSold } from "@/lib/orders-helpers";
 
 const isUuid = (s: string) =>
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
+
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
 const ItemSchema = z.object({
   eventId: z.string(),
@@ -19,12 +23,12 @@ const OrderSchema = z.object({
   buyerName: z.string().min(1, "Informe seu nome"),
   buyerEmail: z.string().email("E-mail inválido"),
   buyerCpf: z.string().optional(),
-  paymentMethod: z.enum(["pix", "card"]),
   items: z.array(ItemSchema).min(1, "Carrinho vazio"),
 });
 
 export type CreateOrderResult =
-  | { ok: true; orderId: string }
+  | { ok: true; orderId: string; paid: true } // modo mock (sem MP)
+  | { ok: true; orderId: string; paid: false; pix: { qrBase64: string; copyPaste: string }; total: number }
   | { ok: false; error: string };
 
 export async function createOrder(
@@ -34,19 +38,16 @@ export async function createOrder(
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Dados inválidos" };
   }
-  const { buyerName, buyerEmail, buyerCpf, paymentMethod, items } = parsed.data;
+  const { buyerName, buyerEmail, buyerCpf, items } = parsed.data;
 
-  // Totais calculados no servidor
   const subtotal = items.reduce((a, i) => a + i.price * i.qty, 0);
   const fee = Math.round(subtotal * 0.1);
   const total = subtotal + fee;
 
-  // Vincula ao usuário logado, se houver
   const {
     data: { user },
   } = await (await createClient()).auth.getUser();
 
-  // Escrita server-side (service role bypassa RLS)
   let svc;
   try {
     svc = await createServiceClient();
@@ -54,14 +55,19 @@ export async function createOrder(
     return { ok: false, error: "Pagamento indisponível no momento." };
   }
 
+  const mp = getMpPayment();
+
+  // Cria o pedido como 'pending' (ou 'paid' direto no modo mock)
   const { data: order, error: orderErr } = await svc
     .from("orders")
     .insert({
       buyer_name: buyerName,
       buyer_email: buyerEmail,
       buyer_cpf: buyerCpf || null,
-      payment_method: paymentMethod,
-      status: "paid", // mock: pagamento aprovado
+      payment_method: "pix",
+      payment_provider: mp ? "mercadopago" : "mock",
+      status: mp ? "pending" : "paid",
+      paid_at: mp ? null : new Date().toISOString(),
       subtotal,
       fee,
       total,
@@ -85,12 +91,68 @@ export async function createOrder(
       quantity: it.qty,
     }))
   );
-
   if (itemsErr) {
-    // rollback simples do pedido
     await svc.from("orders").delete().eq("id", order.id);
     return { ok: false, error: itemsErr.message };
   }
 
-  return { ok: true, orderId: order.id };
+  // Sem Mercado Pago configurado → aprova na hora (mock) + baixa estoque
+  if (!mp) {
+    await bumpSold(svc, order.id);
+    return { ok: true, orderId: order.id, paid: true };
+  }
+
+  // Cria pagamento Pix no Mercado Pago
+  try {
+    const [firstName, ...rest] = buyerName.trim().split(" ");
+    const payment = await mp.create({
+      body: {
+        transaction_amount: total,
+        description: `Elleva Tickets — pedido ${order.id}`,
+        payment_method_id: "pix",
+        external_reference: order.id,
+        notification_url: `${APP_URL}/api/webhooks/mercadopago`,
+        payer: {
+          email: buyerEmail,
+          first_name: firstName,
+          last_name: rest.join(" ") || undefined,
+          identification: buyerCpf
+            ? { type: "CPF", number: buyerCpf.replace(/\D/g, "") }
+            : undefined,
+        },
+      },
+    });
+
+    const tx = payment.point_of_interaction?.transaction_data;
+    const qrBase64 = tx?.qr_code_base64 ?? "";
+    const copyPaste = tx?.qr_code ?? "";
+
+    await svc
+      .from("orders")
+      .update({
+        payment_id: String(payment.id),
+        pix_qr_base64: qrBase64,
+        pix_copy_paste: copyPaste,
+      })
+      .eq("id", order.id);
+
+    return { ok: true, orderId: order.id, paid: false, pix: { qrBase64, copyPaste }, total };
+  } catch (e) {
+    await svc.from("order_items").delete().eq("order_id", order.id);
+    await svc.from("orders").delete().eq("id", order.id);
+    const msg = e instanceof Error ? e.message : "Falha ao gerar o Pix";
+    return { ok: false, error: msg };
+  }
 }
+
+/** Polling do status do pedido (service role — pedido pode ser anônimo). */
+export async function getOrderStatus(orderId: string): Promise<string | null> {
+  try {
+    const svc = await createServiceClient();
+    const { data } = await svc.from("orders").select("status").eq("id", orderId).single();
+    return (data?.status as string) ?? null;
+  } catch {
+    return null;
+  }
+}
+
