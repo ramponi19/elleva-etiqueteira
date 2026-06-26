@@ -3,6 +3,8 @@ import { createClient } from "@/lib/supabase/server";
 import { fmtBRL } from "@/lib/format";
 import PageHeader from "@/components/app/page-header";
 import StatCard from "@/components/app/stat-card";
+import BarChart from "@/components/app/bar-chart";
+import { lastNDays } from "@/lib/sales";
 
 export const metadata: Metadata = { title: "Admin" };
 
@@ -19,11 +21,15 @@ export default async function AdminOverview() {
     supabase.from("events").select("*", { count: "exact", head: true }),
     supabase.from("profiles").select("*", { count: "exact", head: true }).eq("role", "customer"),
     supabase.from("profiles").select("*", { count: "exact", head: true }).eq("role", "producer"),
-    supabase.from("orders").select("total").eq("status", "paid"),
+    supabase.from("orders").select("total, created_at").eq("status", "paid"),
     supabase.from("orders").select("id, buyer_name, buyer_email, total, status, created_at").order("created_at", { ascending: false }).limit(8),
   ]);
 
   const revenue = (paidOrders ?? []).reduce((a, o) => a + Number(o.total), 0);
+  const series = lastNDays(
+    (paidOrders ?? []).map((o) => ({ date: o.created_at as string, amount: Number(o.total) })),
+    14
+  );
 
   const stats = [
     { label: "Receita (pagos)", value: fmtBRL(revenue), icon: "solar:wallet-money-bold-duotone" },
@@ -41,6 +47,13 @@ export default async function AdminOverview() {
           {stats.map((s) => (
             <StatCard key={s.label} {...s} />
           ))}
+        </div>
+
+        <div style={{ background: "var(--bg-elevated)", border: "1px solid var(--border)", borderRadius: "var(--r-xl)", padding: 24, marginTop: 24 }}>
+          <h2 style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 500, margin: "0 0 16px" }}>
+            Receita — últimos 14 dias
+          </h2>
+          <BarChart data={series} />
         </div>
 
         <div style={{ background: "var(--bg-elevated)", border: "1px solid var(--border)", borderRadius: "var(--r-xl)", padding: 24, marginTop: 24 }}>

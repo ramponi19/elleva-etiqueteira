@@ -4,6 +4,8 @@ import { getAuth } from "@/lib/auth";
 import { fmtBRL } from "@/lib/format";
 import PageHeader from "@/components/app/page-header";
 import StatCard from "@/components/app/stat-card";
+import BarChart from "@/components/app/bar-chart";
+import { lastNDays } from "@/lib/sales";
 
 export const metadata: Metadata = { title: "Produtor" };
 
@@ -19,10 +21,19 @@ export default async function ProdutorOverview() {
 
   const { data: items } = await supabase
     .from("order_items")
-    .select("unit_price, quantity");
+    .select("unit_price, quantity, orders!inner(created_at, status)")
+    .eq("orders.status", "paid");
 
-  const revenue = (items ?? []).reduce((a, i) => a + Number(i.unit_price) * i.quantity, 0);
-  const ticketsSold = (items ?? []).reduce((a, i) => a + i.quantity, 0);
+  type ItemRow = { unit_price: number; quantity: number; orders: { created_at: string } | { created_at: string }[] };
+  const rows = (items ?? []) as ItemRow[];
+  const created = (r: ItemRow) => (Array.isArray(r.orders) ? r.orders[0]?.created_at : r.orders?.created_at) ?? new Date().toISOString();
+
+  const revenue = rows.reduce((a, i) => a + Number(i.unit_price) * i.quantity, 0);
+  const ticketsSold = rows.reduce((a, i) => a + i.quantity, 0);
+  const series = lastNDays(
+    rows.map((r) => ({ date: created(r), amount: Number(r.unit_price) * r.quantity })),
+    14
+  );
 
   const stats = [
     { label: "Meus eventos", value: String(events?.length ?? 0), icon: "solar:ticket-bold-duotone" },
@@ -38,6 +49,13 @@ export default async function ProdutorOverview() {
           {stats.map((s) => (
             <StatCard key={s.label} {...s} />
           ))}
+        </div>
+
+        <div style={{ background: "var(--bg-elevated)", border: "1px solid var(--border)", borderRadius: "var(--r-xl)", padding: 24, marginTop: 24 }}>
+          <h2 style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 500, margin: "0 0 16px" }}>
+            Receita — últimos 14 dias
+          </h2>
+          <BarChart data={series} />
         </div>
 
         <div style={{ background: "var(--bg-elevated)", border: "1px solid var(--border)", borderRadius: "var(--r-xl)", padding: 24, marginTop: 24 }}>
