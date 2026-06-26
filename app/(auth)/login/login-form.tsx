@@ -19,15 +19,24 @@ export function LoginForm() {
     setLoading(true);
 
     const supabase = createClient();
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
-    if (error) {
+    if (error || !data.user) {
       setError("Email ou senha incorretos.");
       setLoading(false);
       return;
     }
 
-    router.push("/");
+    // Redireciona conforme o papel
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", data.user.id)
+      .single();
+    const role = profile?.role ?? "customer";
+    const dest = role === "admin" ? "/admin" : role === "producer" ? "/produtor" : "/conta";
+
+    router.push(dest);
     router.refresh();
   }
 
