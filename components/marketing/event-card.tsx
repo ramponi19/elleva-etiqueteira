@@ -14,6 +14,11 @@ export default function EventCard({ event }: { event: EventItem }) {
           <Icon icon={event.icon} style={{ fontSize: 42 }} />
         )}
         <span className="ev-badge">{event.catLabel}</span>
+        {event.soldOut && (
+          <span className="ev-badge" style={{ left: "auto", right: 12, background: "rgba(214,69,69,.85)" }}>
+            ESGOTADO
+          </span>
+        )}
       </div>
       <div className="ev-card__body">
         <div className="ev-date">{event.dateFull} · {event.time}</div>

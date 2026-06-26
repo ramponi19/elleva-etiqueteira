@@ -55,6 +55,28 @@ export async function createOrder(
     return { ok: false, error: "Pagamento indisponível no momento." };
   }
 
+  // Valida estoque (capacity - sold) por lote antes de criar o pedido
+  for (const it of items) {
+    if (!isUuid(it.tierId)) continue;
+    const { data: tier } = await svc
+      .from("ticket_tiers")
+      .select("capacity, sold, name")
+      .eq("id", it.tierId)
+      .single();
+    if (tier && tier.capacity != null) {
+      const available = Math.max(0, tier.capacity - (tier.sold ?? 0));
+      if (it.qty > available) {
+        return {
+          ok: false,
+          error:
+            available === 0
+              ? `"${tier.name}" está esgotado.`
+              : `Restam apenas ${available} ingresso(s) de "${tier.name}".`,
+        };
+      }
+    }
+  }
+
   const mp = getMpPayment();
 
   // Cria o pedido como 'pending' (ou 'paid' direto no modo mock)

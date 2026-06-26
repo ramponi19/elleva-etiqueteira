@@ -110,6 +110,28 @@ export async function sendConfirmationEmail(svc: Svc, orderId: string) {
   }
 }
 
+/** Marca como sold_out os eventos do pedido cujos lotes (todos limitados) se esgotaram. */
+export async function maybeMarkSoldOut(svc: Svc, orderId: string) {
+  const { data: its } = await svc
+    .from("order_items")
+    .select("event_id")
+    .eq("order_id", orderId);
+  const eventIds = [...new Set((its ?? []).map((i) => i.event_id).filter(Boolean))] as string[];
+
+  for (const eventId of eventIds) {
+    const { data: tiers } = await svc
+      .from("ticket_tiers")
+      .select("capacity, sold")
+      .eq("event_id", eventId);
+    if (!tiers?.length) continue;
+    const hasUnlimited = tiers.some((t) => t.capacity == null);
+    const allSoldOut = tiers.every((t) => t.capacity != null && (t.sold ?? 0) >= t.capacity);
+    if (!hasUnlimited && allSoldOut) {
+      await svc.from("events").update({ status: "sold_out" }).eq("id", eventId);
+    }
+  }
+}
+
 /** Marca pedido como pago (idempotente): estoque + ingressos + e-mail. */
 export async function markOrderPaid(svc: Svc, orderId: string) {
   const { data: order } = await svc
@@ -125,6 +147,7 @@ export async function markOrderPaid(svc: Svc, orderId: string) {
     .eq("id", orderId);
 
   await bumpSold(svc, orderId);
+  await maybeMarkSoldOut(svc, orderId);
   await generateTickets(svc, orderId);
   await sendConfirmationEmail(svc, orderId);
 }

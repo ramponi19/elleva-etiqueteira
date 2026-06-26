@@ -12,6 +12,7 @@ export interface Tier {
   name: string;
   desc: string;
   price: number;
+  available: number | null; // null = ilimitado
 }
 
 export interface EventItem {
@@ -26,6 +27,7 @@ export interface EventItem {
   catLabel: CategoryLabel;
   icon: string;
   cover: string | null;
+  soldOut: boolean;
   priceFrom: number;
   desc: string;
 }
@@ -60,6 +62,7 @@ type EventDbRow = {
   venue: string;
   city: string;
   starts_at: string;
+  status?: string;
   cover_url?: string | null;
   ticket_tiers?: { price: number }[];
 };
@@ -76,6 +79,7 @@ function toEventItem(row: EventDbRow): EventItem {
     catLabel: row.category as CategoryLabel,
     icon: row.icon ?? "solar:ticket-bold-duotone",
     cover: row.cover_url ?? null,
+    soldOut: row.status === "sold_out",
     priceFrom: prices.length ? Math.min(...prices) : 0,
     desc: row.description ?? "",
   };
@@ -87,7 +91,7 @@ export async function getEvents(): Promise<EventItem[]> {
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("events")
-      .select("id, slug, title, description, category, icon, venue, city, starts_at, cover_url, ticket_tiers(price)")
+      .select("id, slug, title, description, category, icon, venue, city, starts_at, status, cover_url, ticket_tiers(price)")
       .in("status", ["published", "sold_out"])
       .order("starts_at", { ascending: true });
     if (error || !data?.length) return MOCK_EVENTS;
@@ -104,18 +108,24 @@ export async function getEvent(
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("events")
-      .select("id, slug, title, description, category, icon, venue, city, starts_at, cover_url, ticket_tiers(id, name, description, price, sort_order)")
+      .select("id, slug, title, description, category, icon, venue, city, starts_at, status, cover_url, ticket_tiers(id, name, description, price, sort_order, capacity, sold)")
       .eq("slug", slug)
       .in("status", ["published", "sold_out"])
       .single();
     if (error || !data) return mockEventBySlug(slug);
 
     const row = data as EventDbRow & {
-      ticket_tiers: { id: string; name: string; description: string | null; price: number; sort_order: number }[];
+      ticket_tiers: { id: string; name: string; description: string | null; price: number; sort_order: number; capacity: number | null; sold: number }[];
     };
     const tiers: Tier[] = [...row.ticket_tiers]
       .sort((a, b) => a.sort_order - b.sort_order)
-      .map((t) => ({ id: t.id, name: t.name, desc: t.description ?? "", price: Number(t.price) }));
+      .map((t) => ({
+        id: t.id,
+        name: t.name,
+        desc: t.description ?? "",
+        price: Number(t.price),
+        available: t.capacity == null ? null : Math.max(0, t.capacity - (t.sold ?? 0)),
+      }));
     return { event: toEventItem(row), tiers };
   } catch {
     return mockEventBySlug(slug);
@@ -149,19 +159,19 @@ export const CATEGORIES = [
 // Fallback mock (usado se o Supabase não estiver disponível)
 // ============================================================
 export const MOCK_EVENTS: EventItem[] = [
-  { id: "rita", uuid: "rita", title: "Ana Cañas canta Rita Lee", d: "12", mon: "JUL", dateFull: "12 JUL · SÁB", time: "19:30", venueCity: "Teatro Municipal · Mogi Mirim", catLabel: "SHOW", icon: "solar:microphone-large-bold-duotone", cover: null, priceFrom: 90, desc: "Uma celebração intimista do rock brasileiro, revisitando os clássicos de Rita Lee em arranjos exclusivos." },
-  { id: "ligajoe", uuid: "ligajoe", title: "Liga Joe — Clube Mogiano", d: "08", mon: "AGO", dateFull: "08 AGO · SÁB", time: "20:00", venueCity: "Clube Mogiano · Mogi Mirim", catLabel: "FESTA", icon: "solar:disco-ball-bold-duotone", cover: null, priceFrom: 60, desc: "A noite mais aguardada do interior. Line-up completo, estrutura premium e open de pista." },
-  { id: "copa", uuid: "copa", title: "Copa Tijuca: Brasil x Marrocos", d: "23", mon: "AGO", dateFull: "23 AGO · DOM", time: "12:00", venueCity: "Arena · Mogi Guaçu", catLabel: "ESPORTE", icon: "solar:ball-bold-duotone", cover: null, priceFrom: 40, desc: "Futebol de base de alto nível em um confronto internacional imperdível para toda a família." },
-  { id: "rodolfinho", uuid: "rodolfinho", title: "Nosso Quintal — MC Rodolfinho", d: "14", mon: "SET", dateFull: "14 SET · DOM", time: "22:30", venueCity: "Nosso Quintal · Itapira", catLabel: "SHOW", icon: "solar:music-notes-bold-duotone", cover: null, priceFrom: 70, desc: "O fenômeno do funk em um show especial e energético no palco do Nosso Quintal." },
-  { id: "standup", uuid: "standup", title: "Stand-up Comedy Night", d: "28", mon: "SET", dateFull: "28 SET · DOM", time: "20:00", venueCity: "Teatro · Americana", catLabel: "TEATRO", icon: "solar:masks-bold-duotone", cover: null, priceFrom: 50, desc: "Uma noite de humor afiado com os melhores comediantes do circuito nacional." },
-  { id: "summit", uuid: "summit", title: "Summit Tech Interior 2026", d: "05", mon: "OUT", dateFull: "05 OUT · DOM", time: "09:00", venueCity: "Centro de Convenções · Americana", catLabel: "CORPORATIVO", icon: "solar:presentation-graph-bold-duotone", cover: null, priceFrom: 120, desc: "O maior encontro de tecnologia e inovação do interior, com palestras, painéis e networking." },
+  { id: "rita", uuid: "rita", title: "Ana Cañas canta Rita Lee", d: "12", mon: "JUL", dateFull: "12 JUL · SÁB", time: "19:30", venueCity: "Teatro Municipal · Mogi Mirim", catLabel: "SHOW", icon: "solar:microphone-large-bold-duotone", cover: null, soldOut: false, priceFrom: 90, desc: "Uma celebração intimista do rock brasileiro, revisitando os clássicos de Rita Lee em arranjos exclusivos." },
+  { id: "ligajoe", uuid: "ligajoe", title: "Liga Joe — Clube Mogiano", d: "08", mon: "AGO", dateFull: "08 AGO · SÁB", time: "20:00", venueCity: "Clube Mogiano · Mogi Mirim", catLabel: "FESTA", icon: "solar:disco-ball-bold-duotone", cover: null, soldOut: false, priceFrom: 60, desc: "A noite mais aguardada do interior. Line-up completo, estrutura premium e open de pista." },
+  { id: "copa", uuid: "copa", title: "Copa Tijuca: Brasil x Marrocos", d: "23", mon: "AGO", dateFull: "23 AGO · DOM", time: "12:00", venueCity: "Arena · Mogi Guaçu", catLabel: "ESPORTE", icon: "solar:ball-bold-duotone", cover: null, soldOut: false, priceFrom: 40, desc: "Futebol de base de alto nível em um confronto internacional imperdível para toda a família." },
+  { id: "rodolfinho", uuid: "rodolfinho", title: "Nosso Quintal — MC Rodolfinho", d: "14", mon: "SET", dateFull: "14 SET · DOM", time: "22:30", venueCity: "Nosso Quintal · Itapira", catLabel: "SHOW", icon: "solar:music-notes-bold-duotone", cover: null, soldOut: false, priceFrom: 70, desc: "O fenômeno do funk em um show especial e energético no palco do Nosso Quintal." },
+  { id: "standup", uuid: "standup", title: "Stand-up Comedy Night", d: "28", mon: "SET", dateFull: "28 SET · DOM", time: "20:00", venueCity: "Teatro · Americana", catLabel: "TEATRO", icon: "solar:masks-bold-duotone", cover: null, soldOut: false, priceFrom: 50, desc: "Uma noite de humor afiado com os melhores comediantes do circuito nacional." },
+  { id: "summit", uuid: "summit", title: "Summit Tech Interior 2026", d: "05", mon: "OUT", dateFull: "05 OUT · DOM", time: "09:00", venueCity: "Centro de Convenções · Americana", catLabel: "CORPORATIVO", icon: "solar:presentation-graph-bold-duotone", cover: null, soldOut: false, priceFrom: 120, desc: "O maior encontro de tecnologia e inovação do interior, com palestras, painéis e networking." },
 ];
 
 function mockTiers(priceFrom: number): Tier[] {
   return [
-    { id: "pista", name: "Pista", desc: "Acesso à área geral", price: priceFrom },
-    { id: "vip", name: "VIP", desc: "Área elevada + open bar", price: priceFrom + 70 },
-    { id: "camarote", name: "Camarote", desc: "Vista privilegiada + lounge", price: priceFrom + 190 },
+    { id: "pista", name: "Pista", desc: "Acesso à área geral", price: priceFrom, available: null },
+    { id: "vip", name: "VIP", desc: "Área elevada + open bar", price: priceFrom + 70, available: null },
+    { id: "camarote", name: "Camarote", desc: "Vista privilegiada + lounge", price: priceFrom + 190, available: null },
   ];
 }
 

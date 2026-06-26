@@ -18,7 +18,12 @@ export default function TicketSelector({
   const { addItems } = useCart();
   const [qty, setQty] = useState<Record<string, number>>({});
 
-  const inc = (id: string) => setQty((q) => ({ ...q, [id]: (q[id] || 0) + 1 }));
+  const inc = (id: string, max: number | null) =>
+    setQty((q) => {
+      const next = (q[id] || 0) + 1;
+      if (max != null && next > max) return q;
+      return { ...q, [id]: next };
+    });
   const dec = (id: string) => setQty((q) => ({ ...q, [id]: Math.max(0, (q[id] || 0) - 1) }));
 
   const subtotal = tiers.reduce((a, t) => a + (qty[t.id] || 0) * t.price, 0);
@@ -43,20 +48,31 @@ export default function TicketSelector({
       <h4 className="h4" style={{ fontSize: 18 }}>Selecione seus ingressos</h4>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 20 }}>
-        {tiers.map((t) => (
-          <div className="tier" key={t.id}>
+        {tiers.map((t) => {
+          const soldOut = t.available != null && t.available <= 0;
+          const atMax = t.available != null && (qty[t.id] || 0) >= t.available;
+          return (
+          <div className="tier" key={t.id} style={soldOut ? { opacity: 0.55 } : undefined}>
             <div style={{ flex: 1 }}>
               <div className="tier-name">{t.name}</div>
               <div className="tier-desc">{t.desc}</div>
               <div className="tier-price">{fmtBRL(t.price)}</div>
+              {t.available != null && t.available > 0 && t.available <= 10 && (
+                <div style={{ fontSize: 11, color: "var(--text-gold)", marginTop: 2 }}>Últimas {t.available} unidades</div>
+              )}
             </div>
+            {soldOut ? (
+              <span className="cat-pill">Esgotado</span>
+            ) : (
             <div className="stepper">
               <span className="step" onClick={() => dec(t.id)}><Icon icon="lucide:minus" /></span>
               <span className="qty">{qty[t.id] || 0}</span>
-              <span className="step" onClick={() => inc(t.id)}><Icon icon="lucide:plus" /></span>
+              <span className="step" onClick={() => !atMax && inc(t.id, t.available)} style={atMax ? { opacity: 0.4, cursor: "not-allowed" } : undefined}><Icon icon="lucide:plus" /></span>
             </div>
+            )}
           </div>
-        ))}
+          );
+        })}
       </div>
 
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 20, paddingTop: 18, borderTop: "1px solid var(--border)" }}>
