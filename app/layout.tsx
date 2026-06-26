@@ -34,27 +34,27 @@ export const metadata: Metadata = {
     process.env.NEXT_PUBLIC_APP_URL ?? "https://elleva.app"
   ),
   title: {
-    default: "Elleva — Gestão de Etiquetas Industriais",
-    template: "%s | Elleva",
+    default: "Elleva Tickets — Ingressos para os melhores eventos",
+    template: "%s | Elleva Tickets",
   },
   description:
-    "Plataforma SaaS para gestão completa de etiquetas industriais. Controle modelos, impressoras e jobs de impressão com eficiência.",
-  keywords: ["etiquetas industriais", "gestão de etiquetas", "SaaS industrial", "impressão de etiquetas"],
-  authors: [{ name: "Elleva" }],
+    "Compre ingressos para shows, festas, esporte, teatro e congressos no interior de SP e sul de MG. Rápido, seguro e sem fila.",
+  keywords: ["ingressos", "eventos", "shows", "festas", "teatro", "interior de SP", "sul de MG"],
+  authors: [{ name: "Elleva Tickets" }],
   openGraph: {
     type: "website",
     locale: "pt_BR",
     url: "https://elleva.app",
-    siteName: "Elleva",
-    title: "Elleva — Gestão de Etiquetas Industriais",
+    siteName: "Elleva Tickets",
+    title: "Elleva Tickets — Ingressos para os melhores eventos",
     description:
-      "Plataforma SaaS para gestão completa de etiquetas industriais.",
+      "Ingressos para shows, festas, esporte e teatro no interior de SP e sul de MG.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Elleva — Gestão de Etiquetas Industriais",
+    title: "Elleva Tickets — Ingressos para os melhores eventos",
     description:
-      "Plataforma SaaS para gestão completa de etiquetas industriais.",
+      "Ingressos para shows, festas, esporte e teatro no interior de SP e sul de MG.",
   },
   robots: {
     index: true,

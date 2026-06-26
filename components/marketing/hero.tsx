@@ -1,7 +1,8 @@
 import Link from "next/link";
 import Icon from "@/components/shared/icon";
+import type { EventItem } from "@/lib/events";
 
-export function Hero() {
+export default function Hero({ event }: { event: EventItem }) {
   return (
     <section className="container" style={{ padding: "48px 48px 24px" }}>
       <div className="hero-stage">
@@ -9,50 +10,35 @@ export function Hero() {
         <div className="hero-grid" />
         <div className="hero-inner">
           <div>
-            <span className="eyebrow eyebrow-gold">Gestão de etiquetas industriais</span>
-            <h1 className="h1 hero-title" style={{ marginTop: 20 }}>
-              Do modelo à etiqueta
-              <br />
-              <span className="serif accent-gold">sem fricção</span>
-            </h1>
+            <span className="eyebrow eyebrow-gold">Em cartaz · destaque da semana</span>
+            <h1 className="h1 hero-title" style={{ marginTop: 20 }}>{event.title}</h1>
             <div className="hero-meta">
               <span>
-                <Icon icon="lucide:printer" style={{ verticalAlign: -2, color: "#D3BA83" }} />{" "}
-                Multi-impressora
+                <Icon icon="lucide:calendar" style={{ verticalAlign: -2, color: "#D3BA83" }} /> {event.dateFull}
               </span>
               <span>
-                <Icon icon="lucide:zap" style={{ verticalAlign: -2, color: "#D3BA83" }} /> API
-                em tempo real
+                <Icon icon="lucide:map-pin" style={{ verticalAlign: -2, color: "#D3BA83" }} /> {event.venueCity}
               </span>
             </div>
-            <p className="hero-desc">
-              Controle modelos, impressoras e jobs de impressão em uma plataforma
-              elegante. Do chão de fábrica à rastreabilidade — tudo integrado.
-            </p>
+            <p className="hero-desc">{event.desc}</p>
             <div style={{ display: "flex", gap: 14, marginTop: 32 }}>
-              <Link
-                href="/signup"
-                className="btn btn-gold btn-lg"
-                style={{ boxShadow: "var(--sh-gold)" }}
-              >
-                Começar gratuitamente
+              <Link href={`/evento/${event.id}`} className="btn btn-gold btn-lg" style={{ boxShadow: "var(--sh-gold)" }}>
+                Comprar ingressos
               </Link>
-              <Link href="#features" className="btn btn-ghost-dark btn-lg">
-                Ver funcionalidades
+              <Link href="/agenda" className="btn btn-ghost-dark btn-lg">
+                Ver agenda completa
               </Link>
             </div>
             <div className="hero-dots">
               <span className="active" />
-              <span />
-              <span />
-              <span />
+              <span /><span /><span />
             </div>
           </div>
 
-          <div className="poster">
-            <Icon icon="solar:tag-horizontal-bold-duotone" style={{ fontSize: 64, color: "var(--gold-500)" }} />
-            <span className="poster-label">PRÉVIA DA ETIQUETA</span>
-          </div>
+          <Link href={`/evento/${event.id}`} className="poster">
+            <Icon icon={event.icon} style={{ fontSize: 64, color: "var(--gold-500)" }} />
+            <span className="poster-label">PÔSTER 4:5</span>
+          </Link>
         </div>
       </div>
     </section>

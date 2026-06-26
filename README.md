@@ -1,50 +1,55 @@
-# Elleva — Gestão de Etiquetas Industriais
+# Elleva Tickets
 
-Plataforma SaaS para gestão completa de etiquetas industriais: modelos, impressoras e jobs de impressão.
+Plataforma de **venda de ingressos** — shows, festas, esporte, teatro, cursos e eventos corporativos no interior de SP e sul de MG.
 
-**Stack:** Next.js 16 (App Router + Turbopack) · TypeScript strict · Tailwind v4 · Supabase (Auth + DB + RLS) · Drizzle · Stripe · Resend · Vercel
+**Stack:** Next.js 16 (App Router + Turbopack) · TypeScript · Branor Design System (Fraunces + Plus Jakarta Sans + JetBrains Mono) · Supabase (auth) · Vercel
 
 ## Desenvolvimento
 
 ```bash
 npm install
-cp .env.local.example .env.local   # preencha as variáveis
+cp .env.local.example .env.local   # opcional (auth Supabase)
 npm run dev
 ```
 
 Abra [http://localhost:3000](http://localhost:3000).
 
-### Scripts
+## Fluxo principal
 
-| Comando | Descrição |
-|---|---|
-| `npm run dev` | Servidor de desenvolvimento (Turbopack) |
-| `npm run build` | Build de produção |
-| `npm run typecheck` | Checagem de tipos (tsc --noEmit) |
-| `npm run lint` | ESLint |
-| `npm run db:generate` | Gera migrations Drizzle |
-| `npm run db:studio` | Drizzle Studio |
+```
+Home (/)  →  Agenda (/agenda)  →  Evento (/evento/[id])  →  Checkout (/checkout)
+```
+
+- **Home** — hero cinematográfico do evento em destaque, grade de eventos, categorias, CTA produtor
+- **Agenda** — lista filtrável de todos os eventos
+- **Evento** — banner, detalhes e seletor de ingressos (tiers Pista/VIP/Camarote) com stepper
+- **Checkout** — carrinho, dados, pagamento (Pix/Cartão) e confirmação
+
+Carrinho global em `lib/cart.tsx` (persistido em `localStorage`). Dados mock em `lib/events.ts` — substituir por API/DB real.
 
 ## Estrutura
 
 ```
 app/
-  (marketing)/      Landing page (Navbar, Hero, Features, Pricing, Testimonials, Footer)
-  (auth)/           login, signup, callback
-  (dashboard)/      dashboard, etiquetas, impressoras, jobs, configuracoes (membros, billing)
-  api/webhooks/     Stripe webhook
-components/          ui, marketing, dashboard, shared
-lib/                supabase/, actions/, email/, stripe.ts, resend.ts
-supabase/migrations/ Schema SQL + RLS
-types/              Tipos gerados do Supabase
+  (marketing)/      Storefront: layout (Nav + Footer + CartProvider), home, agenda, evento/[id], checkout
+  (auth)/           login, signup, callback (Supabase)
+components/
+  marketing/        Nav, Hero, EventCard, AgendaRow, TicketSelector, ProducerCTA, Footer
+  shared/           Icon (Iconify: solar duotone + lucide)
+lib/                cart.tsx, events.ts, format.ts, supabase/
+app/globals.css     Branor Design System (tokens navy/gold/bone + classes)
 ```
 
-## Banco de dados (Supabase)
+## Design System (Branor)
 
-Tabelas: `organizations`, `profiles`, `label_templates`, `printers`, `print_jobs`, `invitations`.
-Todas com RLS por `org_id` (multi-tenant). Migrations em `supabase/migrations/`.
+Navy `#162332` + gold `#C6A86A` + bone `#F6F3EB`. Tipografia editorial (Fraunces serif, Plus Jakarta Sans, JetBrains Mono mono). Tokens completos em `app/globals.css` (`:root`), com tema dark pronto via `[data-theme="dark"]`.
 
 ## Deploy
 
-Deploy contínuo via Vercel — push na branch `main` publica em produção.
-Região: `gru1` (São Paulo). Variáveis de ambiente: ver `.env.local.example`.
+Deploy contínuo via Vercel — push na branch `main` publica em produção. Região `gru1` (São Paulo).
+
+## Próximos passos
+
+- Schema de dados real (events, ticket_tiers, orders, order_items) no Supabase
+- Pagamento real (Pix/Cartão)
+- Área do produtor (dashboard de eventos e vendas)
