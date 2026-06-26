@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { getAuth } from "@/lib/auth";
 import { createServiceClient } from "@/lib/supabase/server";
 import { getMpRefund } from "@/lib/mercadopago";
-import { reverseSold, cancelTickets } from "@/lib/orders-helpers";
+import { reverseSold, cancelTickets, sendRefundEmail } from "@/lib/orders-helpers";
 
 export type Role = "customer" | "producer" | "admin";
 
@@ -84,6 +84,7 @@ export async function cancelOrder(
     await svc.from("orders").update({ status: "refunded" }).eq("id", orderId);
     await cancelTickets(svc, orderId);
     await reverseSold(svc, orderId);
+    await sendRefundEmail(svc, orderId);
   } else {
     await svc.from("orders").update({ status: "cancelled" }).eq("id", orderId);
   }

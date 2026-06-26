@@ -165,6 +165,56 @@ export async function cancelTickets(svc: Svc, orderId: string) {
   await svc.from("tickets").update({ status: "cancelled" }).eq("order_id", orderId);
 }
 
+/** E-mail de reembolso (silencioso se Resend não configurado). */
+export async function sendRefundEmail(svc: Svc, orderId: string) {
+  const resend = getResend();
+  if (!resend) return;
+  const { data: order } = await svc
+    .from("orders")
+    .select("buyer_name, buyer_email, total")
+    .eq("id", orderId)
+    .single();
+  if (!order?.buyer_email) return;
+
+  const html = `
+  <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;background:#F6F3EB">
+    <h1 style="font-family:Georgia,serif;color:#162332;font-size:24px;margin:0 0 4px">Elleva <span style="color:#C6A86A">Tickets</span></h1>
+    <p style="color:#4A5A70;font-size:15px">Olá, ${order.buyer_name}. Seu pedido foi <strong>reembolsado</strong>.</p>
+    <div style="background:#fff;border:1px solid #D2CBB8;border-radius:14px;padding:20px;margin-top:16px">
+      <p style="margin:0;color:#162332">Valor reembolsado: <strong>R$ ${Number(order.total).toLocaleString("pt-BR")}</strong></p>
+      <p style="margin:8px 0 0;color:#73829A;font-size:13px">O estorno pode levar alguns dias para aparecer, conforme o meio de pagamento. Os ingressos deste pedido foram cancelados.</p>
+    </div>
+  </div>`;
+  try {
+    await resend.emails.send({
+      from: FROM_EMAIL,
+      to: order.buyer_email,
+      subject: "Pedido reembolsado — Elleva Tickets",
+      html,
+    });
+  } catch { /* não quebra o fluxo */ }
+}
+
+/** E-mail de lembrete de evento. */
+export async function sendReminderEmail(to: string, name: string, eventTitle: string, when: string) {
+  const resend = getResend();
+  if (!resend) return;
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  const html = `
+  <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;background:#F6F3EB">
+    <h1 style="font-family:Georgia,serif;color:#162332;font-size:24px;margin:0 0 4px">Elleva <span style="color:#C6A86A">Tickets</span></h1>
+    <p style="color:#4A5A70;font-size:15px">Olá, ${name}! Seu evento está chegando. 🎉</p>
+    <div style="background:#fff;border:1px solid #D2CBB8;border-radius:14px;padding:20px;margin-top:16px">
+      <p style="font-family:Georgia,serif;font-size:18px;color:#162332;margin:0">${eventTitle}</p>
+      <p style="color:#73829A;font-size:14px;margin:6px 0 0">${when}</p>
+    </div>
+    <a href="${appUrl}/conta" style="display:inline-block;margin-top:20px;background:#C6A86A;color:#0E1824;text-decoration:none;font-weight:600;padding:12px 24px;border-radius:9999px">Ver meus ingressos</a>
+  </div>`;
+  try {
+    await resend.emails.send({ from: FROM_EMAIL, to, subject: `Lembrete: ${eventTitle} — Elleva Tickets`, html });
+  } catch { /* ignore */ }
+}
+
 /** Marca pedido como pago (idempotente): estoque + ingressos + e-mail. */
 export async function markOrderPaid(svc: Svc, orderId: string) {
   const { data: order } = await svc
