@@ -1,22 +1,36 @@
 "use client";
 
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import Icon from "@/components/shared/icon";
 import { validateTicket, type ValidateResult } from "@/lib/actions/tickets";
+
+const CameraScanner = dynamic(() => import("@/components/app/camera-scanner"), { ssr: false });
 
 export default function TicketValidator() {
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
+  const [scanning, setScanning] = useState(false);
   const [result, setResult] = useState<ValidateResult | null>(null);
 
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!code.trim()) return;
+  async function runValidation(value: string) {
+    if (!value.trim()) return;
     setLoading(true);
-    const res = await validateTicket(code);
+    const res = await validateTicket(value);
     setLoading(false);
     setResult(res);
     if (res.ok) setCode("");
+  }
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    await runValidation(code);
+  }
+
+  function onScan(text: string) {
+    setScanning(false);
+    setCode(text);
+    runValidation(text);
   }
 
   const ok = result?.ok;
@@ -30,13 +44,31 @@ export default function TicketValidator() {
           placeholder="ELV-XXXXXXXXXX"
           value={code}
           onChange={(e) => setCode(e.target.value)}
-          autoFocus
           style={{ fontFamily: "var(--font-mono)", textTransform: "uppercase" }}
         />
         <button className="btn btn-navy btn-md" disabled={loading} type="submit">
           {loading ? "..." : "Validar"}
         </button>
       </form>
+
+      <button
+        type="button"
+        onClick={() => { setScanning((s) => !s); setResult(null); }}
+        className="btn btn-ghost btn-sm"
+        style={{ marginTop: 12 }}
+      >
+        <Icon icon={scanning ? "lucide:x" : "solar:qr-code-bold-duotone"} />
+        {scanning ? "Fechar câmera" : "Escanear com câmera"}
+      </button>
+
+      {scanning && (
+        <div style={{ marginTop: 14 }}>
+          <CameraScanner onScan={onScan} />
+          <p style={{ fontSize: 12, color: "var(--text-tertiary)", marginTop: 8 }}>
+            Aponte a câmera para o QR code do ingresso.
+          </p>
+        </div>
+      )}
 
       {result && (
         <div
@@ -77,11 +109,6 @@ export default function TicketValidator() {
           </div>
         </div>
       )}
-
-      <p style={{ fontSize: 12, color: "var(--text-tertiary)", marginTop: 14, display: "flex", alignItems: "center", gap: 6 }}>
-        <Icon icon="solar:info-circle-bold-duotone" style={{ fontSize: 15 }} />
-        Digite ou cole o código do ingresso. Leitura por câmera entra em breve.
-      </p>
     </div>
   );
 }
