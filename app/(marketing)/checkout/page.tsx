@@ -8,7 +8,7 @@ import { fmtBRL } from "@/lib/format";
 import { createOrder, getOrderStatus } from "@/lib/actions/orders";
 import CardForm from "@/components/marketing/card-form";
 
-type Pix = { qrBase64: string; copyPaste: string; orderId: string };
+type Pix = { qrBase64: string; copyPaste: string; orderId: string; expiresAt: string };
 
 export default function CheckoutPage() {
   const { items, subtotal, fee, total, removeItem, clear } = useCart();
@@ -21,6 +21,16 @@ export default function CheckoutPage() {
   const [error, setError] = useState<string | null>(null);
   const [pix, setPix] = useState<Pix | null>(null);
   const [copied, setCopied] = useState(false);
+  const [remaining, setRemaining] = useState(0);
+
+  // Contagem regressiva do Pix
+  useEffect(() => {
+    if (!pix) return;
+    const tick = () => setRemaining(Math.max(0, Math.floor((new Date(pix.expiresAt).getTime() - Date.now()) / 1000)));
+    tick();
+    const t = setInterval(tick, 1000);
+    return () => clearInterval(t);
+  }, [pix]);
 
   // Polling do status enquanto aguarda o Pix
   useEffect(() => {
@@ -73,7 +83,7 @@ export default function CheckoutPage() {
       setConfirmed(true);
       return;
     }
-    setPix({ ...res.pix, orderId: res.orderId });
+    setPix({ ...res.pix, orderId: res.orderId, expiresAt: res.expiresAt });
   };
 
   if (confirmed) {
@@ -109,36 +119,57 @@ export default function CheckoutPage() {
             Total: <strong>{fmtBRL(total)}</strong> · O pedido confirma automaticamente após o pagamento.
           </p>
 
-          <div style={{ background: "var(--bg-elevated)", border: "1px solid var(--border)", borderRadius: "var(--r-xl)", padding: 24, marginTop: 24, display: "inline-block" }}>
-            {pix.qrBase64 ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={`data:image/png;base64,${pix.qrBase64}`} alt="QR code Pix" width={240} height={240} style={{ display: "block" }} />
-            ) : (
-              <p className="body" style={{ width: 240 }}>QR indisponível — use o código abaixo.</p>
-            )}
-          </div>
+          {remaining > 0 ? (
+            <>
+              <div style={{ background: "var(--bg-elevated)", border: "1px solid var(--border)", borderRadius: "var(--r-xl)", padding: 24, marginTop: 24, display: "inline-block" }}>
+                {pix.qrBase64 ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={`data:image/png;base64,${pix.qrBase64}`} alt="QR code Pix" width={240} height={240} style={{ display: "block" }} />
+                ) : (
+                  <p className="body" style={{ width: 240 }}>QR indisponível — use o código abaixo.</p>
+                )}
+              </div>
 
-          <div style={{ marginTop: 20, textAlign: "left" }}>
-            <label className="field-label">PIX COPIA E COLA</label>
-            <div style={{ display: "flex", gap: 8 }}>
-              <input className="input" readOnly value={pix.copyPaste} style={{ fontFamily: "var(--font-mono)", fontSize: 12 }} />
+              <p style={{ marginTop: 14, fontFamily: "var(--font-mono)", fontSize: 13, color: "var(--text-gold)" }}>
+                Expira em {Math.floor(remaining / 60)}:{String(remaining % 60).padStart(2, "0")}
+              </p>
+
+              <div style={{ marginTop: 16, textAlign: "left" }}>
+                <label className="field-label">PIX COPIA E COLA</label>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <input className="input" readOnly value={pix.copyPaste} style={{ fontFamily: "var(--font-mono)", fontSize: 12 }} />
+                  <button
+                    className="btn btn-navy btn-md"
+                    onClick={() => {
+                      navigator.clipboard?.writeText(pix.copyPaste);
+                      setCopied(true);
+                      setTimeout(() => setCopied(false), 2000);
+                    }}
+                  >
+                    {copied ? "Copiado!" : "Copiar"}
+                  </button>
+                </div>
+              </div>
+
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginTop: 24, color: "var(--text-tertiary)", fontSize: 14 }}>
+                <Icon icon="svg-spinners:ring-resize" style={{ fontSize: 18, color: "var(--text-gold)" }} />
+                Aguardando confirmação do pagamento...
+              </div>
+            </>
+          ) : (
+            <div style={{ marginTop: 28 }}>
+              <Icon icon="solar:clock-circle-bold-duotone" style={{ fontSize: 48, color: "var(--text-muted)" }} />
+              <p className="lede" style={{ marginTop: 12 }}>Este Pix expirou.</p>
               <button
-                className="btn btn-navy btn-md"
-                onClick={() => {
-                  navigator.clipboard?.writeText(pix.copyPaste);
-                  setCopied(true);
-                  setTimeout(() => setCopied(false), 2000);
-                }}
+                className="btn btn-gold btn-lg"
+                style={{ marginTop: 16 }}
+                disabled={loading}
+                onClick={() => { setPix(null); finalize(); }}
               >
-                {copied ? "Copiado!" : "Copiar"}
+                {loading ? "Gerando..." : "Gerar novo Pix"}
               </button>
             </div>
-          </div>
-
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginTop: 24, color: "var(--text-tertiary)", fontSize: 14 }}>
-            <Icon icon="svg-spinners:ring-resize" style={{ fontSize: 18, color: "var(--text-gold)" }} />
-            Aguardando confirmação do pagamento...
-          </div>
+          )}
         </div>
       </div>
     );

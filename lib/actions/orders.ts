@@ -106,8 +106,16 @@ async function currentUserId() {
 // ============================================================
 export type CreateOrderResult =
   | { ok: true; orderId: string; paid: true }
-  | { ok: true; orderId: string; paid: false; pix: { qrBase64: string; copyPaste: string }; total: number }
+  | { ok: true; orderId: string; paid: false; pix: { qrBase64: string; copyPaste: string }; total: number; expiresAt: string }
   | { ok: false; error: string };
+
+const PIX_TTL_MIN = 30;
+/** Mesmo instante expresso com offset -03:00 (exigido pelo Mercado Pago). */
+function pixExpiration(minutes: number) {
+  const at = new Date(Date.now() + minutes * 60000);
+  const local = new Date(at.getTime() - 3 * 3600000).toISOString().replace("Z", "-03:00");
+  return { iso: at.toISOString(), mp: local };
+}
 
 export async function createOrder(input: z.input<typeof BaseSchema>): Promise<CreateOrderResult> {
   const parsed = BaseSchema.safeParse(input);
@@ -132,11 +140,13 @@ export async function createOrder(input: z.input<typeof BaseSchema>): Promise<Cr
 
   try {
     const [firstName, ...rest] = parsed.data.buyerName.trim().split(" ");
+    const exp = pixExpiration(PIX_TTL_MIN);
     const payment = await mp.create({
       body: {
         transaction_amount: prep.total,
         description: `Elleva Tickets — pedido ${prep.orderId}`,
         payment_method_id: "pix",
+        date_of_expiration: exp.mp,
         external_reference: prep.orderId,
         notification_url: `${APP_URL}/api/webhooks/mercadopago`,
         payer: {
@@ -152,8 +162,9 @@ export async function createOrder(input: z.input<typeof BaseSchema>): Promise<Cr
       payment_id: String(payment.id),
       pix_qr_base64: tx?.qr_code_base64 ?? "",
       pix_copy_paste: tx?.qr_code ?? "",
+      expires_at: exp.iso,
     }).eq("id", prep.orderId);
-    return { ok: true, orderId: prep.orderId, paid: false, pix: { qrBase64: tx?.qr_code_base64 ?? "", copyPaste: tx?.qr_code ?? "" }, total: prep.total };
+    return { ok: true, orderId: prep.orderId, paid: false, pix: { qrBase64: tx?.qr_code_base64 ?? "", copyPaste: tx?.qr_code ?? "" }, total: prep.total, expiresAt: exp.iso };
   } catch (e) {
     await svc.from("order_items").delete().eq("order_id", prep.orderId);
     await svc.from("orders").delete().eq("id", prep.orderId);
