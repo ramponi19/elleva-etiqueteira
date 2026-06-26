@@ -5,7 +5,7 @@ import Link from "next/link";
 import Icon from "@/components/shared/icon";
 import { useCart } from "@/lib/cart";
 import { fmtBRL } from "@/lib/format";
-import { createOrder, getOrderStatus } from "@/lib/actions/orders";
+import { createOrder, getOrderStatus, previewCoupon } from "@/lib/actions/orders";
 import CardForm from "@/components/marketing/card-form";
 
 type Pix = { qrBase64: string; copyPaste: string; orderId: string; expiresAt: string };
@@ -22,6 +22,28 @@ export default function CheckoutPage() {
   const [pix, setPix] = useState<Pix | null>(null);
   const [copied, setCopied] = useState(false);
   const [remaining, setRemaining] = useState(0);
+  const [coupon, setCoupon] = useState("");
+  const [discount, setDiscount] = useState(0);
+  const [couponMsg, setCouponMsg] = useState<string | null>(null);
+
+  const cartItems = items.map((i) => ({
+    eventId: i.eventId, eventTitle: i.eventTitle, tierId: i.tierId,
+    tierName: i.tierName, price: i.price, qty: i.qty,
+  }));
+
+  async function applyCoupon() {
+    setCouponMsg(null);
+    if (!coupon.trim()) return;
+    const res = await previewCoupon(coupon, cartItems);
+    if (!res.ok) { setDiscount(0); setCouponMsg(res.error); return; }
+    setDiscount(res.discount);
+    setCouponMsg(`Desconto de ${fmtBRL(res.discount)} aplicado!`);
+  }
+
+  // total com desconto: (subtotal - desconto) + taxa(10% sobre base)
+  const base = Math.max(0, subtotal - discount);
+  const feeAdj = Math.round(base * 0.1);
+  const totalAdj = base + feeAdj;
 
   // Contagem regressiva do Pix
   useEffect(() => {
@@ -64,14 +86,8 @@ export default function CheckoutPage() {
       buyerName: name,
       buyerEmail: email,
       buyerCpf: cpf,
-      items: items.map((i) => ({
-        eventId: i.eventId,
-        eventTitle: i.eventTitle,
-        tierId: i.tierId,
-        tierName: i.tierName,
-        price: i.price,
-        qty: i.qty,
-      })),
+      couponCode: coupon || undefined,
+      items: cartItems,
     });
     setLoading(false);
     if (!res.ok) {
@@ -116,7 +132,7 @@ export default function CheckoutPage() {
             Escaneie o <span className="serif accent-gold">QR code</span>
           </h1>
           <p className="body" style={{ marginTop: 8 }}>
-            Total: <strong>{fmtBRL(total)}</strong> · O pedido confirma automaticamente após o pagamento.
+            Total: <strong>{fmtBRL(totalAdj)}</strong> · O pedido confirma automaticamente após o pagamento.
           </p>
 
           {remaining > 0 ? (
@@ -248,11 +264,29 @@ export default function CheckoutPage() {
           {/* summary */}
           <div className="summary">
             <h4 style={{ fontFamily: "var(--font-sans)", fontWeight: 600, fontSize: 17, color: "#F6F3EB", margin: 0 }}>Resumo</h4>
-            <div className="summary-row" style={{ marginTop: 20 }}><span>Subtotal</span><span>{fmtBRL(subtotal)}</span></div>
-            <div className="summary-row" style={{ marginTop: 12 }}><span>Taxa de serviço</span><span>{fmtBRL(fee)}</span></div>
+
+            {/* Cupom */}
+            <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
+              <input
+                value={coupon}
+                onChange={(e) => setCoupon(e.target.value.toUpperCase())}
+                placeholder="Cupom"
+                style={{ flex: 1, fontSize: 13, padding: "9px 12px", borderRadius: 8, border: "1px solid rgba(255,255,255,.18)", background: "rgba(255,255,255,.06)", color: "#F6F3EB", fontFamily: "var(--font-mono)" }}
+              />
+              <button type="button" onClick={applyCoupon} className="btn btn-ghost-dark btn-sm">Aplicar</button>
+            </div>
+            {couponMsg && (
+              <p style={{ fontSize: 12, marginTop: 6, color: discount > 0 ? "var(--gold-400)" : "#F3B4B4" }}>{couponMsg}</p>
+            )}
+
+            <div className="summary-row" style={{ marginTop: 18 }}><span>Subtotal</span><span>{fmtBRL(subtotal)}</span></div>
+            {discount > 0 && (
+              <div className="summary-row" style={{ marginTop: 12, color: "var(--gold-400)" }}><span>Desconto</span><span>− {fmtBRL(discount)}</span></div>
+            )}
+            <div className="summary-row" style={{ marginTop: 12 }}><span>Taxa de serviço</span><span>{fmtBRL(feeAdj)}</span></div>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 18, paddingTop: 18, borderTop: "1px solid rgba(255,255,255,.12)" }}>
               <span style={{ color: "#F6F3EB", fontSize: 15 }}>Total</span>
-              <span style={{ fontFamily: "var(--font-display)", fontSize: 28, fontWeight: 500, color: "#F6F3EB" }}>{fmtBRL(total)}</span>
+              <span style={{ fontFamily: "var(--font-display)", fontSize: 28, fontWeight: 500, color: "#F6F3EB" }}>{fmtBRL(totalAdj)}</span>
             </div>
             {error && (
               <p style={{ marginTop: 16, fontSize: 13, color: "#F3B4B4", background: "rgba(243,180,180,.12)", border: "1px solid rgba(243,180,180,.25)", borderRadius: 10, padding: "8px 12px" }}>
@@ -264,6 +298,7 @@ export default function CheckoutPage() {
               <CardForm
                 buyer={{ name, email, cpf }}
                 items={items}
+                couponCode={coupon || undefined}
                 onSuccess={() => { clear(); setConfirmed(true); }}
               />
             ) : (

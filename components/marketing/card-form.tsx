@@ -21,10 +21,12 @@ declare global {
 export default function CardForm({
   buyer,
   items,
+  couponCode,
   onSuccess,
 }: {
   buyer: { name: string; email: string; cpf: string };
   items: CartItem[];
+  couponCode?: string;
   onSuccess: () => void;
 }) {
   const mpRef = useRef<MpInstance | null>(null);
@@ -101,6 +103,7 @@ export default function CardForm({
         buyerName: buyer.name,
         buyerEmail: buyer.email,
         buyerCpf: buyer.cpf,
+        couponCode,
         token: token.id,
         paymentMethodId,
         installments,

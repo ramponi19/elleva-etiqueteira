@@ -23,16 +23,47 @@ const BaseSchema = z.object({
   buyerName: z.string().min(1, "Informe seu nome"),
   buyerEmail: z.string().email("E-mail inválido"),
   buyerCpf: z.string().optional(),
+  couponCode: z.string().optional(),
   items: z.array(ItemSchema).min(1, "Carrinho vazio"),
 });
 
 type Items = z.infer<typeof ItemSchema>[];
 type Svc = Awaited<ReturnType<typeof createServiceClient>>;
 
-function totals(items: Items) {
-  const subtotal = items.reduce((a, i) => a + i.price * i.qty, 0);
-  const fee = Math.round(subtotal * 0.1);
-  return { subtotal, fee, total: subtotal + fee };
+function subtotalOf(items: Items) {
+  return items.reduce((a, i) => a + i.price * i.qty, 0);
+}
+
+function finalTotals(items: Items, discount: number) {
+  const subtotal = subtotalOf(items);
+  const d = Math.min(discount, subtotal);
+  const base = subtotal - d;
+  const fee = Math.round(base * 0.1);
+  return { subtotal, discount: d, fee, total: base + fee };
+}
+
+/** Valida um cupom e retorna o desconto sobre o subtotal (0 se inválido). */
+async function couponDiscount(
+  svc: Svc,
+  code: string | undefined,
+  subtotal: number
+): Promise<{ discount: number; code: string } | { error: string } | null> {
+  if (!code || !code.trim()) return null;
+  const norm = code.trim().toUpperCase();
+  const { data: c } = await svc
+    .from("coupons")
+    .select("code, discount_type, discount_value, max_uses, used_count, active, expires_at")
+    .eq("code", norm)
+    .single();
+  if (!c || !c.active) return { error: "Cupom inválido." };
+  if (c.expires_at && new Date(c.expires_at).getTime() < Date.now()) return { error: "Cupom expirado." };
+  if (c.max_uses != null && c.used_count >= c.max_uses) return { error: "Cupom esgotado." };
+
+  const raw = c.discount_type === "percent"
+    ? Math.round((subtotal * Number(c.discount_value)) / 100)
+    : Number(c.discount_value);
+  const discount = Math.min(raw, subtotal);
+  return { discount, code: norm };
 }
 
 async function checkStock(svc: Svc, items: Items): Promise<string | null> {
@@ -57,9 +88,9 @@ async function checkStock(svc: Svc, items: Items): Promise<string | null> {
 
 async function insertPendingOrder(
   svc: Svc,
-  data: { buyerName: string; buyerEmail: string; buyerCpf?: string; method: "pix" | "card"; provider: string; items: Items; userId: string | null }
+  data: { buyerName: string; buyerEmail: string; buyerCpf?: string; method: "pix" | "card"; provider: string; items: Items; userId: string | null; discount?: number; couponCode?: string | null }
 ): Promise<{ error: string } | { orderId: string; total: number }> {
-  const { subtotal, fee, total } = totals(data.items);
+  const { subtotal, discount, fee, total } = finalTotals(data.items, data.discount ?? 0);
   const { data: order, error } = await svc
     .from("orders")
     .insert({
@@ -70,6 +101,8 @@ async function insertPendingOrder(
       payment_provider: data.provider,
       status: "pending",
       subtotal, fee, total,
+      discount,
+      coupon_code: data.couponCode ?? null,
       user_id: data.userId,
     })
     .select("id")
@@ -127,9 +160,13 @@ export async function createOrder(input: z.input<typeof BaseSchema>): Promise<Cr
   const stockErr = await checkStock(svc, parsed.data.items);
   if (stockErr) return { ok: false, error: stockErr };
 
+  const coupon = await couponDiscount(svc, parsed.data.couponCode, subtotalOf(parsed.data.items));
+  if (coupon && "error" in coupon) return { ok: false, error: coupon.error };
+
   const mp = getMpPayment();
   const prep = await insertPendingOrder(svc, {
     ...parsed.data, method: "pix", provider: mp ? "mercadopago" : "mock", userId: await currentUserId(),
+    discount: coupon?.discount ?? 0, couponCode: coupon?.code ?? null,
   });
   if ("error" in prep) return { ok: false, error: prep.error };
 
@@ -198,8 +235,12 @@ export async function createCardOrder(input: z.input<typeof CardSchema>): Promis
   const stockErr = await checkStock(svc, parsed.data.items);
   if (stockErr) return { ok: false, error: stockErr };
 
+  const coupon = await couponDiscount(svc, parsed.data.couponCode, subtotalOf(parsed.data.items));
+  if (coupon && "error" in coupon) return { ok: false, error: coupon.error };
+
   const prep = await insertPendingOrder(svc, {
     ...parsed.data, method: "card", provider: "mercadopago", userId: await currentUserId(),
+    discount: coupon?.discount ?? 0, couponCode: coupon?.code ?? null,
   });
   if ("error" in prep) return { ok: false, error: prep.error };
 
@@ -237,6 +278,21 @@ export async function createCardOrder(input: z.input<typeof CardSchema>): Promis
     await svc.from("orders").update({ status: "cancelled" }).eq("id", prep.orderId);
     return { ok: false, error: e instanceof Error ? e.message : "Falha ao processar o cartão" };
   }
+}
+
+/** Preview de cupom no checkout. */
+export async function previewCoupon(
+  code: string,
+  items: z.input<typeof ItemSchema>[]
+): Promise<{ ok: true; discount: number } | { ok: false; error: string }> {
+  const parsedItems = z.array(ItemSchema).safeParse(items);
+  if (!parsedItems.success) return { ok: false, error: "Itens inválidos" };
+  let svc: Svc;
+  try { svc = await createServiceClient(); } catch { return { ok: false, error: "Indisponível" }; }
+  const res = await couponDiscount(svc, code, subtotalOf(parsedItems.data));
+  if (!res) return { ok: false, error: "Informe um cupom." };
+  if ("error" in res) return { ok: false, error: res.error };
+  return { ok: true, discount: res.discount };
 }
 
 /** Polling do status do pedido. */

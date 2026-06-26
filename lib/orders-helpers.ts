@@ -136,7 +136,7 @@ export async function maybeMarkSoldOut(svc: Svc, orderId: string) {
 export async function markOrderPaid(svc: Svc, orderId: string) {
   const { data: order } = await svc
     .from("orders")
-    .select("status")
+    .select("status, coupon_code")
     .eq("id", orderId)
     .single();
   if (!order || order.status === "paid") return;
@@ -145,6 +145,21 @@ export async function markOrderPaid(svc: Svc, orderId: string) {
     .from("orders")
     .update({ status: "paid", paid_at: new Date().toISOString() })
     .eq("id", orderId);
+
+  // contabiliza uso do cupom (apenas em pagamento confirmado)
+  if (order.coupon_code) {
+    const { data: c } = await svc
+      .from("coupons")
+      .select("used_count")
+      .eq("code", order.coupon_code)
+      .single();
+    if (c) {
+      await svc
+        .from("coupons")
+        .update({ used_count: (c.used_count ?? 0) + 1 })
+        .eq("code", order.coupon_code);
+    }
+  }
 
   await bumpSold(svc, orderId);
   await maybeMarkSoldOut(svc, orderId);
