@@ -33,6 +33,28 @@ export default async function ConfiguracoesPage() {
       <Header title="Configurações" description="Gerencie sua organização e conta." />
 
       <main className="p-6 max-w-2xl space-y-6">
+        {/* Sub-nav */}
+        <div className="flex gap-2">
+          <a
+            href="/dashboard/configuracoes/membros"
+            className="flex-1 bg-white rounded-xl border border-[#1A2744]/8 hover:border-[#C9A96E]/40 p-4 transition-colors group"
+          >
+            <p className="text-sm font-medium text-[#1A2744]">Membros</p>
+            <p className="text-xs text-[#1A2744]/40 mt-0.5">
+              Convide e gerencie a equipe →
+            </p>
+          </a>
+          <a
+            href="/dashboard/configuracoes/billing"
+            className="flex-1 bg-white rounded-xl border border-[#1A2744]/8 hover:border-[#C9A96E]/40 p-4 transition-colors group"
+          >
+            <p className="text-sm font-medium text-[#1A2744]">Plano e Cobrança</p>
+            <p className="text-xs text-[#1A2744]/40 mt-0.5">
+              Assinatura e faturas →
+            </p>
+          </a>
+        </div>
+
         {/* Organização */}
         <div className="bg-white rounded-2xl border border-[#1A2744]/8 p-8">
           <h2
