@@ -1,14 +1,10 @@
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import PageHeader from "@/components/app/page-header";
+import RoleSelect from "@/components/app/role-select";
+import type { Role } from "@/lib/actions/admin";
 
 export const metadata: Metadata = { title: "Clientes · Admin" };
-
-const ROLE_LABEL: Record<string, string> = {
-  customer: "Cliente",
-  producer: "Produtor",
-  admin: "Admin",
-};
 
 export default async function AdminClientes() {
   const supabase = await createClient();
@@ -30,7 +26,7 @@ export default async function AdminClientes() {
                 </div>
                 <p style={{ fontSize: 14, fontWeight: 600, margin: 0 }}>{u.full_name ?? "Sem nome"}</p>
               </div>
-              <span className="cat-pill">{ROLE_LABEL[u.role] ?? u.role}</span>
+              <RoleSelect userId={u.id} current={u.role as Role} />
             </div>
           ))}
           {!users?.length && (
