@@ -9,7 +9,7 @@ const TESTIMONIALS = [
   },
   {
     quote:
-      "A API é impecável. Migrei do nosso sistema legado em uma semana e economizo 3 horas por turno de operação.",
+      "A API é impecável. Migrei do nosso sistema legado em uma semana e economizo 3 horas por turno.",
     author: "Fernanda Costa",
     role: "Engenheira de Processos",
     company: "BrasilPack",
@@ -17,7 +17,7 @@ const TESTIMONIALS = [
   },
   {
     quote:
-      "Gerenciar 8 unidades em um único painel era impossível antes. Agora é trivial. O suporte é excepcional.",
+      "Gerenciar 8 unidades em um único painel era impossível antes. Agora é trivial. Suporte excepcional.",
     author: "Marcos Oliveira",
     role: "Diretor de Operações",
     company: "Grupo Nordex",
@@ -27,48 +27,51 @@ const TESTIMONIALS = [
 
 export function Testimonials() {
   return (
-    <section id="testimonials" className="py-28 bg-[#FAFAF8]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
-          <p className="text-[#C9A96E] text-sm font-semibold uppercase tracking-widest mb-4">
-            Clientes
-          </p>
-          <h2
-            className="text-4xl sm:text-5xl font-normal text-[#1A2744]"
-            style={{ fontFamily: "var(--font-instrument-serif), serif" }}
-          >
-            Resultado real em
-            <br />
-            operações reais
-          </h2>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {TESTIMONIALS.map((t) => (
-            <div
-              key={t.author}
-              className="bg-white rounded-2xl border border-[#1A2744]/8 p-8 hover:shadow-lg transition-shadow"
+    <section id="testimonials" className="container" style={{ padding: "48px 48px 16px" }}>
+      <div style={{ marginBottom: 28 }}>
+        <span className="eyebrow eyebrow-gold">Clientes</span>
+        <h2 className="h2" style={{ fontSize: 34, marginTop: 14 }}>
+          Resultado real em operações <span className="serif accent-gold">reais</span>
+        </h2>
+      </div>
+      <div className="ev-grid">
+        {TESTIMONIALS.map((t) => (
+          <div key={t.author} className="feature-card">
+            <p
+              className="serif"
+              style={{ fontSize: 18, lineHeight: 1.5, color: "var(--text-primary)", marginBottom: 20 }}
             >
-              <blockquote
-                className="text-[#1A2744]/80 text-base leading-relaxed mb-6 italic"
-                style={{ fontFamily: "var(--font-instrument-serif), serif" }}
+              &ldquo;{t.quote}&rdquo;
+            </p>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <div
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 9999,
+                  background: "var(--navy-800)",
+                  color: "var(--text-invert)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontFamily: "var(--font-mono)",
+                  fontSize: 12,
+                  fontWeight: 700,
+                }}
               >
-                &ldquo;{t.quote}&rdquo;
-              </blockquote>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-[#1A2744] flex items-center justify-center text-white text-xs font-semibold">
-                  {t.initials}
-                </div>
-                <div>
-                  <p className="text-[#1A2744] text-sm font-semibold">{t.author}</p>
-                  <p className="text-[#1A2744]/50 text-xs">
-                    {t.role} · {t.company}
-                  </p>
-                </div>
+                {t.initials}
+              </div>
+              <div>
+                <p style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)" }}>
+                  {t.author}
+                </p>
+                <p style={{ fontSize: 12, color: "var(--text-tertiary)" }}>
+                  {t.role} · {t.company}
+                </p>
               </div>
             </div>
-          ))}
-        </div>
+          </div>
+        ))}
       </div>
     </section>
   );

@@ -17,25 +17,52 @@ export function FeaturesTicker() {
   const doubled = [...ITEMS, ...ITEMS];
 
   return (
-    <div className="bg-[#C9A96E] py-3 overflow-hidden">
+    <div
+      style={{
+        background: "var(--gold-500)",
+        padding: "12px 0",
+        overflow: "hidden",
+        marginTop: 24,
+      }}
+    >
       <div
-        className="flex gap-12 whitespace-nowrap"
         style={{
-          animation: "ticker 30s linear infinite",
+          display: "flex",
+          gap: 48,
+          whiteSpace: "nowrap",
+          animation: "ellevaTicker 32s linear infinite",
         }}
       >
         {doubled.map((item, i) => (
           <span
             key={i}
-            className="text-[#1A2744] text-sm font-semibold uppercase tracking-widest flex-shrink-0 flex items-center gap-3"
+            style={{
+              fontFamily: "var(--font-mono)",
+              fontSize: 12,
+              fontWeight: 600,
+              letterSpacing: ".18em",
+              textTransform: "uppercase",
+              color: "var(--navy-900)",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 12,
+              flexShrink: 0,
+            }}
           >
-            <span className="w-1 h-1 rounded-full bg-[#1A2744]/40" />
+            <span
+              style={{
+                width: 4,
+                height: 4,
+                borderRadius: 9999,
+                background: "rgba(14,24,36,.4)",
+              }}
+            />
             {item}
           </span>
         ))}
       </div>
       <style>{`
-        @keyframes ticker {
+        @keyframes ellevaTicker {
           0% { transform: translateX(0); }
           100% { transform: translateX(-50%); }
         }

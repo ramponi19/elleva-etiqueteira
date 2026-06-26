@@ -1,16 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { Check } from "lucide-react";
 import { useState } from "react";
-import { cn } from "@/lib/utils";
+import Icon from "@/components/shared/icon";
 
 const PLANS = [
   {
     name: "Starter",
     description: "Para operações em crescimento",
-    priceMonthly: 297,
-    priceYearly: 247,
+    monthly: 297,
+    yearly: 247,
     features: [
       "Até 3 impressoras",
       "5.000 impressões/mês",
@@ -25,8 +24,8 @@ const PLANS = [
   {
     name: "Pro",
     description: "Para indústrias em escala",
-    priceMonthly: 697,
-    priceYearly: 577,
+    monthly: 697,
+    yearly: 577,
     features: [
       "Impressoras ilimitadas",
       "50.000 impressões/mês",
@@ -34,7 +33,6 @@ const PLANS = [
       "API + Webhooks",
       "SSO (SAML 2.0)",
       "Analytics avançado",
-      "Suporte prioritário",
     ],
     cta: "Começar grátis",
     href: "/signup?plan=pro",
@@ -42,17 +40,16 @@ const PLANS = [
   },
   {
     name: "Enterprise",
-    description: "Para grandes grupos industriais",
-    priceMonthly: null,
-    priceYearly: null,
+    description: "Para grandes grupos",
+    monthly: null,
+    yearly: null,
     features: [
       "Tudo do Pro",
       "Impressões ilimitadas",
       "Multi-site centralizado",
-      "SLA garantido 99,9%",
+      "SLA 99,9%",
       "Onboarding dedicado",
       "Customer Success",
-      "Contrato personalizado",
     ],
     cta: "Falar com vendas",
     href: "/contact",
@@ -64,137 +61,136 @@ export function Pricing() {
   const [yearly, setYearly] = useState(false);
 
   return (
-    <section id="pricing" className="py-28 bg-[#1A2744]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="text-center max-w-2xl mx-auto mb-16">
-          <p className="text-[#C9A96E] text-sm font-semibold uppercase tracking-widest mb-4">
-            Planos
-          </p>
-          <h2
-            className="text-4xl sm:text-5xl font-normal text-white mb-4"
-            style={{ fontFamily: "var(--font-instrument-serif), serif" }}
-          >
-            Preço justo para
-            <br />
-            cada tamanho
+    <section id="pricing" className="container" style={{ padding: "48px 48px 16px" }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "flex-end",
+          justifyContent: "space-between",
+          flexWrap: "wrap",
+          gap: 16,
+          marginBottom: 28,
+        }}
+      >
+        <div>
+          <span className="eyebrow eyebrow-gold">Planos</span>
+          <h2 className="h2" style={{ fontSize: 34, marginTop: 14 }}>
+            Preço justo para cada <span className="serif accent-gold">tamanho</span>
           </h2>
+        </div>
 
-          {/* Toggle */}
-          <div className="flex items-center justify-center gap-3 mt-8">
-            <span className={cn("text-sm", !yearly ? "text-white" : "text-white/40")}>
-              Mensal
+        {/* Toggle */}
+        <div style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 14 }}>
+          <span style={{ color: !yearly ? "var(--text-primary)" : "var(--text-tertiary)" }}>
+            Mensal
+          </span>
+          <button
+            onClick={() => setYearly(!yearly)}
+            style={{
+              position: "relative",
+              width: 44,
+              height: 24,
+              borderRadius: 9999,
+              border: "none",
+              cursor: "pointer",
+              background: yearly ? "var(--gold-500)" : "var(--border)",
+              transition: "background .2s",
+            }}
+            aria-label="Alternar cobrança anual"
+          >
+            <span
+              style={{
+                position: "absolute",
+                top: 4,
+                left: yearly ? 24 : 4,
+                width: 16,
+                height: 16,
+                borderRadius: 9999,
+                background: "#fff",
+                transition: "left .2s",
+                boxShadow: "0 1px 2px rgba(0,0,0,.2)",
+              }}
+            />
+          </button>
+          <span
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              color: yearly ? "var(--text-primary)" : "var(--text-tertiary)",
+            }}
+          >
+            Anual
+            <span className="cat-pill" style={{ padding: "2px 8px" }}>
+              −15%
             </span>
-            <button
-              onClick={() => setYearly(!yearly)}
-              className={cn(
-                "relative w-12 h-6 rounded-full transition-colors",
-                yearly ? "bg-[#C9A96E]" : "bg-white/20"
-              )}
+          </span>
+        </div>
+      </div>
+
+      <div className="ev-grid">
+        {PLANS.map((plan) => {
+          const price = yearly ? plan.yearly : plan.monthly;
+          return (
+            <div
+              key={plan.name}
+              className="feature-card"
+              style={
+                plan.highlight
+                  ? { borderColor: "var(--border-gold)", boxShadow: "var(--sh-gold)" }
+                  : undefined
+              }
             >
-              <span
-                className={cn(
-                  "absolute top-1 w-4 h-4 bg-white rounded-full transition-transform",
-                  yearly ? "translate-x-7" : "translate-x-1"
-                )}
-              />
-            </button>
-            <span className={cn("text-sm flex items-center gap-1.5", yearly ? "text-white" : "text-white/40")}>
-              Anual
-              <span className="text-xs bg-[#C9A96E]/20 text-[#C9A96E] px-2 py-0.5 rounded-full font-medium">
-                −15%
-              </span>
-            </span>
-          </div>
-        </div>
-
-        {/* Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {PLANS.map((plan) => {
-            const price = yearly ? plan.priceYearly : plan.priceMonthly;
-            return (
-              <div
-                key={plan.name}
-                className={cn(
-                  "rounded-2xl p-8 flex flex-col border transition-all",
-                  plan.highlight
-                    ? "bg-[#C9A96E] border-transparent scale-[1.02]"
-                    : "bg-white/5 border-white/10 hover:border-white/20"
-                )}
-              >
-                <div className="mb-6">
-                  <h3
-                    className={cn(
-                      "text-2xl mb-1",
-                      plan.highlight ? "text-[#1A2744]" : "text-white"
-                    )}
-                    style={{ fontFamily: "var(--font-instrument-serif), serif" }}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <h3 className="h3" style={{ fontSize: 24 }}>
+                  {plan.name}
+                </h3>
+                {plan.highlight && (
+                  <span
+                    className="cat-pill"
+                    style={{ background: "var(--gold-500)", color: "var(--navy-900)", border: "none" }}
                   >
-                    {plan.name}
-                  </h3>
-                  <p className={cn("text-sm", plan.highlight ? "text-[#1A2744]/70" : "text-white/50")}>
-                    {plan.description}
-                  </p>
-                </div>
-
-                <div className="mb-8">
-                  {price ? (
-                    <div className="flex items-end gap-1">
-                      <span
-                        className={cn(
-                          "text-4xl font-light",
-                          plan.highlight ? "text-[#1A2744]" : "text-white"
-                        )}
-                        style={{ fontFamily: "var(--font-instrument-serif), serif" }}
-                      >
-                        R${price}
-                      </span>
-                      <span className={cn("text-sm mb-1", plan.highlight ? "text-[#1A2744]/60" : "text-white/40")}>
-                        /mês
-                      </span>
-                    </div>
-                  ) : (
-                    <p
-                      className={cn(
-                        "text-3xl",
-                        plan.highlight ? "text-[#1A2744]" : "text-white"
-                      )}
-                      style={{ fontFamily: "var(--font-instrument-serif), serif" }}
-                    >
-                      Sob consulta
-                    </p>
-                  )}
-                </div>
-
-                <ul className="flex-1 space-y-3 mb-8">
-                  {plan.features.map((f) => (
-                    <li key={f} className="flex items-center gap-2.5">
-                      <Check
-                        size={14}
-                        className={plan.highlight ? "text-[#1A2744]" : "text-[#C9A96E]"}
-                      />
-                      <span className={cn("text-sm", plan.highlight ? "text-[#1A2744]/80" : "text-white/70")}>
-                        {f}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-
-                <Link
-                  href={plan.href}
-                  className={cn(
-                    "text-center py-3 rounded-xl text-sm font-semibold transition-all",
-                    plan.highlight
-                      ? "bg-[#1A2744] text-white hover:bg-[#111B33]"
-                      : "border border-white/20 text-white hover:bg-white/10"
-                  )}
-                >
-                  {plan.cta}
-                </Link>
+                    Popular
+                  </span>
+                )}
               </div>
-            );
-          })}
-        </div>
+              <p className="body" style={{ fontSize: 13, marginTop: 4 }}>
+                {plan.description}
+              </p>
+
+              <div style={{ margin: "20px 0" }}>
+                {price ? (
+                  <span style={{ fontFamily: "var(--font-display)", fontSize: 40, fontWeight: 500 }}>
+                    R${price}
+                    <span style={{ fontSize: 14, color: "var(--text-tertiary)", fontFamily: "var(--font-sans)" }}>
+                      /mês
+                    </span>
+                  </span>
+                ) : (
+                  <span style={{ fontFamily: "var(--font-display)", fontSize: 30, fontWeight: 500 }}>
+                    Sob consulta
+                  </span>
+                )}
+              </div>
+
+              <ul style={{ listStyle: "none", padding: 0, margin: "0 0 24px", display: "flex", flexDirection: "column", gap: 10 }}>
+                {plan.features.map((f) => (
+                  <li key={f} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 14, color: "var(--text-secondary)" }}>
+                    <Icon icon="lucide:check" style={{ color: "var(--text-gold)", fontSize: 16 }} />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+
+              <Link
+                href={plan.href}
+                className={`btn btn-block ${plan.highlight ? "btn-gold" : "btn-navy"}`}
+              >
+                {plan.cta}
+              </Link>
+            </div>
+          );
+        })}
       </div>
     </section>
   );

@@ -5,6 +5,7 @@ import { Features } from "@/components/marketing/features";
 import { Pricing } from "@/components/marketing/pricing";
 import { Testimonials } from "@/components/marketing/testimonials";
 import { Footer } from "@/components/marketing/footer";
+import { ProducerCTA } from "@/components/marketing/producer-cta";
 
 export default function LandingPage() {
   return (
@@ -16,6 +17,7 @@ export default function LandingPage() {
         <Features />
         <Testimonials />
         <Pricing />
+        <ProducerCTA />
       </main>
       <Footer />
     </>
