@@ -2,11 +2,27 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import Icon from "@/components/shared/icon";
 import { useCart } from "@/lib/cart";
+import { createClient } from "@/lib/supabase/client";
 
-export default function Nav() {
+export default function Nav({
+  loggedIn,
+  homeHref,
+}: {
+  loggedIn: boolean;
+  homeHref: string;
+}) {
   const { count } = useCart();
+  const router = useRouter();
+
+  async function signOut() {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push("/");
+    router.refresh();
+  }
 
   return (
     <nav className="nav">
@@ -26,14 +42,35 @@ export default function Nav() {
       </div>
 
       <div className="nav-actions">
-        <Link
-          href="/login"
-          className="nav-link"
-          style={{ fontSize: 14, fontWeight: 500, color: "var(--text-secondary)" }}
-        >
-          Entrar
-        </Link>
-        <Link href="/signup" className="btn btn-navy btn-sm">Criar conta</Link>
+        {loggedIn ? (
+          <>
+            <Link
+              href={homeHref}
+              className="nav-link"
+              style={{ fontSize: 14, fontWeight: 500, color: "var(--text-secondary)" }}
+            >
+              Minha conta
+            </Link>
+            <button
+              onClick={signOut}
+              className="btn btn-navy btn-sm"
+              style={{ border: "none" }}
+            >
+              Sair
+            </button>
+          </>
+        ) : (
+          <>
+            <Link
+              href="/login"
+              className="nav-link"
+              style={{ fontSize: 14, fontWeight: 500, color: "var(--text-secondary)" }}
+            >
+              Entrar
+            </Link>
+            <Link href="/signup" className="btn btn-navy btn-sm">Criar conta</Link>
+          </>
+        )}
         <Link href="/checkout" className="cart-btn" aria-label="Carrinho">
           <Icon icon="solar:cart-large-2-bold-duotone" style={{ fontSize: 26, color: "var(--text-primary)" }} />
           {count > 0 && <span className="cart-badge">{count}</span>}

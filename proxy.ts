@@ -35,10 +35,18 @@ export async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Usuário logado não precisa ver login/signup.
+  // Usuário logado não precisa ver login/signup — manda pra área do papel dele.
   if (user && AUTH_ROUTES.includes(request.nextUrl.pathname)) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+    const role = (profile?.role as string) ?? "customer";
+    const dest = role === "admin" ? "/admin" : role === "producer" ? "/produtor" : "/conta";
+
     const url = request.nextUrl.clone();
-    url.pathname = "/";
+    url.pathname = dest;
     return NextResponse.redirect(url);
   }
 
