@@ -1,26 +1,21 @@
 import Link from "next/link";
-import Image from "next/image";
+import Logo from "@/components/shared/logo";
 
 export default function Footer() {
   return (
     <footer className="footer">
       <div className="footer-inner">
-        <div>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <Image src="/eagle-bone.png" alt="Elleva" width={32} height={23} />
-            <span style={{ fontFamily: "var(--font-display)", fontSize: 22, color: "#F6F3EB" }}>
-              Elleva{" "}
-              <span style={{ fontFamily: "var(--font-mono)", fontSize: 9, letterSpacing: ".3em", color: "var(--gold-500)" }}>
-                TICKETS
-              </span>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, justifyContent: "center" }}>
+          <Logo variant="light" width={32} />
+          <span style={{ fontFamily: "var(--font-display)", fontSize: 22, color: "#F6F3EB" }}>
+            Elleva{" "}
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: 9, letterSpacing: ".3em", color: "var(--gold-500)" }}>
+              TICKETS
             </span>
-          </div>
-          <p style={{ color: "#8894A8", fontSize: 13, marginTop: 16, maxWidth: 280, lineHeight: 1.6 }}>
-            Ingressos para os melhores eventos do interior de SP e sul de MG. Rápido, seguro e sem fila.
-          </p>
+          </span>
         </div>
 
-        <div style={{ display: "flex", gap: 64, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", justifyContent: "center", gap: 64, flexWrap: "wrap", marginTop: 48 }}>
           <div className="footer-col">
             <span className="footer-head">Eventos</span>
             <Link href="/agenda" className="footer-link">Shows</Link>

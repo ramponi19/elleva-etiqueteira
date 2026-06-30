@@ -30,6 +30,8 @@ export interface EventItem {
   soldOut: boolean;
   priceFrom: number;
   desc: string;
+  featured: boolean;
+  featuredOrder: number;
 }
 
 // ---------- Formatação de data (America/Sao_Paulo) ----------
@@ -64,6 +66,8 @@ type EventDbRow = {
   starts_at: string;
   status?: string;
   cover_url?: string | null;
+  is_featured?: boolean;
+  featured_order?: number;
   ticket_tiers?: { price: number }[];
 };
 
@@ -82,6 +86,8 @@ function toEventItem(row: EventDbRow): EventItem {
     soldOut: row.status === "sold_out",
     priceFrom: prices.length ? Math.min(...prices) : 0,
     desc: row.description ?? "",
+    featured: row.is_featured ?? false,
+    featuredOrder: row.featured_order ?? 0,
   };
 }
 
@@ -91,7 +97,7 @@ export async function getEvents(): Promise<EventItem[]> {
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("events")
-      .select("id, slug, title, description, category, icon, venue, city, starts_at, status, cover_url, ticket_tiers(price)")
+      .select("id, slug, title, description, category, icon, venue, city, starts_at, status, cover_url, is_featured, featured_order, ticket_tiers(price)")
       .in("status", ["published", "sold_out"])
       .order("starts_at", { ascending: true });
     if (error || !data?.length) return MOCK_EVENTS;
@@ -99,6 +105,15 @@ export async function getEvents(): Promise<EventItem[]> {
   } catch {
     return MOCK_EVENTS;
   }
+}
+
+/** Eventos em destaque para o carrossel da home, escolhidos no admin. */
+export async function getFeaturedEvents(): Promise<EventItem[]> {
+  const events = await getEvents();
+  const featured = events
+    .filter((e) => e.featured)
+    .sort((a, b) => a.featuredOrder - b.featuredOrder);
+  return featured.length ? featured : events.slice(0, 6);
 }
 
 export async function getEvent(
@@ -159,12 +174,12 @@ export const CATEGORIES = [
 // Fallback mock (usado se o Supabase não estiver disponível)
 // ============================================================
 export const MOCK_EVENTS: EventItem[] = [
-  { id: "rita", uuid: "rita", title: "Ana Cañas canta Rita Lee", d: "12", mon: "JUL", dateFull: "12 JUL · SÁB", time: "19:30", venueCity: "Teatro Municipal · Mogi Mirim", catLabel: "SHOW", icon: "solar:microphone-large-bold-duotone", cover: null, soldOut: false, priceFrom: 90, desc: "Uma celebração intimista do rock brasileiro, revisitando os clássicos de Rita Lee em arranjos exclusivos." },
-  { id: "ligajoe", uuid: "ligajoe", title: "Liga Joe — Clube Mogiano", d: "08", mon: "AGO", dateFull: "08 AGO · SÁB", time: "20:00", venueCity: "Clube Mogiano · Mogi Mirim", catLabel: "FESTA", icon: "solar:disco-ball-bold-duotone", cover: null, soldOut: false, priceFrom: 60, desc: "A noite mais aguardada do interior. Line-up completo, estrutura premium e open de pista." },
-  { id: "copa", uuid: "copa", title: "Copa Tijuca: Brasil x Marrocos", d: "23", mon: "AGO", dateFull: "23 AGO · DOM", time: "12:00", venueCity: "Arena · Mogi Guaçu", catLabel: "ESPORTE", icon: "solar:ball-bold-duotone", cover: null, soldOut: false, priceFrom: 40, desc: "Futebol de base de alto nível em um confronto internacional imperdível para toda a família." },
-  { id: "rodolfinho", uuid: "rodolfinho", title: "Nosso Quintal — MC Rodolfinho", d: "14", mon: "SET", dateFull: "14 SET · DOM", time: "22:30", venueCity: "Nosso Quintal · Itapira", catLabel: "SHOW", icon: "solar:music-notes-bold-duotone", cover: null, soldOut: false, priceFrom: 70, desc: "O fenômeno do funk em um show especial e energético no palco do Nosso Quintal." },
-  { id: "standup", uuid: "standup", title: "Stand-up Comedy Night", d: "28", mon: "SET", dateFull: "28 SET · DOM", time: "20:00", venueCity: "Teatro · Americana", catLabel: "TEATRO", icon: "solar:masks-bold-duotone", cover: null, soldOut: false, priceFrom: 50, desc: "Uma noite de humor afiado com os melhores comediantes do circuito nacional." },
-  { id: "summit", uuid: "summit", title: "Summit Tech Interior 2026", d: "05", mon: "OUT", dateFull: "05 OUT · DOM", time: "09:00", venueCity: "Centro de Convenções · Americana", catLabel: "CORPORATIVO", icon: "solar:presentation-graph-bold-duotone", cover: null, soldOut: false, priceFrom: 120, desc: "O maior encontro de tecnologia e inovação do interior, com palestras, painéis e networking." },
+  { id: "rita", uuid: "rita", title: "Ana Cañas canta Rita Lee", d: "12", mon: "JUL", dateFull: "12 JUL · SÁB", time: "19:30", venueCity: "Teatro Municipal · Mogi Mirim", catLabel: "SHOW", icon: "solar:microphone-large-bold-duotone", cover: null, soldOut: false, priceFrom: 90, desc: "Uma celebração intimista do rock brasileiro, revisitando os clássicos de Rita Lee em arranjos exclusivos.", featured: true, featuredOrder: 0 },
+  { id: "ligajoe", uuid: "ligajoe", title: "Liga Joe — Clube Mogiano", d: "08", mon: "AGO", dateFull: "08 AGO · SÁB", time: "20:00", venueCity: "Clube Mogiano · Mogi Mirim", catLabel: "FESTA", icon: "solar:disco-ball-bold-duotone", cover: null, soldOut: false, priceFrom: 60, desc: "A noite mais aguardada do interior. Line-up completo, estrutura premium e open de pista.", featured: true, featuredOrder: 1 },
+  { id: "copa", uuid: "copa", title: "Copa Tijuca: Brasil x Marrocos", d: "23", mon: "AGO", dateFull: "23 AGO · DOM", time: "12:00", venueCity: "Arena · Mogi Guaçu", catLabel: "ESPORTE", icon: "solar:ball-bold-duotone", cover: null, soldOut: false, priceFrom: 40, desc: "Futebol de base de alto nível em um confronto internacional imperdível para toda a família.", featured: true, featuredOrder: 2 },
+  { id: "rodolfinho", uuid: "rodolfinho", title: "Nosso Quintal — MC Rodolfinho", d: "14", mon: "SET", dateFull: "14 SET · DOM", time: "22:30", venueCity: "Nosso Quintal · Itapira", catLabel: "SHOW", icon: "solar:music-notes-bold-duotone", cover: null, soldOut: false, priceFrom: 70, desc: "O fenômeno do funk em um show especial e energético no palco do Nosso Quintal.", featured: false, featuredOrder: 0 },
+  { id: "standup", uuid: "standup", title: "Stand-up Comedy Night", d: "28", mon: "SET", dateFull: "28 SET · DOM", time: "20:00", venueCity: "Teatro · Americana", catLabel: "TEATRO", icon: "solar:masks-bold-duotone", cover: null, soldOut: false, priceFrom: 50, desc: "Uma noite de humor afiado com os melhores comediantes do circuito nacional.", featured: false, featuredOrder: 0 },
+  { id: "summit", uuid: "summit", title: "Summit Tech Interior 2026", d: "05", mon: "OUT", dateFull: "05 OUT · DOM", time: "09:00", venueCity: "Centro de Convenções · Americana", catLabel: "CORPORATIVO", icon: "solar:presentation-graph-bold-duotone", cover: null, soldOut: false, priceFrom: 120, desc: "O maior encontro de tecnologia e inovação do interior, com palestras, painéis e networking.", featured: false, featuredOrder: 0 },
 ];
 
 function mockTiers(priceFrom: number): Tier[] {

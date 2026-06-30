@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import Icon from "@/components/shared/icon";
+import Logo from "@/components/shared/logo";
 import { useCart } from "@/lib/cart";
 import { createClient } from "@/lib/supabase/client";
 
@@ -48,11 +48,8 @@ export default function Nav({
   return (
     <nav className="nav">
       <Link href="/" className="nav-brand">
-        <Image src="/eagle-navy.png" alt="Elleva Tickets" width={36} height={26} priority />
-        <span style={{ display: "flex", flexDirection: "column", lineHeight: 1 }}>
-          <span className="brand-name">Elleva</span>
-          <span className="brand-sub">Tickets</span>
-        </span>
+        <Logo width={40} />
+        <span className="brand-name">Elleva Tickets</span>
       </Link>
 
       <div className="nav-links">

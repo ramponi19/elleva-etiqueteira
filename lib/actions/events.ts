@@ -144,3 +144,16 @@ export async function updateEvent(id: string, input: EventInput): Promise<EventF
   revalidatePath("/agenda");
   return { ok: true };
 }
+
+export async function setFeatured(id: string, featured: boolean): Promise<EventFormState> {
+  const { user, role } = await getAuth();
+  if (!user || role !== "admin") return { ok: false, error: "Sem permissão." };
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("events").update({ is_featured: featured }).eq("id", id);
+  if (error) return { ok: false, error: error.message };
+
+  revalidatePath("/admin/eventos");
+  revalidatePath("/");
+  return { ok: true };
+}

@@ -1,8 +1,22 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Icon from "@/components/shared/icon";
 import type { EventItem } from "@/lib/events";
 
-export default function Hero({ event }: { event: EventItem }) {
+export default function Carousel({ events }: { events: EventItem[] }) {
+  const [active, setActive] = useState(0);
+
+  useEffect(() => {
+    if (events.length < 2) return;
+    const timer = setInterval(() => setActive((i) => (i + 1) % events.length), 8000);
+    return () => clearInterval(timer);
+  }, [events.length]);
+
+  const event = events[active];
+  if (!event) return null;
+
   return (
     <section className="container" style={{ padding: "48px 48px 24px" }}>
       <div className="hero-stage">
@@ -29,10 +43,20 @@ export default function Hero({ event }: { event: EventItem }) {
                 Ver agenda completa
               </Link>
             </div>
-            <div className="hero-dots">
-              <span className="active" />
-              <span /><span /><span />
-            </div>
+            {events.length > 1 && (
+              <div className="hero-dots">
+                {events.map((ev, i) => (
+                  <button
+                    key={ev.id}
+                    type="button"
+                    aria-label={`Ver ${ev.title}`}
+                    onClick={() => setActive(i)}
+                    className={i === active ? "active" : ""}
+                    style={{ border: "none", padding: 0, cursor: "pointer" }}
+                  />
+                ))}
+              </div>
+            )}
           </div>
 
           <Link href={`/evento/${event.id}`} className="poster" style={event.cover ? { padding: 0, overflow: "hidden" } : undefined}>

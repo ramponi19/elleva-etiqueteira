@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import PageHeader from "@/components/app/page-header";
+import FeaturedToggle from "@/components/app/featured-toggle";
 
 export const metadata: Metadata = { title: "Eventos · Admin" };
 
@@ -8,12 +9,15 @@ export default async function AdminEventos() {
   const supabase = await createClient();
   const { data: events } = await supabase
     .from("events")
-    .select("id, title, category, city, starts_at, status")
+    .select("id, title, category, city, starts_at, status, is_featured")
     .order("starts_at", { ascending: true });
 
   return (
     <>
-      <PageHeader title="Eventos" subtitle={`${events?.length ?? 0} evento(s) na plataforma.`} />
+      <PageHeader
+        title="Eventos"
+        subtitle={`${events?.length ?? 0} evento(s) na plataforma. Marque os destaques que aparecem no carrossel da home.`}
+      />
       <main style={{ padding: 32 }}>
         <div style={{ background: "var(--bg-elevated)", border: "1px solid var(--border)", borderRadius: "var(--r-xl)", overflow: "hidden" }}>
           {(events ?? []).map((e, i) => (
@@ -27,6 +31,7 @@ export default async function AdminEventos() {
               <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
                 <span className="cat-pill">{e.category}</span>
                 <span className="cat-pill">{e.status}</span>
+                <FeaturedToggle id={e.id} initial={!!e.is_featured} />
               </div>
             </div>
           ))}
