@@ -117,15 +117,15 @@ export default function Nav({
               <div
                 style={{
                   position: "absolute", right: 0, top: "calc(100% + 10px)", zIndex: 60,
-                  display: "flex", flexDirection: "column", gap: 8, padding: 10,
+                  display: "flex", flexDirection: "column", gap: 8, padding: 8,
                   background: "var(--bg-elevated)", border: "1px solid var(--border)",
-                  borderRadius: "var(--r-lg)", boxShadow: "var(--sh-md)", minWidth: 170,
+                  borderRadius: "var(--r-lg)", boxShadow: "var(--sh-md)", width: "max-content",
                 }}
               >
-                <Link href="/login" className="btn btn-navy btn-sm" style={{ textAlign: "center" }}>
+                <Link href="/login" className="btn btn-navy btn-sm" style={{ justifyContent: "center" }}>
                   Login
                 </Link>
-                <Link href="/signup" className="btn btn-ghost btn-sm" style={{ textAlign: "center" }}>
+                <Link href="/signup" className="btn btn-ghost btn-sm" style={{ justifyContent: "center" }}>
                   Cadastrar-se
                 </Link>
               </div>
