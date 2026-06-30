@@ -5,8 +5,13 @@ import { getEvents } from "@/lib/events";
 export const metadata: Metadata = { title: "Agenda" };
 export const revalidate = 300;
 
-export default async function AgendaPage() {
+export default async function AgendaPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>;
+}) {
   const events = await getEvents();
+  const { q } = await searchParams;
 
   return (
     <div className="container" style={{ padding: "48px 48px 64px" }}>
@@ -15,7 +20,7 @@ export default async function AgendaPage() {
         Todos os <span className="serif accent-gold">eventos</span>
       </h1>
 
-      <AgendaContent events={events} />
+      <AgendaContent events={events} initialQuery={q ?? ""} />
     </div>
   );
 }

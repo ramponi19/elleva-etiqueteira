@@ -14,9 +14,15 @@ const FILTERS: { label: string; cat: string | null }[] = [
   { label: "Corporativo", cat: "CORPORATIVO" },
 ];
 
-export default function AgendaContent({ events }: { events: EventItem[] }) {
+export default function AgendaContent({
+  events,
+  initialQuery = "",
+}: {
+  events: EventItem[];
+  initialQuery?: string;
+}) {
   const [cat, setCat] = useState<string | null>(null);
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(initialQuery);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
