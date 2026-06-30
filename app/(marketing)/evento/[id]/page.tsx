@@ -48,7 +48,7 @@ export default async function EventPage({
             ) : (
               <>
                 <div className="banner-glow" />
-                <Icon icon={event.icon} style={{ fontSize: 72, color: "var(--gold-500)", position: "relative" }} />
+                <Icon icon={event.icon} style={{ fontSize: 72, color: "#fff", position: "relative" }} />
                 <span className="poster-label" style={{ position: "relative" }}>BANNER 16:9</span>
               </>
             )}

@@ -7,11 +7,8 @@ export default function Footer() {
       <div className="footer-inner">
         <div style={{ display: "flex", alignItems: "center", gap: 12, justifyContent: "center" }}>
           <Logo variant="light" width={32} />
-          <span style={{ fontFamily: "var(--font-display)", fontSize: 22, color: "#F6F3EB" }}>
-            Elleva{" "}
-            <span style={{ fontFamily: "var(--font-mono)", fontSize: 9, letterSpacing: ".3em", color: "var(--gold-500)" }}>
-              TICKETS
-            </span>
+          <span style={{ fontFamily: "var(--font-sans)", fontWeight: 800, fontSize: 21, letterSpacing: "-.02em", color: "#FFFFFF" }}>
+            Elleva Tickets
           </span>
         </div>
 

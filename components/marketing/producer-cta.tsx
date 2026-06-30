@@ -10,12 +10,12 @@ export default function ProducerCTA() {
           <h2
             style={{
               fontFamily: "var(--font-display)", fontSize: 34, fontWeight: 500,
-              color: "#F6F3EB", letterSpacing: "-.025em", margin: "14px 0 0", maxWidth: 520,
+              color: "#FFFFFF", letterSpacing: "-.025em", margin: "14px 0 0", maxWidth: 520,
             }}
           >
-            Faça seu evento <span className="serif accent-gold">com a gente</span>.
+            Faça seu evento <span style={{ fontFamily: "var(--font-display)", fontStyle: "italic", color: "#FFFFFF" }}>com a gente</span>.
           </h2>
-          <p style={{ color: "#B8C1D0", fontSize: 16, marginTop: 14, maxWidth: 480 }}>
+          <p style={{ color: "#BBBBBB", fontSize: 16, marginTop: 14, maxWidth: 480 }}>
             Produção, divulgação e bilheteria em um só lugar. Falamos a sua língua e cuidamos do resto.
           </p>
         </div>

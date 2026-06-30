@@ -28,10 +28,10 @@ export default function Carousel({ events }: { events: EventItem[] }) {
             <h1 className="h1 hero-title" style={{ marginTop: 20 }}>{event.title}</h1>
             <div className="hero-meta">
               <span>
-                <Icon icon="lucide:calendar" style={{ verticalAlign: -2, color: "#D3BA83" }} /> {event.dateFull}
+                <Icon icon="lucide:calendar" style={{ verticalAlign: -2, color: "#9A9A9A" }} /> {event.dateFull}
               </span>
               <span>
-                <Icon icon="lucide:map-pin" style={{ verticalAlign: -2, color: "#D3BA83" }} /> {event.venueCity}
+                <Icon icon="lucide:map-pin" style={{ verticalAlign: -2, color: "#9A9A9A" }} /> {event.venueCity}
               </span>
             </div>
             <p className="hero-desc">{event.desc}</p>
@@ -65,7 +65,7 @@ export default function Carousel({ events }: { events: EventItem[] }) {
               <img src={event.cover} alt={event.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
             ) : (
               <>
-                <Icon icon={event.icon} style={{ fontSize: 64, color: "var(--gold-500)" }} />
+                <Icon icon={event.icon} style={{ fontSize: 64, color: "#fff" }} />
                 <span className="poster-label">PÔSTER 4:5</span>
               </>
             )}

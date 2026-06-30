@@ -71,6 +71,41 @@
 }
 
 /* ============================================================
+   MARKETING — 100% preto e branco (aprovado na preview v11-v14)
+   Sobrescreve os tokens navy/dourado só nas páginas públicas
+   (home, agenda, evento) sem afetar admin/produtor/checkout.
+   ============================================================ */
+.marketing-mono {
+  background:#FFFFFF; min-height:100vh;
+  --navy-900:#0A0A0A; --navy-800:#0A0A0A; --navy-700:#171717; --navy-600:#262626; --navy-500:#404040;
+  --gold-700:#0A0A0A; --gold-600:#0A0A0A; --gold-500:#0A0A0A; --gold-400:#404040; --gold-300:#737373;
+
+  --bg-main:#FFFFFF; --bg-secondary:#F7F7F7; --bg-elevated:#FFFFFF; --bg-inverse:#0A0A0A; --bg-tint:#FAFAFA;
+
+  --text-primary:#0A0A0A; --text-secondary:#4D4D4D; --text-tertiary:#999999;
+  --text-muted:#BBBBBB; --text-invert:#FFFFFF; --text-gold:#999999;
+
+  --border:#EAEAEA; --border-subtle:rgba(10,10,10,.08); --border-strong:#0A0A0A; --border-gold:#0A0A0A;
+
+  --sh-gold:none;
+}
+.marketing-mono .btn-gold { background:#0A0A0A; color:#fff; }
+.marketing-mono .btn-ghost-dark { background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.18); color:#fff; }
+.marketing-mono .hero-stage, .marketing-mono .poster, .marketing-mono .ev-card__img, .marketing-mono .banner {
+  background:linear-gradient(155deg,#1A1A1A,#0A0A0A) !important; color:#fff !important;
+}
+.marketing-mono .hero-glow, .marketing-mono .banner-glow, .marketing-mono .cta-glow {
+  background:radial-gradient(circle,rgba(255,255,255,.10),transparent 65%) !important;
+}
+.marketing-mono .cta { background:linear-gradient(135deg,#1A1A1A,#0A0A0A) !important; }
+.marketing-mono em, .marketing-mono .accent-gold { color:#0A0A0A; }
+.marketing-mono .hero-dots span.active { background:#fff; }
+.marketing-mono .date-block { background:#0A0A0A; }
+.marketing-mono .date-block .m { color:#9A9A9A; }
+.marketing-mono .footer-link { color:#BBBBBB; }
+.marketing-mono .footer-meta { color:#777777; }
+
+/* ============================================================
    BASE
    ============================================================ */
 * { box-sizing: border-box; }
@@ -132,10 +167,10 @@ input { font-family: inherit; }
 /* ============================================================
    NAV
    ============================================================ */
-.nav { position:sticky; top:0; z-index:50; display:flex; align-items:center; justify-content:space-between; padding:16px 48px; background:rgba(246,243,235,.85); backdrop-filter:blur(14px); border-bottom:1px solid var(--border); }
+.nav { position:sticky; top:0; z-index:50; display:flex; align-items:center; justify-content:space-between; padding:16px 48px; background:rgba(255,255,255,.85); backdrop-filter:blur(14px); border-bottom:1px solid var(--border); }
 .nav-brand { display:flex; align-items:center; gap:12px; }
 .nav-brand img { height:36px; width:auto; }
-.brand-name { font-family:var(--font-display); font-weight:500; font-size:23px; letter-spacing:-.02em; color:var(--text-primary); line-height:1; }
+.brand-name { font-family:var(--font-sans); font-weight:800; font-size:21px; letter-spacing:-.02em; color:var(--text-primary); line-height:1; }
 .brand-sub { font-family:var(--font-mono); font-size:9px; letter-spacing:.32em; color:var(--text-gold); text-transform:uppercase; margin-top:3px; }
 .nav-links { display:flex; gap:34px; font-size:14px; font-weight:500; color:var(--text-secondary); }
 .nav-link { cursor:pointer; transition:color .2s var(--ease-in-out); }

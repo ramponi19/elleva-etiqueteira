@@ -12,9 +12,11 @@ export default async function MarketingLayout({
 
   return (
     <CartProvider>
-      <Nav loggedIn={!!user} homeHref={homeForRole(role)} />
-      <main>{children}</main>
-      <Footer />
+      <div className="marketing-mono">
+        <Nav loggedIn={!!user} homeHref={homeForRole(role)} />
+        <main>{children}</main>
+        <Footer />
+      </div>
     </CartProvider>
   );
 }
