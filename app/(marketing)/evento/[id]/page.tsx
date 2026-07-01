@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import Icon from "@/components/shared/icon";
 import TicketSelector from "@/components/marketing/ticket-selector";
 import { getEvent, getEventSlugs } from "@/lib/events";
+import { eventGradient } from "@/lib/event-theme";
 
 export const revalidate = 300;
 
@@ -41,23 +42,22 @@ export default async function EventPage({
       <div className="event-layout" style={{ marginTop: 8 }}>
         {/* left: banner + info */}
         <div>
-          <div className="banner" style={event.cover ? { padding: 0 } : undefined}>
+          <div className="banner" data-reveal style={event.cover ? { padding: 0 } : undefined}>
             {event.cover ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={event.cover} alt={event.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
             ) : (
-              <>
-                <div className="banner-glow" />
-                <Icon icon={event.icon} style={{ fontSize: 72, color: "#fff", position: "relative" }} />
-                <span className="poster-label" style={{ position: "relative" }}>BANNER 16:9</span>
-              </>
+              <div className="banner-poster" style={{ backgroundImage: eventGradient(event.catLabel) }}>
+                <span className="banner-poster__cat">{event.catLabel}</span>
+                <span className="banner-poster__title">{event.title}</span>
+              </div>
             )}
           </div>
 
           <span className="eyebrow eyebrow-gold" style={{ marginTop: 32 }}>{event.catLabel}</span>
-          <h1 className="h1" style={{ fontSize: 44, marginTop: 16 }}>{event.title}</h1>
+          <h1 className="h1" data-reveal-lines style={{ fontSize: 44, marginTop: 16 }}>{event.title}</h1>
 
-          <div className="meta-row">
+          <div className="meta-row" data-reveal>
             <div className="meta-chip">
               <Icon icon="solar:calendar-bold-duotone" style={{ fontSize: 22, color: "var(--text-gold)" }} />
               <div><div className="k">DATA</div><div className="v">{event.dateFull}</div></div>
@@ -72,8 +72,8 @@ export default async function EventPage({
             </div>
           </div>
 
-          <h3 className="h3" style={{ fontSize: 24, marginTop: 36 }}>Sobre o evento</h3>
-          <p className="body-lg" style={{ marginTop: 12, maxWidth: 560 }}>{event.desc}</p>
+          <h3 className="h3" data-reveal style={{ fontSize: 24, marginTop: 36 }}>Sobre o evento</h3>
+          <p className="body-lg" data-reveal style={{ marginTop: 12, maxWidth: 560 }}>{event.desc}</p>
           <p className="body" style={{ marginTop: 14, maxWidth: 560 }}>
             Abertura dos portões uma hora antes. Evento sujeito à classificação indicativa. Ingressos não
             reembolsáveis após a confirmação, conforme política de compra.

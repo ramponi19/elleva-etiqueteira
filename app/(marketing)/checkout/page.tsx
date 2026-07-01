@@ -11,7 +11,7 @@ import CardForm from "@/components/marketing/card-form";
 type Pix = { qrBase64: string; copyPaste: string; orderId: string; expiresAt: string };
 
 export default function CheckoutPage() {
-  const { items, subtotal, fee, total, removeItem, clear } = useCart();
+  const { items, subtotal, removeItem, clear } = useCart();
   const [confirmed, setConfirmed] = useState(false);
   const [pay, setPay] = useState<"pix" | "card">("pix");
   const [name, setName] = useState("");
@@ -107,7 +107,7 @@ export default function CheckoutPage() {
       <div className="container" style={{ maxWidth: 1100, padding: "40px 48px 64px" }}>
         <div style={{ textAlign: "center", padding: "64px 0" }}>
           <div style={{ width: 88, height: 88, borderRadius: "50%", background: "var(--navy-800)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto" }}>
-            <Icon icon="solar:check-circle-bold" style={{ fontSize: 48, color: "var(--gold-500)" }} />
+            <Icon icon="solar:check-circle-bold" style={{ fontSize: 48, color: "#fff" }} />
           </div>
           <h1 className="h1" style={{ fontSize: 42, marginTop: 28 }}>
             Compra <span className="serif accent-gold">confirmada</span>.
@@ -194,7 +194,7 @@ export default function CheckoutPage() {
   return (
     <div className="container" style={{ maxWidth: 1100, padding: "40px 48px 64px" }}>
       <span className="eyebrow eyebrow-gold">Checkout</span>
-      <h1 className="h1" style={{ fontSize: 44, marginTop: 16 }}>
+      <h1 className="h1" data-reveal-lines style={{ fontSize: 44, marginTop: 16 }}>
         Seu <span className="serif accent-gold">carrinho</span>
       </h1>
 
@@ -214,7 +214,7 @@ export default function CheckoutPage() {
               {items.map((item, idx) => (
                 <div className="cart-item" key={idx}>
                   <div className="thumb">
-                    <Icon icon="solar:ticket-bold-duotone" style={{ fontSize: 26, color: "var(--gold-500)" }} />
+                    <Icon icon="solar:ticket-bold-duotone" style={{ fontSize: 26, color: "#fff" }} />
                   </div>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontFamily: "var(--font-display)", fontSize: 17, fontWeight: 500 }}>{item.eventTitle}</div>
@@ -251,11 +251,11 @@ export default function CheckoutPage() {
             <h3 className="h3" style={{ fontSize: 22, marginTop: 32 }}>Pagamento</h3>
             <div style={{ display: "flex", gap: 12, marginTop: 18 }}>
               <div className={`pay-option${pay === "pix" ? " pay-option--active" : ""}`} onClick={() => setPay("pix")}>
-                <Icon icon="solar:qr-code-bold-duotone" style={{ fontSize: 24, color: pay === "pix" ? "var(--text-gold)" : "var(--text-tertiary)" }} />
+                <Icon icon="solar:qr-code-bold-duotone" style={{ fontSize: 24, color: pay === "pix" ? "var(--text-primary)" : "var(--text-tertiary)" }} />
                 <span style={{ fontWeight: 600, fontSize: 14 }}>Pix</span>
               </div>
               <div className={`pay-option${pay === "card" ? " pay-option--active" : ""}`} onClick={() => setPay("card")}>
-                <Icon icon="solar:card-bold-duotone" style={{ fontSize: 24, color: pay === "card" ? "var(--text-gold)" : "var(--text-tertiary)" }} />
+                <Icon icon="solar:card-bold-duotone" style={{ fontSize: 24, color: pay === "card" ? "var(--text-primary)" : "var(--text-tertiary)" }} />
                 <span style={{ fontWeight: 600, fontSize: 14, color: "var(--text-secondary)" }}>Cartão</span>
               </div>
             </div>
@@ -263,7 +263,7 @@ export default function CheckoutPage() {
 
           {/* summary */}
           <div className="summary">
-            <h4 style={{ fontFamily: "var(--font-sans)", fontWeight: 600, fontSize: 17, color: "#F6F3EB", margin: 0 }}>Resumo</h4>
+            <h4 style={{ fontFamily: "var(--font-sans)", fontWeight: 600, fontSize: 17, color: "#fff", margin: 0 }}>Resumo</h4>
 
             {/* Cupom */}
             <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
@@ -271,7 +271,7 @@ export default function CheckoutPage() {
                 value={coupon}
                 onChange={(e) => setCoupon(e.target.value.toUpperCase())}
                 placeholder="Cupom"
-                style={{ flex: 1, fontSize: 13, padding: "9px 12px", borderRadius: 8, border: "1px solid rgba(255,255,255,.18)", background: "rgba(255,255,255,.06)", color: "#F6F3EB", fontFamily: "var(--font-mono)" }}
+                style={{ flex: 1, fontSize: 13, padding: "9px 12px", borderRadius: 8, border: "1px solid rgba(255,255,255,.18)", background: "rgba(255,255,255,.06)", color: "#fff", fontFamily: "var(--font-mono)" }}
               />
               <button type="button" onClick={applyCoupon} className="btn btn-ghost-dark btn-sm">Aplicar</button>
             </div>
@@ -285,8 +285,8 @@ export default function CheckoutPage() {
             )}
             <div className="summary-row" style={{ marginTop: 12 }}><span>Taxa de serviço</span><span>{fmtBRL(feeAdj)}</span></div>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 18, paddingTop: 18, borderTop: "1px solid rgba(255,255,255,.12)" }}>
-              <span style={{ color: "#F6F3EB", fontSize: 15 }}>Total</span>
-              <span style={{ fontFamily: "var(--font-display)", fontSize: 28, fontWeight: 500, color: "#F6F3EB" }}>{fmtBRL(totalAdj)}</span>
+              <span style={{ color: "#fff", fontSize: 15 }}>Total</span>
+              <span style={{ fontFamily: "var(--font-display)", fontSize: 28, fontWeight: 500, color: "#fff" }}>{fmtBRL(totalAdj)}</span>
             </div>
             {error && (
               <p style={{ marginTop: 16, fontSize: 13, color: "#F3B4B4", background: "rgba(243,180,180,.12)", border: "1px solid rgba(243,180,180,.25)", borderRadius: 10, padding: "8px 12px" }}>
@@ -306,8 +306,8 @@ export default function CheckoutPage() {
                 <button className="btn btn-gold btn-block" style={{ marginTop: 22, opacity: loading ? 0.6 : 1 }} onClick={finalize} disabled={loading}>
                   {loading ? "Processando..." : "Pagar com Pix"}
                 </button>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginTop: 14, fontSize: 12, color: "#8894A8" }}>
-                  <Icon icon="solar:lock-keyhole-bold-duotone" style={{ color: "var(--gold-500)", fontSize: 16 }} /> Pagamento criptografado
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginTop: 14, fontSize: 12, color: "#9AA0A6" }}>
+                  <Icon icon="solar:lock-keyhole-bold-duotone" style={{ color: "#9AA0A6", fontSize: 16 }} /> Pagamento criptografado
                 </div>
               </>
             )}
