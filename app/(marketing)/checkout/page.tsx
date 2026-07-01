@@ -7,6 +7,7 @@ import { useCart } from "@/lib/cart";
 import { fmtBRL } from "@/lib/format";
 import { createOrder, getOrderStatus, previewCoupon } from "@/lib/actions/orders";
 import CardForm from "@/components/marketing/card-form";
+import { createClient } from "@/lib/supabase/client";
 
 type Pix = { qrBase64: string; copyPaste: string; orderId: string; expiresAt: string };
 
@@ -73,6 +74,18 @@ export default function CheckoutPage() {
     return () => clearInterval(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pix]);
+
+  // pré-preenche nome/e-mail do usuário logado (veio pelo gate de acesso)
+  useEffect(() => {
+    (async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      setEmail((e) => e || user.email || "");
+      const { data: profile } = await supabase.from("profiles").select("full_name").eq("id", user.id).single();
+      if (profile?.full_name) setName((n) => n || profile.full_name);
+    })();
+  }, []);
 
   const finalize = async () => {
     if (!items.length) return;
@@ -193,9 +206,13 @@ export default function CheckoutPage() {
 
   return (
     <div className="container" style={{ maxWidth: 1100, padding: "40px 48px 64px" }}>
-      <span className="eyebrow eyebrow-gold">Checkout</span>
-      <h1 className="h1" data-reveal-lines style={{ fontSize: 44, marginTop: 16 }}>
-        Seu <span className="serif accent-gold">carrinho</span>
+      <div className="buy-steps" style={{ marginBottom: 18 }}>
+        <span>Ingressos</span><span className="sep">·</span>
+        <span>Acesso</span><span className="sep">·</span>
+        <b>Pagamento</b>
+      </div>
+      <h1 className="h1" data-reveal-lines style={{ fontSize: 40, marginTop: 4 }}>
+        Finalizar <span className="serif accent-gold">compra</span>
       </h1>
 
       {items.length === 0 ? (
@@ -263,7 +280,7 @@ export default function CheckoutPage() {
 
           {/* summary */}
           <div className="summary">
-            <h4 style={{ fontFamily: "var(--font-sans)", fontWeight: 600, fontSize: 17, color: "#fff", margin: 0 }}>Resumo</h4>
+            <h4 style={{ fontFamily: "var(--font-sans)", fontWeight: 600, fontSize: 17, color: "var(--text-primary)", margin: 0 }}>Resumo</h4>
 
             {/* Cupom */}
             <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
@@ -271,25 +288,25 @@ export default function CheckoutPage() {
                 value={coupon}
                 onChange={(e) => setCoupon(e.target.value.toUpperCase())}
                 placeholder="Cupom"
-                style={{ flex: 1, fontSize: 13, padding: "9px 12px", borderRadius: 8, border: "1px solid rgba(255,255,255,.18)", background: "rgba(255,255,255,.06)", color: "#fff", fontFamily: "var(--font-mono)" }}
+                style={{ flex: 1, fontSize: 13, padding: "10px 12px", borderRadius: 8, border: "1px solid var(--border)", background: "var(--bg-tint)", color: "var(--text-primary)", fontFamily: "var(--font-mono)" }}
               />
-              <button type="button" onClick={applyCoupon} className="btn btn-ghost-dark btn-sm">Aplicar</button>
+              <button type="button" onClick={applyCoupon} className="btn btn-navy btn-sm">Aplicar</button>
             </div>
             {couponMsg && (
-              <p style={{ fontSize: 12, marginTop: 6, color: discount > 0 ? "var(--gold-400)" : "#F3B4B4" }}>{couponMsg}</p>
+              <p style={{ fontSize: 12, marginTop: 6, color: discount > 0 ? "var(--text-primary)" : "#B4291F" }}>{couponMsg}</p>
             )}
 
             <div className="summary-row" style={{ marginTop: 18 }}><span>Subtotal</span><span>{fmtBRL(subtotal)}</span></div>
             {discount > 0 && (
-              <div className="summary-row" style={{ marginTop: 12, color: "var(--gold-400)" }}><span>Desconto</span><span>− {fmtBRL(discount)}</span></div>
+              <div className="summary-row" style={{ marginTop: 12, color: "var(--text-primary)" }}><span>Desconto</span><span>− {fmtBRL(discount)}</span></div>
             )}
             <div className="summary-row" style={{ marginTop: 12 }}><span>Taxa de serviço</span><span>{fmtBRL(feeAdj)}</span></div>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 18, paddingTop: 18, borderTop: "1px solid rgba(255,255,255,.12)" }}>
-              <span style={{ color: "#fff", fontSize: 15 }}>Total</span>
-              <span style={{ fontFamily: "var(--font-display)", fontSize: 28, fontWeight: 500, color: "#fff" }}>{fmtBRL(totalAdj)}</span>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 18, paddingTop: 18, borderTop: "1px solid var(--border)" }}>
+              <span style={{ color: "var(--text-primary)", fontSize: 15 }}>Total</span>
+              <span style={{ fontFamily: "var(--font-display)", fontSize: 28, fontWeight: 500, color: "var(--text-primary)" }}>{fmtBRL(totalAdj)}</span>
             </div>
             {error && (
-              <p style={{ marginTop: 16, fontSize: 13, color: "#F3B4B4", background: "rgba(243,180,180,.12)", border: "1px solid rgba(243,180,180,.25)", borderRadius: 10, padding: "8px 12px" }}>
+              <p style={{ marginTop: 16, fontSize: 13, color: "#B4291F", background: "rgba(180,41,31,.08)", border: "1px solid rgba(180,41,31,.2)", borderRadius: 10, padding: "8px 12px" }}>
                 {error}
               </p>
             )}
@@ -306,8 +323,8 @@ export default function CheckoutPage() {
                 <button className="btn btn-gold btn-block" style={{ marginTop: 22, opacity: loading ? 0.6 : 1 }} onClick={finalize} disabled={loading}>
                   {loading ? "Processando..." : "Pagar com Pix"}
                 </button>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginTop: 14, fontSize: 12, color: "#9AA0A6" }}>
-                  <Icon icon="solar:lock-keyhole-bold-duotone" style={{ color: "#9AA0A6", fontSize: 16 }} /> Pagamento criptografado
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginTop: 14, fontSize: 12, color: "var(--text-tertiary)" }}>
+                  <Icon icon="solar:lock-keyhole-bold-duotone" style={{ color: "var(--text-tertiary)", fontSize: 16 }} /> Pagamento criptografado
                 </div>
               </>
             )}

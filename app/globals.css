@@ -102,11 +102,6 @@
 .marketing-mono .date-block { background:#0A0A0A; }
 .marketing-mono .date-block .m { color:#9A9A9A; }
 .marketing-mono .footer-link { color:#BBBBBB; }
-.marketing-mono .summary { color:#FFFFFF; }
-.marketing-mono .summary-row { color:#BBBBBB; }
-/* CTA dentro do resumo (fundo preto) precisa ser claro pra ter contraste */
-.marketing-mono .summary .btn-gold { background:#FFFFFF; color:#0A0A0A; }
-.marketing-mono .summary .btn-gold:hover { background:#ECECEC; }
 .marketing-mono .step:hover { background:#0A0A0A; color:#fff; }
 
 /* hero — gancho editorial acima do carrossel (classes únicas p/ não colidir
@@ -317,8 +312,48 @@ input { font-family: inherit; }
    CHECKOUT / SUMMARY
    ============================================================ */
 .checkout-layout { display:grid; grid-template-columns:1.4fr .9fr; gap:36px; align-items:start; }
-.summary { position:sticky; top:96px; background:var(--navy-800); border-radius:var(--r-xl); padding:28px; box-shadow:var(--sh-lg); color:#F6F3EB; }
-.summary-row { display:flex; align-items:center; justify-content:space-between; color:#B8C1D0; font-size:14px; }
+.summary { position:sticky; top:96px; background:var(--bg-elevated); border:1px solid var(--border); border-radius:var(--r-xl); padding:28px; box-shadow:var(--sh-sm); color:var(--text-primary); }
+.summary-row { display:flex; align-items:center; justify-content:space-between; color:var(--text-secondary); font-size:14px; }
+
+/* ============================================================
+   PURCHASE FLOW — seleção de ingressos (leve, em etapas)
+   ============================================================ */
+.buy-steps { display:flex; align-items:center; gap:10px; font-family:var(--font-mono); font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--text-tertiary); }
+.buy-steps b { color:var(--text-primary); font-weight:600; }
+.buy-steps .sep { opacity:.4; }
+
+.buy-header { display:flex; align-items:center; gap:16px; padding:20px 0 24px; margin-top:16px; border-bottom:1px solid var(--border); }
+.buy-header__thumb { width:58px; height:58px; border-radius:12px; object-fit:cover; flex-shrink:0; background:linear-gradient(150deg,#1A1A1A,#0A0A0A); }
+.buy-header__title { font-family:var(--font-display); font-weight:500; font-size:19px; letter-spacing:-.01em; margin:0; }
+.buy-header__meta { font-size:13px; color:var(--text-tertiary); margin-top:3px; display:inline-flex; gap:6px; align-items:center; }
+.buy-header__link { font-size:13px; color:var(--text-secondary); text-decoration:underline; text-underline-offset:3px; white-space:nowrap; }
+
+.buy-layout { display:grid; grid-template-columns:1fr 380px; gap:32px; align-items:start; margin-top:28px; }
+.buy-tier { display:flex; align-items:center; gap:16px; padding:22px 24px; border:1px solid var(--border); border-radius:var(--r-lg); background:var(--bg-elevated); }
+.buy-tier + .buy-tier { margin-top:12px; }
+.buy-tier__name { font-family:var(--font-display); font-weight:500; font-size:18px; letter-spacing:-.01em; }
+.buy-tier__desc { font-size:13px; color:var(--text-tertiary); margin-top:3px; }
+.buy-tier__price { font-size:15px; margin-top:10px; }
+.buy-tier__price .tax { color:var(--text-tertiary); font-size:12px; margin-left:4px; }
+
+.buy-panel { position:sticky; top:96px; border:1px solid var(--border); border-radius:var(--r-xl); background:var(--bg-elevated); box-shadow:var(--sh-sm); overflow:hidden; }
+.buy-panel__head { display:flex; align-items:center; gap:10px; padding:18px 22px; border-bottom:1px solid var(--border); font-weight:600; font-size:15px; }
+.buy-panel__body { padding:16px 22px; min-height:120px; }
+.buy-panel__empty { text-align:center; color:var(--text-tertiary); font-size:14px; padding:22px 8px; }
+.buy-line { display:flex; justify-content:space-between; gap:12px; font-size:14px; padding:10px 0; border-top:1px solid var(--border-subtle); }
+.buy-line:first-child { border-top:none; }
+.buy-panel__foot { padding:18px 22px; border-top:1px solid var(--border); background:var(--bg-tint); }
+.buy-total { display:flex; align-items:baseline; justify-content:space-between; margin:8px 0 14px; }
+.buy-total .v { font-family:var(--font-display); font-size:26px; font-weight:500; }
+@media (max-width:900px) { .buy-layout { grid-template-columns:1fr; } .buy-panel { position:static; } }
+
+/* modal de login/cadastro */
+.modal-overlay { position:fixed; inset:0; background:rgba(10,10,10,.55); backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center; padding:24px; z-index:100; }
+.modal-card { background:var(--bg-elevated); border-radius:var(--r-2xl); width:100%; max-width:420px; padding:32px; box-shadow:0 30px 80px rgba(0,0,0,.32); position:relative; }
+.modal-close { position:absolute; right:16px; top:16px; background:none; border:none; cursor:pointer; color:var(--text-tertiary); display:flex; }
+.modal-tabs { display:flex; gap:24px; border-bottom:1px solid var(--border); margin-bottom:18px; }
+.modal-tab { padding:0 0 12px; font-size:15px; font-weight:500; color:var(--text-tertiary); background:none; border:none; border-bottom:2px solid transparent; cursor:pointer; margin-bottom:-1px; }
+.modal-tab--active { color:var(--text-primary); border-bottom-color:var(--text-primary); }
 
 /* banner do evento (sem capa): pôster tipográfico com cor da categoria */
 .banner-poster { width:100%; height:100%; display:flex; flex-direction:column; justify-content:flex-end; gap:12px; padding:36px 40px; text-align:left; }

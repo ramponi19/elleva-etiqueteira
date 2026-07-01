@@ -2,9 +2,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Icon from "@/components/shared/icon";
-import TicketSelector from "@/components/marketing/ticket-selector";
 import { getEvent, getEventSlugs } from "@/lib/events";
 import { eventGradient } from "@/lib/event-theme";
+import { fmtBRL } from "@/lib/format";
 
 export const revalidate = 300;
 
@@ -31,58 +31,61 @@ export default async function EventPage({
   const { id } = await params;
   const data = await getEvent(id);
   if (!data) notFound();
-  const { event, tiers } = data;
+  const { event } = data;
 
   return (
-    <div className="container" style={{ padding: "32px 48px 64px" }}>
+    <div className="container" style={{ padding: "32px 48px 72px", maxWidth: 900 }}>
       <Link href="/agenda" className="nav-link" style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 14, color: "var(--text-tertiary)", marginBottom: 24 }}>
         <Icon icon="lucide:arrow-left" /> Voltar para a agenda
       </Link>
 
-      <div className="event-layout" style={{ marginTop: 8 }}>
-        {/* left: banner + info */}
-        <div>
-          <div className="banner" data-reveal style={event.cover ? { padding: 0 } : undefined}>
-            {event.cover ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={event.cover} alt={event.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-            ) : (
-              <div className="banner-poster" style={{ backgroundImage: eventGradient(event.catLabel) }}>
-                <span className="banner-poster__cat">{event.catLabel}</span>
-                <span className="banner-poster__title">{event.title}</span>
-              </div>
-            )}
+      <div className="banner" data-reveal style={event.cover ? { padding: 0 } : undefined}>
+        {event.cover ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={event.cover} alt={event.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+        ) : (
+          <div className="banner-poster" style={{ backgroundImage: eventGradient(event.catLabel) }}>
+            <span className="banner-poster__cat">{event.catLabel}</span>
+            <span className="banner-poster__title">{event.title}</span>
           </div>
-
-          <span className="eyebrow eyebrow-gold" style={{ marginTop: 32 }}>{event.catLabel}</span>
-          <h1 className="h1" data-reveal-lines style={{ fontSize: 44, marginTop: 16 }}>{event.title}</h1>
-
-          <div className="meta-row" data-reveal>
-            <div className="meta-chip">
-              <Icon icon="solar:calendar-bold-duotone" style={{ fontSize: 22, color: "var(--text-gold)" }} />
-              <div><div className="k">DATA</div><div className="v">{event.dateFull}</div></div>
-            </div>
-            <div className="meta-chip">
-              <Icon icon="solar:clock-circle-bold-duotone" style={{ fontSize: 22, color: "var(--text-gold)" }} />
-              <div><div className="k">HORÁRIO</div><div className="v">{event.time}</div></div>
-            </div>
-            <div className="meta-chip">
-              <Icon icon="solar:map-point-bold-duotone" style={{ fontSize: 22, color: "var(--text-gold)" }} />
-              <div><div className="k">LOCAL</div><div className="v">{event.venueCity}</div></div>
-            </div>
-          </div>
-
-          <h3 className="h3" data-reveal style={{ fontSize: 24, marginTop: 36 }}>Sobre o evento</h3>
-          <p className="body-lg" data-reveal style={{ marginTop: 12, maxWidth: 560 }}>{event.desc}</p>
-          <p className="body" style={{ marginTop: 14, maxWidth: 560 }}>
-            Abertura dos portões uma hora antes. Evento sujeito à classificação indicativa. Ingressos não
-            reembolsáveis após a confirmação, conforme política de compra.
-          </p>
-        </div>
-
-        {/* right: ticket selector */}
-        <TicketSelector event={event} tiers={tiers} />
+        )}
       </div>
+
+      <span className="eyebrow eyebrow-gold" style={{ marginTop: 32 }}>{event.catLabel}</span>
+      <h1 className="h1" data-reveal-lines style={{ fontSize: 44, marginTop: 16 }}>{event.title}</h1>
+
+      <div className="meta-row" data-reveal>
+        <div className="meta-chip">
+          <Icon icon="solar:calendar-bold-duotone" style={{ fontSize: 22, color: "var(--text-gold)" }} />
+          <div><div className="k">DATA</div><div className="v">{event.dateFull}</div></div>
+        </div>
+        <div className="meta-chip">
+          <Icon icon="solar:clock-circle-bold-duotone" style={{ fontSize: 22, color: "var(--text-gold)" }} />
+          <div><div className="k">HORÁRIO</div><div className="v">{event.time}</div></div>
+        </div>
+        <div className="meta-chip">
+          <Icon icon="solar:map-point-bold-duotone" style={{ fontSize: 22, color: "var(--text-gold)" }} />
+          <div><div className="k">LOCAL</div><div className="v">{event.venueCity}</div></div>
+        </div>
+      </div>
+
+      {/* CTA de compra */}
+      <div data-reveal style={{ display: "flex", alignItems: "center", gap: 20, flexWrap: "wrap", marginTop: 32, paddingTop: 28, borderTop: "1px solid var(--border)" }}>
+        <div>
+          <div style={{ fontSize: 13, color: "var(--text-tertiary)" }}>a partir de</div>
+          <div style={{ fontFamily: "var(--font-display)", fontSize: 26, fontWeight: 500 }}>{fmtBRL(event.priceFrom)}</div>
+        </div>
+        <Link href={`/evento/${event.id}/ingressos`} className="btn btn-gold btn-lg" style={{ marginLeft: "auto" }}>
+          Comprar ingresso <Icon icon="lucide:arrow-right" />
+        </Link>
+      </div>
+
+      <h3 className="h3" data-reveal style={{ fontSize: 24, marginTop: 44 }}>Sobre o evento</h3>
+      <p className="body-lg" data-reveal style={{ marginTop: 12, maxWidth: 620 }}>{event.desc}</p>
+      <p className="body" style={{ marginTop: 14, maxWidth: 620 }}>
+        Abertura dos portões uma hora antes. Evento sujeito à classificação indicativa. Ingressos não
+        reembolsáveis após a confirmação, conforme política de compra.
+      </p>
     </div>
   );
 }
