@@ -1,75 +1,110 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
+import { useEffect, useState, useRef } from "react";
+import { useRouter } from "next/navigation";
 import Icon from "@/components/shared/icon";
 import type { EventItem } from "@/lib/events";
 
+function slideStyle(offset: number, total: number): React.CSSProperties {
+  // normaliza o offset para o caminho mais curto (carrossel circular)
+  let o = offset;
+  if (o > total / 2) o -= total;
+  if (o < -total / 2) o += total;
+  const abs = Math.abs(o);
+
+  let x: number, scale: number, opacity: number, z: number, blur: number;
+  if (abs === 0) { x = -50; scale = 1; opacity = 1; z = 5; blur = 0; }
+  else if (abs === 1) { x = o > 0 ? 38 : -138; scale = 0.78; opacity = 0.5; z = 3; blur = 1; }
+  else if (abs === 2) { x = o > 0 ? 90 : -190; scale = 0.6; opacity = 0.18; z = 1; blur = 2; }
+  else { x = o > 0 ? 130 : -230; scale = 0.5; opacity = 0; z = 0; blur = 3; }
+
+  return {
+    transform: `translate(${x}%, -50%) scale(${scale})`,
+    opacity,
+    zIndex: z,
+    filter: `blur(${blur}px)`,
+    pointerEvents: abs > 2 ? "none" : "auto",
+  };
+}
+
 export default function Carousel({ events }: { events: EventItem[] }) {
   const [active, setActive] = useState(0);
+  const router = useRouter();
+  const timer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const total = events.length;
+
+  function restart() {
+    if (timer.current) clearInterval(timer.current);
+    if (total > 1) timer.current = setInterval(() => setActive((i) => (i + 1) % total), 8000);
+  }
 
   useEffect(() => {
-    if (events.length < 2) return;
-    const timer = setInterval(() => setActive((i) => (i + 1) % events.length), 8000);
-    return () => clearInterval(timer);
-  }, [events.length]);
+    restart();
+    return () => { if (timer.current) clearInterval(timer.current); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [total]);
 
-  const event = events[active];
-  if (!event) return null;
+  function go(i: number) {
+    setActive(((i % total) + total) % total);
+    restart();
+  }
+
+  if (total === 0) return null;
+  const current = events[active];
 
   return (
-    <section className="container" style={{ padding: "48px 48px 24px" }}>
-      <div className="hero-stage">
-        <div className="hero-glow" />
-        <div className="hero-grid" />
-        <div className="hero-inner">
-          <div>
-            <span className="eyebrow eyebrow-gold">Em cartaz · destaque da semana</span>
-            <h1 className="h1 hero-title" style={{ marginTop: 20 }}>{event.title}</h1>
-            <div className="hero-meta">
-              <span>
-                <Icon icon="lucide:calendar" style={{ verticalAlign: -2, color: "#9A9A9A" }} /> {event.dateFull}
-              </span>
-              <span>
-                <Icon icon="lucide:map-pin" style={{ verticalAlign: -2, color: "#9A9A9A" }} /> {event.venueCity}
-              </span>
-            </div>
-            <p className="hero-desc">{event.desc}</p>
-            <div style={{ display: "flex", gap: 14, marginTop: 32 }}>
-              <Link href={`/evento/${event.id}`} className="btn btn-gold btn-lg" style={{ boxShadow: "var(--sh-gold)" }}>
-                Comprar ingressos
-              </Link>
-              <Link href="/agenda" className="btn btn-ghost-dark btn-lg">
-                Ver agenda completa
-              </Link>
-            </div>
-            {events.length > 1 && (
-              <div className="hero-dots">
-                {events.map((ev, i) => (
-                  <button
-                    key={ev.id}
-                    type="button"
-                    aria-label={`Ver ${ev.title}`}
-                    onClick={() => setActive(i)}
-                    className={i === active ? "active" : ""}
-                    style={{ border: "none", padding: 0, cursor: "pointer" }}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
+    <section className="carousel-section">
+      <div className="carousel">
+        {total > 1 && (
+          <button className="car-arrow car-prev" onClick={() => go(active - 1)} aria-label="Anterior">
+            <Icon icon="lucide:chevron-left" />
+          </button>
+        )}
 
-          <Link href={`/evento/${event.id}`} className="poster" style={event.cover ? { padding: 0, overflow: "hidden" } : undefined}>
-            {event.cover ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={event.cover} alt={event.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-            ) : (
-              <>
-                <Icon icon={event.icon} style={{ fontSize: 64, color: "#fff" }} />
-                <span className="poster-label">PÔSTER 4:5</span>
-              </>
-            )}
-          </Link>
+        <div className="car-track">
+          {events.map((ev, i) => (
+            <button
+              key={ev.id}
+              className="car-slide"
+              style={slideStyle(i - active, total)}
+              onClick={() => (i === active ? router.push(`/evento/${ev.id}`) : go(i))}
+              aria-label={ev.title}
+            >
+              {ev.cover ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={ev.cover} alt={ev.title} className="car-img" />
+              ) : (
+                <span className="car-art"><Icon icon={ev.icon} /></span>
+              )}
+            </button>
+          ))}
+        </div>
+
+        {total > 1 && (
+          <button className="car-arrow car-next" onClick={() => go(active + 1)} aria-label="Próximo">
+            <Icon icon="lucide:chevron-right" />
+          </button>
+        )}
+      </div>
+
+      {total > 1 && (
+        <div className="car-dots">
+          {events.map((ev, i) => (
+            <button
+              key={ev.id}
+              className={`car-dot${i === active ? " active" : ""}`}
+              onClick={() => go(i)}
+              aria-label={`Ir para ${ev.title}`}
+            />
+          ))}
+        </div>
+      )}
+
+      <div className="car-caption">
+        <h3 className="car-title">{current.title}</h3>
+        <div className="car-meta">
+          <span><Icon icon="lucide:map-pin" /> {current.venueCity}</span>
+          <span><Icon icon="lucide:calendar" /> {current.dateFull} · {current.time}</span>
         </div>
       </div>
     </section>

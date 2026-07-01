@@ -104,6 +104,25 @@
 .marketing-mono .date-block .m { color:#9A9A9A; }
 .marketing-mono .footer-link { color:#BBBBBB; }
 
+/* carrossel coverflow — slide central grande, laterais menores/desbotados */
+.carousel-section { padding:56px 0 0; }
+.carousel { position:relative; height:400px; display:flex; align-items:center; justify-content:center; }
+.car-track { position:relative; width:100%; height:100%; }
+.car-slide { position:absolute; top:50%; left:50%; width:600px; max-width:82vw; aspect-ratio:16/9; border-radius:20px; overflow:hidden; padding:0; border:none; cursor:pointer; background:#0A0A0A; box-shadow:0 26px 60px rgba(0,0,0,.22); transition:transform .65s cubic-bezier(.16,1,.3,1), opacity .65s, filter .65s; }
+.car-img { width:100%; height:100%; object-fit:cover; }
+.car-art { width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size:64px; color:#fff; background:linear-gradient(155deg,#1A1A1A,#0A0A0A); }
+.car-arrow { position:absolute; top:50%; transform:translateY(-50%); width:46px; height:46px; border-radius:50%; background:#fff; border:1px solid #E5E5E5; display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:20; box-shadow:0 6px 16px rgba(0,0,0,.1); color:#0A0A0A; font-size:18px; }
+.car-arrow:hover { background:#0A0A0A; color:#fff; }
+.car-prev { left:6%; }
+.car-next { right:6%; }
+.car-dots { display:flex; justify-content:center; gap:8px; margin-top:22px; }
+.car-dot { width:7px; height:7px; padding:0; border:none; border-radius:9999px; background:#DDD; cursor:pointer; transition:background .3s, width .3s; }
+.car-dot.active { background:#0A0A0A; width:24px; }
+.car-caption { text-align:center; margin-top:24px; }
+.car-title { font-family:var(--font-display); font-weight:500; font-size:26px; letter-spacing:-.01em; color:#0A0A0A; }
+.car-meta { display:flex; justify-content:center; gap:20px; margin-top:10px; font-size:13px; color:#777; flex-wrap:wrap; }
+.car-meta span { display:inline-flex; align-items:center; gap:6px; }
+
 /* ticket-divider: linha de perfuração entre seções, eco do próprio
    objeto ingresso (o logo já é um ticket) em vez de um hairline genérico */
 .ticket-divider { position:relative; display:flex; align-items:center; margin:8px 48px 0; height:1px; }
