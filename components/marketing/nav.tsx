@@ -52,13 +52,6 @@ export default function Nav({
         <span className="brand-name">Elleva Tickets</span>
       </Link>
 
-      <div className="nav-links">
-        <Link href="/agenda" className="nav-link">Shows</Link>
-        <Link href="/agenda" className="nav-link">Eventos</Link>
-        <Link href="/agenda" className="nav-link">Categorias</Link>
-        <Link href="/agenda" className="nav-link">Cidades</Link>
-      </div>
-
       <div className="nav-actions">
         {searchOpen ? (
           <form onSubmit={submitSearch} style={{ position: "relative" }}>
