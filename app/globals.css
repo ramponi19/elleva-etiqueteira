@@ -106,7 +106,6 @@
 /* hero — gancho editorial acima do carrossel (classes únicas p/ não colidir
    com o hero legado .hero-* mais abaixo neste arquivo) */
 .home-hero { display:flex; flex-direction:column; align-items:center; text-align:center; padding:66px 48px 18px; }
-.home-hero__kicker { font-family:var(--font-mono); font-size:12px; font-weight:500; letter-spacing:.24em; text-transform:uppercase; color:var(--text-tertiary); margin:0 0 20px; }
 .home-hero__title { font-family:var(--font-display); font-weight:500; font-size:clamp(2.4rem,6vw,5rem); line-height:1.02; letter-spacing:-.035em; color:#0A0A0A; margin:0 auto; max-width:16ch; text-wrap:balance; }
 @media (max-width:640px) { .home-hero { padding:42px 24px 10px; } }
 

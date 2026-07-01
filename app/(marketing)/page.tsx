@@ -21,7 +21,6 @@ export default async function HomePage() {
       </noscript>
 
       <section className="home-hero">
-        <p className="home-hero__kicker" data-reveal>Ingressos · Interior de SP + Sul de MG</p>
         <h1 className="home-hero__title" data-hero-title style={{ opacity: 0 }}>
           Todo evento que importa,<br />num lugar só.
         </h1>
