@@ -109,15 +109,6 @@
 .home-hero__title { font-family:var(--font-display); font-weight:500; font-size:clamp(2.4rem,6vw,5rem); line-height:1.02; letter-spacing:-.035em; color:#0A0A0A; margin:0 auto; max-width:16ch; text-wrap:balance; }
 @media (max-width:640px) { .home-hero { padding:42px 24px 10px; } }
 
-/* marquee — faixa "ticker" correndo (assinatura) */
-.marquee { overflow:hidden; background:#0A0A0A; padding:26px 0; margin-top:8px; }
-.marquee__track { display:flex; width:max-content; animation:marqueeScroll 30s linear infinite; }
-.marquee__group { display:flex; flex-shrink:0; }
-.marquee__item { display:inline-flex; align-items:center; font-family:var(--font-display); font-weight:500; font-size:clamp(26px,3.6vw,48px); letter-spacing:-.02em; color:#fff; white-space:nowrap; }
-.marquee__sep { color:rgba(255,255,255,.35); margin:0 32px; font-size:.55em; }
-@keyframes marqueeScroll { to { transform:translateX(-50%); } }
-@media (prefers-reduced-motion:reduce) { .marquee__track { animation:none; } }
-
 /* carrossel coverflow — slide central grande, laterais menores/desbotados */
 .carousel-section { padding:56px 0 0; }
 .carousel { position:relative; height:400px; display:flex; align-items:center; justify-content:center; }

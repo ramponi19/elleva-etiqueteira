@@ -2,7 +2,6 @@ import Link from "next/link";
 import Carousel from "@/components/marketing/carousel";
 import EventGrid from "@/components/marketing/event-grid";
 import ProducerCTA from "@/components/marketing/producer-cta";
-import Marquee from "@/components/marketing/marquee";
 import TicketDivider from "@/components/marketing/ticket-divider";
 import Icon from "@/components/shared/icon";
 import { getEvents, getFeaturedEvents } from "@/lib/events";
@@ -42,8 +41,6 @@ export default async function HomePage() {
         </div>
         <EventGrid events={events} />
       </section>
-
-      <Marquee />
 
       <ProducerCTA />
     </>
