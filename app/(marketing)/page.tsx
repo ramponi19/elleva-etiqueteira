@@ -2,6 +2,7 @@ import Link from "next/link";
 import Carousel from "@/components/marketing/carousel";
 import EventGrid from "@/components/marketing/event-grid";
 import ProducerCTA from "@/components/marketing/producer-cta";
+import Marquee from "@/components/marketing/marquee";
 import TicketDivider from "@/components/marketing/ticket-divider";
 import Icon from "@/components/shared/icon";
 import { getEvents, getFeaturedEvents } from "@/lib/events";
@@ -13,6 +14,19 @@ export default async function HomePage() {
 
   return (
     <>
+      {/* sem JS, o título do hero fica visível (ele começa com opacity:0 pro
+          reveal por linha não piscar) */}
+      <noscript>
+        <style dangerouslySetInnerHTML={{ __html: ".home-hero__title{opacity:1 !important}" }} />
+      </noscript>
+
+      <section className="home-hero">
+        <p className="home-hero__kicker" data-reveal>Ingressos · Interior de SP + Sul de MG</p>
+        <h1 className="home-hero__title" data-hero-title style={{ opacity: 0 }}>
+          Todo evento que importa,<br />num lugar só.
+        </h1>
+      </section>
+
       {featured.length > 0 && <Carousel events={featured} />}
 
       <TicketDivider />
@@ -29,6 +43,8 @@ export default async function HomePage() {
         </div>
         <EventGrid events={events} />
       </section>
+
+      <Marquee />
 
       <ProducerCTA />
     </>

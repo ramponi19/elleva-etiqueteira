@@ -95,6 +95,7 @@ export default function MotionProvider({ children }: { children: React.ReactNode
     document.fonts.ready.then(() => {
       if (cancelled) return;
       ctx.add(() => {
+        // títulos que revelam por linha ao entrar na tela
         gsap.utils.toArray<HTMLElement>("[data-reveal-lines]").forEach((el) => {
           const split = new SplitText(el, { type: "lines", autoSplit: true });
           splits.push(split);
@@ -105,6 +106,21 @@ export default function MotionProvider({ children }: { children: React.ReactNode
             ease: "power3.out",
             stagger: 0.12,
             scrollTrigger: { trigger: el, start: "top 85%", once: true },
+          });
+        });
+
+        // hero: revela por linha logo no load (começa com opacity:0 inline)
+        gsap.utils.toArray<HTMLElement>("[data-hero-title]").forEach((el) => {
+          const split = new SplitText(el, { type: "lines" });
+          splits.push(split);
+          gsap.set(el, { opacity: 1 });
+          gsap.from(split.lines, {
+            yPercent: 100,
+            opacity: 0,
+            duration: 1,
+            ease: "power4.out",
+            stagger: 0.14,
+            delay: 0.1,
           });
         });
       });

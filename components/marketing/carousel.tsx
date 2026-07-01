@@ -76,7 +76,10 @@ export default function Carousel({ events }: { events: EventItem[] }) {
                 <img src={ev.cover} alt={ev.title} className="car-img" />
               ) : (
                 <span className="car-art" style={{ backgroundImage: eventGradient(ev.catLabel) }}>
-                  <Icon icon={ev.icon} />
+                  <span className="car-poster">
+                    <span className="car-poster__cat">{ev.catLabel}</span>
+                    <span className="car-poster__title">{ev.title}</span>
+                  </span>
                 </span>
               )}
             </button>
