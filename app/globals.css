@@ -103,6 +103,12 @@
 .marketing-mono .date-block { background:#0A0A0A; }
 .marketing-mono .date-block .m { color:#9A9A9A; }
 .marketing-mono .footer-link { color:#BBBBBB; }
+
+/* ticket-divider: linha de perfuração entre seções, eco do próprio
+   objeto ingresso (o logo já é um ticket) em vez de um hairline genérico */
+.ticket-divider { position:relative; display:flex; align-items:center; margin:8px 48px 0; height:1px; }
+.ticket-divider__line { flex:1; border-top:2px dashed #D8D8D8; }
+.ticket-divider__notch { width:20px; height:20px; border-radius:50%; background:var(--bg-main); border:2px solid #D8D8D8; flex-shrink:0; margin:0 -10px; z-index:1; }
 .marketing-mono .footer-meta { color:#777777; }
 
 /* ============================================================
