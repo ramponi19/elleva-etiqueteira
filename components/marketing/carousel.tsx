@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Icon from "@/components/shared/icon";
+import { eventGradient } from "@/lib/event-theme";
 import type { EventItem } from "@/lib/events";
 
 function slideStyle(offset: number, total: number): React.CSSProperties {
@@ -14,9 +15,9 @@ function slideStyle(offset: number, total: number): React.CSSProperties {
 
   let x: number, scale: number, opacity: number, z: number, blur: number;
   if (abs === 0) { x = -50; scale = 1; opacity = 1; z = 5; blur = 0; }
-  else if (abs === 1) { x = o > 0 ? 38 : -138; scale = 0.78; opacity = 0.5; z = 3; blur = 1; }
-  else if (abs === 2) { x = o > 0 ? 90 : -190; scale = 0.6; opacity = 0.18; z = 1; blur = 2; }
-  else { x = o > 0 ? 130 : -230; scale = 0.5; opacity = 0; z = 0; blur = 3; }
+  else if (abs === 1) { x = o > 0 ? 38 : -138; scale = 0.8; opacity = 0.55; z = 3; blur = 0; }
+  else if (abs === 2) { x = o > 0 ? 92 : -192; scale = 0.62; opacity = 0.3; z = 1; blur = 0.5; }
+  else { x = o > 0 ? 130 : -230; scale = 0.5; opacity = 0; z = 0; blur = 2; }
 
   return {
     transform: `translate(${x}%, -50%) scale(${scale})`,
@@ -74,7 +75,9 @@ export default function Carousel({ events }: { events: EventItem[] }) {
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={ev.cover} alt={ev.title} className="car-img" />
               ) : (
-                <span className="car-art"><Icon icon={ev.icon} /></span>
+                <span className="car-art" style={{ backgroundImage: eventGradient(ev.catLabel) }}>
+                  <Icon icon={ev.icon} />
+                </span>
               )}
             </button>
           ))}
