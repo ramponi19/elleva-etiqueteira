@@ -19,7 +19,7 @@ export default async function HomePage() {
 
       {/* escolha um evento */}
       <section className="container" style={{ padding: "40px 48px 16px" }}>
-        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 24 }}>
+        <div data-reveal style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 24 }}>
           <h2 className="h2" style={{ fontSize: 34 }}>
             Escolha um <span className="serif accent-gold">evento</span>
           </h2>

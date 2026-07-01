@@ -143,6 +143,19 @@
 .marketing-mono .footer-meta { color:#777777; }
 
 /* ============================================================
+   MOTION — Lenis (scroll suave) + reveals (GSAP/ScrollTrigger)
+   ============================================================ */
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+.lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
+.lenis.lenis-stopped { overflow: hidden; }
+.lenis.lenis-smooth iframe { pointer-events: none; }
+
+/* O estado inicial escondido dos reveals é aplicado por JS (gsap.set), não por
+   CSS — assim, sem JS ou com prefers-reduced-motion, o conteúdo aparece normal
+   e não há mismatch de hidratação. */
+
+/* ============================================================
    BASE
    ============================================================ */
 * { box-sizing: border-box; }

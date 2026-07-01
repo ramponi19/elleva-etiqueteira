@@ -23,7 +23,7 @@ export default function ProducerCTA() {
         </span>
       ))}
 
-      <div className="producer-inner">
+      <div className="producer-inner" data-reveal>
         <h2 className="producer-title">
           Cria. <span className="serif">Divulga.</span> Coloca seu<br />evento no mundo.
         </h2>
