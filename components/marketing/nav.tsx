@@ -6,7 +6,6 @@ import { useEffect, useRef, useState } from "react";
 import Icon from "@/components/shared/icon";
 import Logo from "@/components/shared/logo";
 import Magnetic from "@/components/motion/magnetic";
-import { useCart } from "@/lib/cart";
 import { createClient } from "@/lib/supabase/client";
 
 export default function Nav({
@@ -16,7 +15,6 @@ export default function Nav({
   loggedIn: boolean;
   homeHref: string;
 }) {
-  const { count } = useCart();
   const router = useRouter();
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -125,10 +123,6 @@ export default function Nav({
             )}
           </div>
         )}
-        <Link href="/checkout" className="cart-btn" aria-label="Carrinho">
-          <Icon icon="solar:cart-large-2-bold-duotone" style={{ fontSize: 26, color: "var(--text-primary)" }} />
-          {count > 0 && <span className="cart-badge">{count}</span>}
-        </Link>
       </div>
     </nav>
   );

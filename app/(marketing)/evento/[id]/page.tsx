@@ -4,7 +4,6 @@ import type { Metadata } from "next";
 import Icon from "@/components/shared/icon";
 import { getEvent, getEventSlugs } from "@/lib/events";
 import { eventGradient } from "@/lib/event-theme";
-import { fmtBRL } from "@/lib/format";
 
 export const revalidate = 300;
 
@@ -70,12 +69,8 @@ export default async function EventPage({
       </div>
 
       {/* CTA de compra */}
-      <div data-reveal style={{ display: "flex", alignItems: "center", gap: 20, flexWrap: "wrap", marginTop: 32, paddingTop: 28, borderTop: "1px solid var(--border)" }}>
-        <div>
-          <div style={{ fontSize: 13, color: "var(--text-tertiary)" }}>a partir de</div>
-          <div style={{ fontFamily: "var(--font-display)", fontSize: 26, fontWeight: 500 }}>{fmtBRL(event.priceFrom)}</div>
-        </div>
-        <Link href={`/evento/${event.id}/ingressos`} className="btn btn-gold btn-lg" style={{ marginLeft: "auto" }}>
+      <div data-reveal style={{ marginTop: 32, paddingTop: 28, borderTop: "1px solid var(--border)" }}>
+        <Link href={`/evento/${event.id}/ingressos`} className="btn btn-gold btn-lg">
           Comprar ingresso <Icon icon="lucide:arrow-right" />
         </Link>
       </div>
