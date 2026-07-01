@@ -1,4 +1,3 @@
-import Link from "next/link";
 import Logo from "@/components/shared/logo";
 
 export default function Footer() {
@@ -12,18 +11,10 @@ export default function Footer() {
           </span>
         </div>
 
-        <div style={{ display: "flex", justifyContent: "center", gap: 64, flexWrap: "wrap", marginTop: 48 }}>
-          <div className="footer-col">
-            <span className="footer-head">Eventos</span>
-            <Link href="/agenda" className="footer-link">Shows</Link>
-            <Link href="/agenda" className="footer-link">Festas</Link>
-            <Link href="/agenda" className="footer-link">Esportes</Link>
-            <Link href="/agenda" className="footer-link">Teatro</Link>
-          </div>
+        <div style={{ display: "flex", justifyContent: "center", gap: 72, flexWrap: "wrap", marginTop: 40 }}>
           <div className="footer-col">
             <span className="footer-head">Elleva</span>
             <span className="footer-link">Quem somos</span>
-            <span className="footer-link">Área do produtor</span>
             <span className="footer-link">Política de compras</span>
             <span className="footer-link">Privacidade</span>
           </div>

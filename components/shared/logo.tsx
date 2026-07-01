@@ -6,16 +6,21 @@ export default function Logo({
   width?: number;
 }) {
   const stroke = variant === "light" ? "#fff" : "#0A0A0A";
+  // Ticket clássico: recortes semicirculares nas laterais + linha de picote.
   return (
-    <svg width={width} height={(width * 38) / 48} viewBox="0 0 48 38" fill="none">
-      <g transform="rotate(-14 22 19)">
-        <rect x="2" y="9" width="34" height="20" rx="4" fill="none" stroke={stroke} strokeWidth="2" />
-        <line x1="14" y1="12" x2="14" y2="26" stroke={stroke} strokeWidth="1.5" strokeDasharray="2.2 2.2" />
-      </g>
-      <g transform="rotate(5 22 19)">
-        <rect x="9" y="9" width="34" height="20" rx="4" fill="none" stroke={stroke} strokeWidth="2" />
-        <line x1="21" y1="12" x2="21" y2="26" stroke={stroke} strokeWidth="1.5" strokeDasharray="2.2 2.2" />
-      </g>
+    <svg width={width} height={(width * 16) / 22} viewBox="1 4 22 16" fill="none">
+      <path
+        d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"
+        stroke={stroke}
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M15 5.5v2M15 11v2M15 16.5v2"
+        stroke={stroke}
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
