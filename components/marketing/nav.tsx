@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import Icon from "@/components/shared/icon";
 import Logo from "@/components/shared/logo";
+import Magnetic from "@/components/motion/magnetic";
 import { useCart } from "@/lib/cart";
 import { createClient } from "@/lib/supabase/client";
 
@@ -96,13 +97,15 @@ export default function Nav({
           </>
         ) : (
           <div ref={accessRef} style={{ position: "relative" }}>
-            <button
-              type="button"
-              className="btn btn-navy btn-sm"
-              onClick={() => setAccessOpen((v) => !v)}
-            >
-              Acessar
-            </button>
+            <Magnetic strength={0.3}>
+              <button
+                type="button"
+                className="btn btn-navy btn-sm"
+                onClick={() => setAccessOpen((v) => !v)}
+              >
+                Acessar
+              </button>
+            </Magnetic>
             {accessOpen && (
               <div
                 style={{

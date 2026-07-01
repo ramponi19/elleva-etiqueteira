@@ -19,11 +19,11 @@ export default async function HomePage() {
 
       {/* escolha um evento */}
       <section className="container" style={{ padding: "40px 48px 16px" }}>
-        <div data-reveal style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 24 }}>
-          <h2 className="h2" style={{ fontSize: 34 }}>
+        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 24 }}>
+          <h2 className="h2" data-reveal-lines style={{ fontSize: 34 }}>
             Escolha um <span className="serif accent-gold">evento</span>
           </h2>
-          <Link href="/agenda" className="nav-link" style={{ fontSize: 14, color: "var(--text-tertiary)", display: "flex", alignItems: "center", gap: 6 }}>
+          <Link href="/agenda" data-reveal className="nav-link" style={{ fontSize: 14, color: "var(--text-tertiary)", display: "flex", alignItems: "center", gap: 6 }}>
             Ver agenda <Icon icon="lucide:arrow-right" />
           </Link>
         </div>
