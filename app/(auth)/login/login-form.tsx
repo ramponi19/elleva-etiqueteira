@@ -49,7 +49,7 @@ export function LoginForm() {
     const supabase = createClient();
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+      options: { emailRedirectTo: `${window.location.origin}/callback` },
     });
     setLoading(false);
     if (error) setError("Não foi possível enviar o link. Tente novamente.");
