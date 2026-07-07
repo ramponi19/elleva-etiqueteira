@@ -27,6 +27,7 @@ export async function becomeProducerAndGo(formData: FormData) {
   }
 
   const to = String(formData.get("to") ?? "");
-  const dest = to.startsWith("/produtor") ? to : "/produtor/eventos";
+  const allowed = to.startsWith("/produtor") || to === "/criar-evento";
+  const dest = allowed ? to : "/criar-evento";
   redirect(dest);
 }

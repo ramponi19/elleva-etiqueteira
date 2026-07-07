@@ -108,7 +108,7 @@ export default function Nav({
                     <Icon icon="lucide:heart" style={{ fontSize: 17 }} /> Favoritos
                   </Link>
                   <form action={becomeProducerAndGo}>
-                    <input type="hidden" name="to" value="/produtor/eventos/novo" />
+                    <input type="hidden" name="to" value="/criar-evento" />
                     <button type="submit" className={itemCls}>
                       <Icon icon="lucide:circle-plus" style={{ fontSize: 17 }} /> Criar evento
                     </button>

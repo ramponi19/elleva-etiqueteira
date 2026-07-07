@@ -5,21 +5,40 @@ import { revalidatePath } from "next/cache";
 import { getAuth } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
+const optStr = z.string().optional().or(z.literal("").transform(() => undefined));
+
 const TierSchema = z.object({
   name: z.string().min(1),
   description: z.string().optional(),
   price: z.coerce.number().nonnegative(),
   capacity: z.coerce.number().int().positive().optional().or(z.literal("").transform(() => undefined)),
+  isFree: z.coerce.boolean().optional(),
 });
 
 const EventSchema = z.object({
   title: z.string().min(2, "Título obrigatório"),
   description: z.string().optional(),
   category: z.enum(["SHOW", "FESTA", "ESPORTE", "TEATRO", "CORPORATIVO", "CURSO"]),
+  subcategory: optStr,
   venue: z.string().min(1, "Local obrigatório"),
   city: z.string().min(1, "Cidade obrigatória"),
   date: z.string().min(1, "Data obrigatória"),
   time: z.string().min(1, "Horário obrigatório"),
+  // Novos campos (opcionais no servidor; o formulário novo cobriga os do Sympla)
+  endDate: optStr,
+  endTime: optStr,
+  cep: optStr,
+  address: optStr,
+  addressNumber: optStr,
+  addressComplement: optStr,
+  neighborhood: optStr,
+  state: optStr,
+  showOnMaps: z.coerce.boolean().optional(),
+  producerName: optStr,
+  producerBio: optStr,
+  visibility: z.enum(["public", "private"]).default("public"),
+  absorbFee: z.coerce.boolean().optional(),
+  nomenclature: optStr,
   icon: z.string().optional(),
   coverUrl: z.string().url().optional().or(z.literal("").transform(() => undefined)),
   status: z.enum(["draft", "published"]).default("published"),
@@ -39,6 +58,52 @@ function slugify(s: string) {
 }
 
 type EventInput = z.input<typeof EventSchema>;
+type EventData = z.output<typeof EventSchema>;
+
+/** Colunas da tabela events a partir dos dados validados (sem slug/producer_id). */
+function eventColumns(v: EventData) {
+  const starts_at = `${v.date}T${v.time}:00-03:00`;
+  const ends_at =
+    v.endDate && v.endTime ? `${v.endDate}T${v.endTime}:00-03:00` : null;
+  return {
+    title: v.title,
+    description: v.description || null,
+    category: v.category,
+    subcategory: v.subcategory ?? null,
+    venue: v.venue,
+    city: v.city,
+    state: v.state ?? null,
+    cep: v.cep ?? null,
+    address: v.address ?? null,
+    address_number: v.addressNumber ?? null,
+    address_complement: v.addressComplement ?? null,
+    neighborhood: v.neighborhood ?? null,
+    show_on_maps: v.showOnMaps ?? true,
+    starts_at,
+    ends_at,
+    icon: v.icon || "solar:ticket-bold-duotone",
+    cover_url: v.coverUrl ?? null,
+    producer_name: v.producerName ?? null,
+    producer_bio: v.producerBio ?? null,
+    visibility: v.visibility,
+    absorb_fee: v.absorbFee ?? false,
+    ticket_nomenclature: v.nomenclature || "Ingresso",
+    status: v.status,
+  };
+}
+
+/** Linhas de ticket_tiers (lotes) para insert. Gratuito força preço 0. */
+function tierRows(eventId: string, tiers: EventData["tiers"]) {
+  return tiers.map((t, i) => ({
+    event_id: eventId,
+    name: t.name,
+    description: t.description || null,
+    price: t.isFree ? 0 : t.price,
+    capacity: t.capacity ?? null,
+    is_free: t.isFree ?? false,
+    sort_order: i,
+  }));
+}
 
 async function authorize() {
   const { user, role } = await getAuth();
@@ -64,34 +129,13 @@ export async function createEvent(input: EventInput): Promise<EventFormState> {
 
   const { data: ev, error } = await supabase
     .from("events")
-    .insert({
-      slug,
-      title: v.title,
-      description: v.description || null,
-      category: v.category,
-      venue: v.venue,
-      city: v.city,
-      starts_at,
-      icon: v.icon || "solar:ticket-bold-duotone",
-      cover_url: v.coverUrl ?? null,
-      status: v.status,
-      producer_id: auth.user.id,
-    })
+    .insert({ slug, ...eventColumns(v), producer_id: auth.user.id })
     .select("id, slug")
     .single();
 
   if (error || !ev) return { ok: false, error: error?.message ?? "Falha ao criar evento" };
 
-  const { error: tErr } = await supabase.from("ticket_tiers").insert(
-    v.tiers.map((t, i) => ({
-      event_id: ev.id,
-      name: t.name,
-      description: t.description || null,
-      price: t.price,
-      capacity: t.capacity ?? null,
-      sort_order: i,
-    }))
-  );
+  const { error: tErr } = await supabase.from("ticket_tiers").insert(tierRows(ev.id, v.tiers));
   if (tErr) return { ok: false, error: tErr.message };
 
   revalidatePath("/produtor/eventos");
@@ -108,36 +152,13 @@ export async function updateEvent(id: string, input: EventInput): Promise<EventF
   const v = parsed.data;
 
   const supabase = await createClient();
-  const starts_at = `${v.date}T${v.time}:00-03:00`;
 
-  const { error } = await supabase
-    .from("events")
-    .update({
-      title: v.title,
-      description: v.description || null,
-      category: v.category,
-      venue: v.venue,
-      city: v.city,
-      starts_at,
-      icon: v.icon || "solar:ticket-bold-duotone",
-      cover_url: v.coverUrl ?? null,
-      status: v.status,
-    })
-    .eq("id", id);
+  const { error } = await supabase.from("events").update(eventColumns(v)).eq("id", id);
   if (error) return { ok: false, error: error.message };
 
   // substitui os lotes (simples para MVP)
   await supabase.from("ticket_tiers").delete().eq("event_id", id);
-  const { error: tErr } = await supabase.from("ticket_tiers").insert(
-    v.tiers.map((t, i) => ({
-      event_id: id,
-      name: t.name,
-      description: t.description || null,
-      price: t.price,
-      capacity: t.capacity ?? null,
-      sort_order: i,
-    }))
-  );
+  const { error: tErr } = await supabase.from("ticket_tiers").insert(tierRows(id, v.tiers));
   if (tErr) return { ok: false, error: tErr.message };
 
   revalidatePath("/produtor/eventos");
