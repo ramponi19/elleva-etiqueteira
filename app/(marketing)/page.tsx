@@ -26,13 +26,16 @@ export default async function HomePage() {
 
       {/* HERO — alinhado à esquerda (spec 8.1) */}
       <section className="mx-auto max-w-[1320px] px-5 pb-4 pt-14 sm:px-10 sm:pt-20">
-        <p className="rotulo m-0 text-sol-escuro" data-reveal>
+        {/* sem data-reveal no hero: é o LCP — esconder/reanimar acima da
+            dobra empurra o LCP pra depois do JS (Lighthouse caiu de 90+ pra
+            80 por isso). Reveal fica só nas seções abaixo da dobra (§9). */}
+        <p className="rotulo m-0 text-sol-escuro">
           Bilheteria oficial · Interior de SP e Sul de MG
         </p>
-        <h1 className="display-1 mt-4 max-w-[13ch]" data-reveal>
+        <h1 className="display-1 mt-4 max-w-[13ch]">
           O palco do <span className="text-sol">interior</span> é aqui
         </h1>
-        <p className="corpo mt-5 max-w-[46ch]" data-reveal>
+        <p className="corpo mt-5 max-w-[46ch]">
           Shows, festas, teatro e esporte na sua cidade. Sem taxa escondida,
           sem fila, sem drama.
         </p>
@@ -40,7 +43,6 @@ export default async function HomePage() {
         <form
           action="/agenda"
           className="mt-7 flex max-w-[440px] items-center gap-1.5 rounded-[var(--radius-pill)] border-[1.5px] border-tinta bg-white p-1.5"
-          data-reveal
         >
           <input
             type="search"
