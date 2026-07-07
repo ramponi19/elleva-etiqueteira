@@ -3,6 +3,7 @@ import AppShell from "@/components/app/app-shell";
 
 const NAV = [
   { href: "/conta", label: "Meus ingressos", icon: "solar:ticket-bold-duotone" },
+  { href: "/conta/favoritos", label: "Favoritos", icon: "solar:heart-bold-duotone" },
   { href: "/conta/perfil", label: "Perfil", icon: "solar:user-circle-bold-duotone" },
 ];
 

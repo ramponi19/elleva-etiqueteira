@@ -27,14 +27,8 @@ export function LoginForm() {
       return;
     }
 
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", data.user.id)
-      .single();
-    const role = profile?.role ?? "customer";
-    const dest = role === "admin" ? "/admin" : role === "producer" ? "/produtor" : "/conta";
-    router.push(dest);
+    // Após o login o usuário permanece na página inicial (estilo Sympla).
+    router.push("/");
     router.refresh();
   }
 

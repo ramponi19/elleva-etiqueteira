@@ -13,7 +13,7 @@ export async function getAuth() {
 
   const { data } = await supabase
     .from("profiles")
-    .select("role, full_name")
+    .select("role, full_name, avatar_url")
     .eq("id", user.id)
     .single();
 
@@ -21,6 +21,7 @@ export async function getAuth() {
     user,
     role: ((data?.role as Role) ?? "customer") as Role,
     fullName: (data?.full_name as string | null) ?? null,
+    avatarUrl: (data?.avatar_url as string | null) ?? null,
   };
 }
 

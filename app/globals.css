@@ -232,6 +232,34 @@ input { font-family: inherit; }
 .nav-link:hover { color:var(--text-primary); }
 .nav-actions { display:flex; align-items:center; gap:20px; }
 
+/* ---- Header logado (estilo Sympla) ---- */
+.nav-top-link { display:inline-flex; align-items:center; gap:7px; white-space:nowrap; font-size:14px; font-weight:500; color:var(--text-secondary); background:none; border:none; cursor:pointer; }
+.nav-top-link:hover { color:var(--text-primary); }
+
+.nav-avatar { display:flex; align-items:center; gap:8px; padding:4px 10px 4px 4px; border:1px solid var(--border); border-radius:9999px; background:var(--bg-elevated); cursor:pointer; transition:border-color .2s var(--ease-in-out), box-shadow .2s var(--ease-in-out); }
+.nav-avatar:hover { border-color:var(--border-strong); box-shadow:var(--sh-sm); }
+.nav-avatar__circle, .nav-avatar > span { width:30px; height:30px; border-radius:50%; background:var(--bg-inverse); color:var(--bg-elevated); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; letter-spacing:.02em; flex-shrink:0; overflow:hidden; }
+.nav-avatar__circle--lg { width:40px; height:40px; font-size:14px; }
+
+.account-menu { position:absolute; right:0; top:calc(100% + 12px); z-index:60; width:300px; background:var(--bg-elevated); border:1px solid var(--border); border-radius:var(--r-lg); box-shadow:var(--sh-lg); padding:8px; }
+.account-menu__head { display:flex; align-items:center; gap:12px; padding:12px 10px 14px; border-bottom:1px solid var(--border-subtle); }
+.account-menu__name { margin:0; font-size:14px; font-weight:600; color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:200px; }
+.account-menu__email { margin:2px 0 0; font-size:12.5px; color:var(--text-tertiary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:200px; }
+
+.account-progress { display:block; margin:8px 2px; padding:12px; border-radius:var(--r-md); background:var(--bg-inverse); color:var(--bg-main); text-decoration:none; }
+.account-progress__meter { display:flex; align-items:center; gap:8px; margin:10px 0; }
+.account-progress__track { flex:1; height:8px; border-radius:9999px; background:rgba(255,255,255,.20); overflow:hidden; }
+.account-progress__fill { height:100%; border-radius:9999px; background:var(--bg-main); transition:width .3s var(--ease-out-expo); }
+.account-progress__pct { font-size:12px; font-weight:600; opacity:.9; }
+.account-progress__cta { display:block; text-align:center; padding:9px; border-radius:var(--r-sm); background:var(--bg-main); color:var(--text-primary); font-size:13px; font-weight:600; transition:transform .2s var(--ease-in-out); }
+.account-progress:hover .account-progress__cta { transform:translateY(-1px); }
+
+.account-menu__list { display:flex; flex-direction:column; gap:2px; padding:4px; }
+.account-menu__list form { width:100%; }
+.account-item { display:flex; align-items:center; gap:12px; width:100%; padding:10px; border-radius:var(--r-sm); font-size:14px; color:var(--text-secondary); background:none; border:none; cursor:pointer; text-align:left; text-decoration:none; transition:background .15s var(--ease-in-out), color .15s var(--ease-in-out); }
+.account-item:hover { background:var(--bg-tint); color:var(--text-primary); }
+.account-menu__divider { height:1px; background:var(--border-subtle); margin:4px 8px; }
+
 /* ============================================================
    POSTER (usado na página de evento)
    ============================================================ */

@@ -39,9 +39,9 @@ export function SignupForm() {
       return;
     }
 
-    // já autenticado (confirmação de email desligada) → vai pra conta
+    // já autenticado (confirmação de email desligada) → permanece na home
     if (data.session) {
-      router.push("/conta");
+      router.push("/");
       router.refresh();
       return;
     }
