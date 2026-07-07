@@ -109,7 +109,7 @@ export async function getEvents(): Promise<EventItem[]> {
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("events")
-      .select("id, slug, title, description, category, icon, venue, city, starts_at, status, cover_url, is_featured, featured_order, ticket_tiers(price)")
+      .select("id, slug, title, description, category, icon, venue, city, starts_at, status, cover_url, is_featured, featured_order, serial, ticket_tiers(price)")
       .in("status", ["published", "sold_out"])
       .order("starts_at", { ascending: true });
     if (error || !data?.length) return MOCK_EVENTS;
@@ -135,7 +135,7 @@ export async function getEvent(
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("events")
-      .select("id, slug, title, description, category, icon, venue, city, starts_at, status, cover_url, ticket_tiers(id, name, description, price, sort_order, capacity, sold)")
+      .select("id, slug, title, description, category, icon, venue, city, starts_at, status, cover_url, serial, ticket_tiers(id, name, description, price, sort_order, capacity, sold)")
       .eq("slug", slug)
       .in("status", ["published", "sold_out"])
       .single();
