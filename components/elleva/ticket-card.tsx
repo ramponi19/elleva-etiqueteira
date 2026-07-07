@@ -19,6 +19,8 @@ interface TicketCardProps {
   precoDesde: number;
   cover?: string | null;
   esgotado?: boolean;
+  /** true nos primeiros cards da dobra (LCP): carrega a capa eager/high */
+  prioridade?: boolean;
 }
 
 function Notch({ lado }: { lado: "esquerda" | "direita" }) {
@@ -40,6 +42,7 @@ export function TicketCard({
   precoDesde,
   cover,
   esgotado,
+  prioridade,
 }: TicketCardProps) {
   const arte = arteDaCategoria(categoria);
   return (
@@ -60,6 +63,7 @@ export function TicketCard({
               tone={duotoneDaCategoria(categoria)}
               className="h-full w-full"
               sizes="(max-width: 640px) 100vw, 340px"
+              priority={prioridade}
             />
           </div>
         )}

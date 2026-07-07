@@ -77,7 +77,7 @@ export default async function HomePage() {
           </p>
         ) : (
           <div className="grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-6">
-            {events.map((e) => (
+            {events.map((e, i) => (
               <TicketCard
                 key={e.id}
                 href={`/evento/${e.id}`}
@@ -88,6 +88,7 @@ export default async function HomePage() {
                 precoDesde={e.priceFrom}
                 cover={e.cover}
                 esgotado={e.soldOut}
+                prioridade={i < 3}
               />
             ))}
           </div>
