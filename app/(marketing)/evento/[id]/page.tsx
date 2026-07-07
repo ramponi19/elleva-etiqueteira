@@ -77,6 +77,8 @@ export default async function EventPage({
                   alt=""
                   tone={duotoneDaCategoria(event.catLabel)}
                   className="h-full w-full"
+                  priority
+                  sizes="(max-width: 1024px) 100vw, 640px"
                 />
               </div>
             )}

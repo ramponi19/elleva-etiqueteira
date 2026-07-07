@@ -59,6 +59,7 @@ export function TicketCard({
               alt=""
               tone={duotoneDaCategoria(categoria)}
               className="h-full w-full"
+              sizes="(max-width: 640px) 100vw, 340px"
             />
           </div>
         )}
