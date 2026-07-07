@@ -22,3 +22,11 @@ Registro exigido pela spec (§0 e §17): toda decisão fora do documento entra a
 - **Ticker de escassez** da página de evento fica para a Fase C (exige realtime + dados reais, §11).
 - **Cidades das rotas estáticas** (`lib/cidades.ts`): Mogi Guaçu, Mogi Mirim, Itapira, Americana, Sul de MG; a cidade do evento é derivada do sufixo de `venueCity` ("Venue · Cidade").
 - **Deletados:** carousel, event-grid, event-card, producer-cta, agenda-content, agenda-row, nav/footer antigos, lib/event-theme.ts, motion/magnetic.tsx.
+
+## Aceite da Fase B (2026-07-07)
+
+- **Migration 0018 aplicada no banco remoto** (conector Supabase reconectou): eventos com serial 1–6; `lib/events.ts` voltou a ler a coluna real (fallback por uuid permanece só como rede de segurança).
+- **Lighthouse (mobile, deploy preview, mediana de runs locais):** home **90** (runs 83/90/90), evento **94**, agenda **96**; acessibilidade **100** nas três. Ambiente local tem variância de ±5 no TBT — validar no PageSpeed Insights quando promover pra produção.
+- **Causas raiz de performance encontradas e corrigidas:** (1) `template.tsx` do marketing embrulhava toda página em framer-motion `initial opacity:0` — o HTML chegava invisível e o LCP só pintava pós-hidratação (~4s em TODAS as rotas); removido, transição de rota não está na spec §9. (2) capas servidas cruas do Unsplash → Duotone via next/image (AVIF/srcset). (3) GSAP/Lenis e supabase-js saíram do bundle crítico via import dinâmico. (4) hero sem data-reveal (LCP não pode ser escondido e reanimado). (5) só a primeira capa da home com priority (3 preloads competiam na banda).
+- **Lição de CSS (Tailwind v4):** regra fora de `@layer` vence QUALQUER utilitário. O `a { color:inherit }` da base engolia `text-*` em links (pill ativa ilegível) e `.duotone { position:relative }` engolia `absolute`. Base agora em `@layer base` e componentes CSS em `@layer components`. O bloco LEGADO continua fora de layer de propósito (as telas antigas dependem dessa precedência).
+- **Contraste §4 aplicado de verdade:** texto pequeno sobre sol = tinta (`fgPequeno` em lib/arte.ts); destaque pequeno no modo noite = cartaz (sol sobre tinta é 4,1:1, reprova AA em 11px).
