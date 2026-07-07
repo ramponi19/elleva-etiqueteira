@@ -1,11 +1,18 @@
 import { requireRole } from "@/lib/auth";
-import AppShell from "@/components/app/app-shell";
+import Nav from "@/components/elleva/nav";
+import Footer from "@/components/elleva/footer";
+import { ContaTabs } from "@/components/elleva/conta-tabs";
 
-const NAV = [
-  { href: "/conta", label: "Meus ingressos", icon: "solar:ticket-bold-duotone" },
-  { href: "/conta/favoritos", label: "Favoritos", icon: "solar:heart-bold-duotone" },
-  { href: "/conta/perfil", label: "Perfil", icon: "solar:user-circle-bold-duotone" },
-];
+function initialsFrom(name: string | null, email: string | null): string {
+  const n = (name ?? "").trim();
+  if (n) {
+    const parts = n.split(/\s+/);
+    const first = parts[0]?.[0] ?? "";
+    const last = parts.length > 1 ? parts[parts.length - 1][0] : "";
+    return (first + last).toUpperCase() || "?";
+  }
+  return (email?.[0] ?? "?").toUpperCase();
+}
 
 export default async function ContaLayout({
   children,
@@ -13,10 +20,32 @@ export default async function ContaLayout({
   children: React.ReactNode;
 }) {
   // Qualquer usuário logado tem conta
-  const { fullName, user } = await requireRole(["customer", "producer", "admin"]);
+  const { user, role, fullName, avatarUrl } = await requireRole([
+    "customer",
+    "producer",
+    "admin",
+  ]);
+
   return (
-    <AppShell area="MINHA CONTA" items={NAV} userName={fullName ?? user!.email ?? "Você"}>
-      {children}
-    </AppShell>
+    <>
+      <Nav
+        loggedIn={!!user}
+        role={role}
+        name={fullName ?? user!.email ?? "Você"}
+        email={user!.email ?? ""}
+        avatarUrl={avatarUrl}
+        initials={initialsFrom(fullName ?? null, user!.email ?? null)}
+      />
+      <main className="min-h-[70vh] bg-papel">
+        <div className="mx-auto max-w-[1100px] px-5 py-10 sm:px-10">
+          <h1 className="display-2 text-tinta">Minha conta</h1>
+          <div className="mt-6">
+            <ContaTabs />
+          </div>
+          <div className="mt-8">{children}</div>
+        </div>
+      </main>
+      <Footer />
+    </>
   );
 }

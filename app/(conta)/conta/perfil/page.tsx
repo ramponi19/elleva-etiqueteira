@@ -1,13 +1,8 @@
-import PageHeader from "@/components/app/page-header";
-import ComingSoon from "@/components/app/coming-soon";
+import type { Metadata } from "next";
+import { EmBreve } from "@/components/elleva/em-breve";
+
+export const metadata: Metadata = { title: "Perfil" };
 
 export default function ContaPerfil() {
-  return (
-    <>
-      <PageHeader title="Perfil" subtitle="Seus dados e preferências." />
-      <main style={{ padding: 32 }}>
-        <ComingSoon note="Edição de perfil em breve." />
-      </main>
-    </>
-  );
+  return <EmBreve icon="solar:user-circle-bold-duotone" nota="Edição de perfil em breve." />;
 }

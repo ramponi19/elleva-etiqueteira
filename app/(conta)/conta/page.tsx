@@ -1,21 +1,13 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import QRCode from "qrcode";
 import { createClient } from "@/lib/supabase/server";
-import { getAuth } from "@/lib/auth";
 import Icon from "@/components/shared/icon";
-import PageHeader from "@/components/app/page-header";
+import { Button } from "@/components/ui/button";
+import { IngressoCard } from "@/components/elleva/ingresso-card";
 
 export const metadata: Metadata = { title: "Meus ingressos" };
 
-const STATUS_LABEL: Record<string, string> = {
-  valid: "Válido",
-  used: "Utilizado",
-  cancelled: "Cancelado",
-};
-
 export default async function ContaOverview() {
-  const { user } = await getAuth();
   const supabase = await createClient();
 
   const { data: tickets } = await supabase
@@ -26,45 +18,43 @@ export default async function ContaOverview() {
   const withQr = await Promise.all(
     (tickets ?? []).map(async (t) => ({
       ...t,
-      qr: await QRCode.toDataURL(t.code, { margin: 1, width: 220, color: { dark: "#162332", light: "#ffffff" } }),
+      qr: await QRCode.toDataURL(t.code, {
+        margin: 1,
+        width: 220,
+        color: { dark: "#141210", light: "#ffffff" },
+      }),
     }))
   );
 
   return (
-    <>
-      <PageHeader title="Meus ingressos" subtitle="Apresente o QR code na entrada do evento." />
-      <main style={{ padding: 32, maxWidth: 900 }}>
-        {!withQr.length ? (
-          <div style={{ textAlign: "center", padding: "64px 0" }}>
-            <Icon icon="solar:ticket-bold-duotone" style={{ fontSize: 56, color: "var(--text-muted)" }} />
-            <p className="lede" style={{ marginTop: 16 }}>Você ainda não tem ingressos.</p>
-            <Link href="/agenda" className="btn btn-navy btn-lg" style={{ marginTop: 20 }}>
-              Explorar eventos
-            </Link>
-          </div>
-        ) : (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 16 }}>
-            {withQr.map((t) => (
-              <div key={t.id} style={{ background: "var(--bg-elevated)", border: "1px solid var(--border)", borderRadius: "var(--r-xl)", padding: 20, textAlign: "center", boxShadow: "var(--sh-sm)" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-                  <span className="cat-pill">{t.tier_name}</span>
-                  <span className="cat-pill" style={{ color: t.status === "valid" ? "var(--text-gold)" : "var(--text-muted)" }}>
-                    {STATUS_LABEL[t.status] ?? t.status}
-                  </span>
-                </div>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={t.qr} alt={`Ingresso ${t.code}`} width={180} height={180} style={{ margin: "0 auto", display: "block", borderRadius: 8 }} />
-                <p style={{ fontFamily: "var(--font-display)", fontSize: 17, fontWeight: 500, margin: "12px 0 2px", color: "var(--text-primary)" }}>
-                  {t.event_title}
-                </p>
-                <p style={{ fontFamily: "var(--font-mono)", fontSize: 12, letterSpacing: ".1em", color: "var(--text-tertiary)" }}>
-                  {t.code}
-                </p>
-              </div>
-            ))}
-          </div>
-        )}
-      </main>
-    </>
+    <section>
+      <p className="corpo-suave mb-6">Apresente o QR code na entrada do evento.</p>
+
+      {!withQr.length ? (
+        <div className="flex flex-col items-center rounded-[var(--radius-card)] border-[1.5px] border-dashed border-tinta bg-white py-16 text-center">
+          <Icon
+            icon="solar:ticket-bold-duotone"
+            style={{ fontSize: 56, color: "var(--color-tinta-35)" }}
+          />
+          <p className="corpo mt-4 text-tinta-60">Você ainda não tem ingressos.</p>
+          <Button href="/agenda" variante="primario" className="mt-6">
+            Explorar eventos
+          </Button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-5">
+          {withQr.map((t) => (
+            <IngressoCard
+              key={t.id}
+              eventTitle={t.event_title}
+              tierName={t.tier_name}
+              status={t.status}
+              code={t.code}
+              qr={t.qr}
+            />
+          ))}
+        </div>
+      )}
+    </section>
   );
 }
