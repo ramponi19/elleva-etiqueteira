@@ -90,7 +90,7 @@ export default async function HomePage() {
                 precoDesde={e.priceFrom}
                 cover={e.cover}
                 esgotado={e.soldOut}
-                prioridade={i < 3}
+                prioridade={i === 0}
               />
             ))}
           </div>
