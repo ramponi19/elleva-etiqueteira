@@ -236,8 +236,8 @@ export function CriarEventoForm() {
     then(res.slug);
   }
 
-  const publicar = () => persist("published", () => { router.push("/produtor/eventos"); router.refresh(); });
-  const rascunho = () => persist("draft", () => { router.push("/produtor/eventos"); router.refresh(); });
+  const publicar = () => persist("published", () => { router.push("/meus-eventos"); router.refresh(); });
+  const rascunho = () => persist("draft", () => { router.push("/meus-eventos"); router.refresh(); });
   const preview = () => persist("draft", (slug) => router.push(slug ? `/evento/${slug}` : "/produtor/eventos"));
 
   return (

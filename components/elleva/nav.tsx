@@ -114,7 +114,7 @@ export default function Nav({
                     </button>
                   </form>
                   <form action={becomeProducerAndGo}>
-                    <input type="hidden" name="to" value="/produtor/eventos" />
+                    <input type="hidden" name="to" value="/meus-eventos" />
                     <button type="submit" className={itemCls}>
                       <Icon icon="lucide:calendar-check" style={{ fontSize: 17 }} /> Meus eventos
                     </button>
