@@ -43,7 +43,7 @@ export function EventStubRow({
         <span className="numero text-[22px]">{dia}</span>
         <span className="rotulo">{mes}</span>
       </div>
-      <div className="picote-v flex flex-1 items-center justify-between gap-4 px-4 py-3.5">
+      <div className="picote-v flex min-w-0 flex-1 items-center justify-between gap-4 px-4 py-3.5">
         <div className="min-w-0">
           <h3 className="titulo-card truncate text-[15px] text-[var(--cor-texto)]">
             {titulo}

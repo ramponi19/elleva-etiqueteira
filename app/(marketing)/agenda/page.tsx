@@ -1,8 +1,12 @@
 import type { Metadata } from "next";
-import AgendaContent from "@/components/marketing/agenda-content";
+import { AgendaNoite } from "@/components/elleva/agenda-noite";
 import { getEvents } from "@/lib/events";
 
-export const metadata: Metadata = { title: "Agenda" };
+export const metadata: Metadata = {
+  title: "Agenda de eventos no interior de SP e sul de MG | Elleva Tickets",
+  description:
+    "Tudo que está em cartaz em Mogi Guaçu, Mogi Mirim, Itapira, Americana e região. Shows, festas, teatro e esporte.",
+};
 export const revalidate = 300;
 
 export default async function AgendaPage({
@@ -10,17 +14,22 @@ export default async function AgendaPage({
 }: {
   searchParams: Promise<{ q?: string }>;
 }) {
-  const events = await getEvents();
-  const { q } = await searchParams;
+  const [events, { q }] = await Promise.all([getEvents(), searchParams]);
+
+  const query = q?.trim() ?? "";
+  const filtrados = query
+    ? events.filter((e) =>
+        `${e.title} ${e.venueCity} ${e.catLabel}`
+          .toLowerCase()
+          .includes(query.toLowerCase())
+      )
+    : events;
 
   return (
-    <div className="container" style={{ padding: "48px 48px 64px" }}>
-      <span className="eyebrow eyebrow-gold">Agenda completa</span>
-      <h1 className="h1" style={{ fontSize: 48, marginTop: 18 }}>
-        Todos os <span className="serif accent-gold">eventos</span>
-      </h1>
-
-      <AgendaContent events={events} initialQuery={q ?? ""} />
-    </div>
+    <AgendaNoite
+      events={filtrados}
+      destaqueHeader="no interior"
+      query={query || undefined}
+    />
   );
 }

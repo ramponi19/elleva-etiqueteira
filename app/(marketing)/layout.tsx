@@ -1,6 +1,6 @@
 import { CartProvider } from "@/lib/cart";
-import Nav from "@/components/marketing/nav";
-import Footer from "@/components/marketing/footer";
+import Nav from "@/components/elleva/nav";
+import Footer from "@/components/elleva/footer";
 import MotionProvider from "@/components/motion/motion-provider";
 import { getAuth } from "@/lib/auth";
 
@@ -22,31 +22,19 @@ export default async function MarketingLayout({
 }) {
   const { user, role, fullName, avatarUrl } = await getAuth();
 
-  // "Complete seus dados" — % real a partir do que temos no perfil.
-  const checks = [
-    true, // conta criada
-    !!user?.email_confirmed_at, // email confirmado
-    !!(fullName && fullName.trim().length > 1), // nome completo
-    !!avatarUrl, // foto de perfil
-  ];
-  const completion = Math.round((checks.filter(Boolean).length / checks.length) * 100);
-
   return (
     <CartProvider>
       <MotionProvider>
-        <div className="marketing-mono">
-          <Nav
-            loggedIn={!!user}
-            role={role}
-            name={fullName ?? user?.email ?? "Você"}
-            email={user?.email ?? ""}
-            avatarUrl={avatarUrl}
-            initials={initialsFrom(fullName ?? null, user?.email ?? null)}
-            completion={completion}
-          />
-          <main>{children}</main>
-          <Footer />
-        </div>
+        <Nav
+          loggedIn={!!user}
+          role={role}
+          name={fullName ?? user?.email ?? "Você"}
+          email={user?.email ?? ""}
+          avatarUrl={avatarUrl}
+          initials={initialsFrom(fullName ?? null, user?.email ?? null)}
+        />
+        <main className="min-h-[60vh]">{children}</main>
+        <Footer />
       </MotionProvider>
     </CartProvider>
   );
