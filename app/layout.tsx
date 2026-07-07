@@ -1,30 +1,11 @@
 import type { Metadata, Viewport } from "next";
-import { Fraunces, Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { archivo } from "./fonts";
 import "./globals.css";
 
-const fraunces = Fraunces({
-  variable: "--font-fraunces",
-  subsets: ["latin"],
-  display: "swap",
-  axes: ["SOFT", "WONK", "opsz"],
-});
-
-const jakarta = Plus_Jakarta_Sans({
-  variable: "--font-jakarta",
-  subsets: ["latin"],
-  display: "swap",
-});
-
-const jetbrains = JetBrains_Mono({
-  variable: "--font-jetbrains",
-  subsets: ["latin"],
-  display: "swap",
-});
-
 export const viewport: Viewport = {
-  themeColor: "#1A2744",
+  themeColor: "#FAF5EC",
   width: "device-width",
   initialScale: 1,
 };
@@ -68,10 +49,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="pt-BR"
-      className={`${fraunces.variable} ${jakarta.variable} ${jetbrains.variable} antialiased`}
-    >
+    <html lang="pt-BR" className={`${archivo.variable} antialiased`}>
       <body className="min-h-screen flex flex-col">
         {children}
         <Analytics />

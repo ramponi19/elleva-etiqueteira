@@ -1,12 +1,207 @@
 /* ============================================================
-   ELLEVA — Global styles
-   Foundation = Branor Design System (navy + gold + bone)
-   Fontes injetadas via next/font: --font-fraunces / --font-jakarta / --font-mono
+   ELLEVA TICKETS — Global styles
+   Sistema "Cartaz de Show" (spec Nível 3)
+   Fonte única: Archivo Variable (--font-archivo via next/font)
+   60/30/10: papel domina, tinta estrutura, sol acende.
    ============================================================ */
 @import "tailwindcss";
 
 /* ============================================================
-   TOKENS — LIGHT (default)
+   TOKENS (spec §2)
+   ============================================================ */
+@theme {
+  /* ===== COR ===== */
+  --color-papel: #FAF5EC;        /* fundo dominante (60%) */
+  --color-papel-2: #F3ECDF;      /* papel sombreado: hovers, zebra, inputs */
+  --color-tinta: #141210;        /* texto, bordas, blocos de contraste (30%) */
+  --color-tinta-60: rgb(20 18 16 / 0.6);
+  --color-tinta-35: rgb(20 18 16 / 0.35);
+  --color-sol: #E8481F;          /* A cor da Elleva (10%): CTAs, datas, links */
+  --color-sol-escuro: #C93A15;   /* sol para texto pequeno sobre papel (AA 4.5:1) */
+  --color-cartaz: #F2B324;       /* apoio: fundo de card por categoria, destaques */
+  --color-palco: #16624A;        /* apoio: fundo de card por categoria */
+  --color-papel-inv: rgb(250 245 236 / 0.18); /* bordas sobre tinta (modo noite) */
+
+  /* ===== TIPOGRAFIA ===== */
+  --font-sans: var(--font-archivo), "Archivo", system-ui, sans-serif;
+
+  /* ===== FORMA ===== */
+  --radius-card: 14px;
+  --radius-pill: 999px;
+  --border-width-tinta: 1.5px;
+
+  /* ===== MOTION ===== */
+  --ease-mola: cubic-bezier(0.34, 1.56, 0.64, 1); /* overshoot: rasgo do ingresso, hovers */
+  --dur-micro: 150ms;
+  --dur-base: 300ms;
+  --dur-rasgo: 600ms;
+
+  /* ===== ALIASES LEGADOS (só até a Fase B — 9 usos de bg-navy/gold/bone
+     em telas antigas; apontam pra paleta nova pra nada quebrar) ===== */
+  --color-navy: #141210;
+  --color-navy-900: #141210;
+  --color-navy-700: #141210;
+  --color-gold: #E8481F;
+  --color-gold-600: #C93A15;
+  --color-bone: #FAF5EC;
+  --color-bone-100: #F3ECDF;
+  --font-display: var(--font-archivo), system-ui, sans-serif;
+  --font-mono: var(--font-archivo), system-ui, sans-serif;
+}
+
+/* ============================================================
+   MODO NOITE (spec §14) — não é toggle global: rotas de descoberta
+   noturna recebem data-theme="noite" no wrapper e invertem pra tinta.
+   Componentes de sistema usam estas variáveis semânticas.
+   ============================================================ */
+:root {
+  --cor-fundo: var(--color-papel);
+  --cor-texto: var(--color-tinta);
+  --cor-texto-suave: var(--color-tinta-60);
+  --cor-borda: var(--color-tinta);
+  --cor-hover: var(--color-papel-2);
+}
+[data-theme="noite"] {
+  --cor-fundo: var(--color-tinta);
+  --cor-texto: var(--color-papel);
+  --cor-texto-suave: rgb(250 245 236 / 0.64);
+  --cor-borda: var(--color-papel-inv);
+  --cor-hover: rgb(250 245 236 / 0.06);
+  background: var(--cor-fundo);
+  color: var(--cor-texto);
+}
+
+/* ============================================================
+   BASE
+   ============================================================ */
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--color-papel);
+  color: var(--color-tinta);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+a { color: inherit; text-decoration: none; }
+input, button, select, textarea { font-family: inherit; }
+::selection { background: var(--color-sol); color: var(--color-tinta); }
+
+/* Foco visível obrigatório (spec §7) */
+:focus-visible {
+  outline: 2px solid var(--color-sol-escuro);
+  outline-offset: 2px;
+}
+
+/* ============================================================
+   TIPOGRAFIA — Archivo, três vozes (spec §3)
+   caps só em display, títulos de card e rótulos; pesos 400/500/900
+   ============================================================ */
+.display-1 {
+  font-weight: 900; font-stretch: 120%;
+  text-transform: uppercase;
+  line-height: 0.92; letter-spacing: -0.01em;
+  font-size: clamp(44px, 7vw, 88px);
+  margin: 0; text-wrap: balance;
+}
+.display-2 {
+  font-weight: 900; font-stretch: 118%;
+  text-transform: uppercase;
+  line-height: 0.95;
+  font-size: clamp(28px, 4vw, 44px);
+  margin: 0; text-wrap: balance;
+}
+.titulo-card {
+  font-weight: 900; font-stretch: 115%;
+  text-transform: uppercase;
+  line-height: 1;
+  font-size: 18px;
+  margin: 0;
+}
+.corpo {
+  font-weight: 400; font-stretch: 100%;
+  line-height: 1.55; font-size: 15.5px;
+  color: var(--cor-texto);
+}
+.corpo-suave {
+  font-weight: 400;
+  line-height: 1.5; font-size: 13.5px;
+  color: var(--cor-texto-suave);
+}
+.rotulo {
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 11px; line-height: 1.3;
+}
+.numero {
+  font-weight: 900; font-stretch: 115%;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+/* ============================================================
+   GEOMETRIA DE INGRESSO (spec §6)
+   ============================================================ */
+.picote-h { border-top: var(--border-width-tinta) dashed var(--cor-borda); }
+.picote-v { border-left: var(--border-width-tinta) dashed var(--cor-borda); }
+
+/* ============================================================
+   DUOTONE tinta→sol (spec §5.1) — toda foto de evento passa por aqui
+   ============================================================ */
+.duotone { position: relative; overflow: hidden; background: var(--color-tinta); }
+.duotone img {
+  display: block; width: 100%; height: 100%; object-fit: cover;
+  filter: grayscale(1) contrast(1.15) brightness(1.05);
+  mix-blend-mode: screen; /* sombras afundam na tinta */
+}
+.duotone::after {
+  content: ""; position: absolute; inset: 0;
+  background: var(--color-sol);
+  mix-blend-mode: multiply; /* altas luzes ganham o laranja */
+  pointer-events: none;
+}
+.duotone[data-tone="cartaz"]::after { background: var(--color-cartaz); }
+.duotone[data-tone="palco"]::after { background: var(--color-palco); }
+
+/* ============================================================
+   MARQUEE (spec §7) — CSS puro, pausa no hover, respeita
+   prefers-reduced-motion
+   ============================================================ */
+@keyframes marquee-rolar { to { transform: translateX(-50%); } }
+.marquee {
+  position: relative;
+  overflow: hidden;
+  height: 38px;
+  background: var(--color-tinta);
+  color: var(--color-papel);
+  white-space: nowrap;
+}
+/* track absoluto: o max-content (~2500px) não pode inflar a largura
+   intrínseca da página (main é flex item do body flex-col) */
+.marquee__track {
+  position: absolute;
+  top: 0; bottom: 0; left: 0;
+  display: flex;
+  align-items: center;
+  width: max-content;
+  animation: marquee-rolar 30s linear infinite;
+}
+.marquee:hover .marquee__track { animation-play-state: paused; }
+@media (prefers-reduced-motion: reduce) {
+  .marquee__track { animation: none; }
+}
+
+/* ============================================================
+   ============================================================
+   LEGADO — tudo abaixo morre ao longo da Fase B, tela a tela.
+   Mantido só pra as rotas antigas (admin/produtor/conta/checkout
+   e marketing atual) continuarem renderizando. Não usar em código
+   novo. Fontes já remapeadas pra Archivo (serifa/mono removidas).
+   ============================================================
    ============================================================ */
 :root {
   --navy-900:#0E1824; --navy-800:#162332; --navy-700:#1E2E42; --navy-600:#2A3C52; --navy-500:#3E5169;
@@ -20,13 +215,9 @@
 
   --border:#D2CBB8; --border-subtle:rgba(22,35,50,.08); --border-strong:#162332; --border-gold:#C6A86A;
 
-  --font-display:var(--font-fraunces), Georgia, 'Times New Roman', serif;
-  --font-sans:var(--font-jakarta), system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-mono:var(--font-jetbrains), 'SF Mono', Menlo, 'Courier New', monospace;
-
-  /* Aliases legados (auth/dashboard ainda referenciam) — apontam pro novo DS */
-  --font-instrument-serif:var(--font-fraunces), Georgia, serif;
-  --font-inter:var(--font-jakarta), system-ui, sans-serif;
+  /* fontes antigas → Archivo (Fraunces/Jakarta/JetBrains saíram do bundle) */
+  --font-instrument-serif:var(--font-archivo), system-ui, sans-serif;
+  --font-inter:var(--font-archivo), system-ui, sans-serif;
 
   --fs-xs:.75rem; --fs-sm:.875rem; --fs-base:1rem; --fs-lg:1.125rem; --fs-xl:1.25rem;
   --fs-2xl:1.5rem; --fs-3xl:1.875rem; --fs-4xl:2.25rem; --fs-5xl:3rem; --fs-6xl:3.75rem;
@@ -45,23 +236,6 @@
   --container:1320px;
 }
 
-/* Tokens expostos ao Tailwind v4 (utilitários bg-navy, text-gold, etc.) */
-@theme {
-  --color-navy:#162332;
-  --color-navy-900:#0E1824;
-  --color-navy-700:#1E2E42;
-  --color-gold:#C6A86A;
-  --color-gold-600:#A88B4E;
-  --color-bone:#F6F3EB;
-  --color-bone-100:#ECE9E0;
-  --font-display:var(--font-fraunces), Georgia, serif;
-  --font-sans:var(--font-jakarta), system-ui, sans-serif;
-  --font-mono:var(--font-jetbrains), monospace;
-}
-
-/* ============================================================
-   TOKENS — DARK (toggle [data-theme="dark"] no <html>)
-   ============================================================ */
 [data-theme="dark"] {
   --bg-main:#0E1824; --bg-secondary:#12202F; --bg-elevated:#1A2A3D; --bg-inverse:#F6F3EB; --bg-tint:#162332;
   --text-primary:#ECE9E0; --text-secondary:#B8C1D0; --text-tertiary:#8894A8; --text-muted:#5E6B80;
@@ -70,11 +244,7 @@
   --sh-sm:0 1px 2px rgba(0,0,0,.30); --sh-md:0 6px 18px rgba(0,0,0,.35); --sh-lg:0 18px 48px rgba(0,0,0,.45);
 }
 
-/* ============================================================
-   MARKETING — 100% preto e branco (aprovado na preview v11-v14)
-   Sobrescreve os tokens navy/dourado só nas páginas públicas
-   (home, agenda, evento) sem afetar admin/produtor/checkout.
-   ============================================================ */
+/* MARKETING — P&B da preview antiga (substituído na Fase B) */
 .marketing-mono {
   background:#FFFFFF; min-height:100vh;
   --navy-900:#0A0A0A; --navy-800:#0A0A0A; --navy-700:#171717; --navy-600:#262626; --navy-500:#404040;
@@ -104,13 +274,10 @@
 .marketing-mono .footer-link { color:#BBBBBB; }
 .marketing-mono .step:hover { background:#0A0A0A; color:#fff; }
 
-/* hero — gancho editorial acima do carrossel (classes únicas p/ não colidir
-   com o hero legado .hero-* mais abaixo neste arquivo) */
 .home-hero { display:flex; flex-direction:column; align-items:center; text-align:center; padding:66px 48px 18px; }
 .home-hero__title { font-family:var(--font-display); font-weight:500; font-size:clamp(2.4rem,6vw,5rem); line-height:1.02; letter-spacing:-.035em; color:#0A0A0A; margin:0 auto; max-width:16ch; text-wrap:balance; }
 @media (max-width:640px) { .home-hero { padding:42px 24px 10px; } }
 
-/* carrossel coverflow — slide central grande, laterais menores/desbotados */
 .carousel-section { padding:56px 0 0; }
 .carousel { position:relative; height:400px; display:flex; align-items:center; justify-content:center; }
 .car-track { position:relative; width:100%; height:100%; }
@@ -127,7 +294,6 @@
 .car-dots { display:flex; justify-content:center; gap:8px; margin-top:22px; }
 .car-dot { width:7px; height:7px; padding:0; border:none; border-radius:9999px; background:#DDD; cursor:pointer; transition:background .3s, width .3s; }
 .car-dot.active { background:#0A0A0A; width:24px; }
-/* seção do produtor — chamada com cards coloridos flutuantes (preview v11) */
 .producer { position:relative; overflow:hidden; background:#F7F7F7; padding:104px 48px; margin-top:8px; }
 .producer-inner { position:relative; z-index:2; max-width:660px; margin:0 auto; text-align:center; }
 .producer-title { font-family:var(--font-display); font-weight:500; font-size:clamp(2rem,4.5vw,3.1rem); letter-spacing:-.03em; line-height:1.06; color:#0A0A0A; margin:0; }
@@ -147,41 +313,16 @@
 
 .marketing-mono .footer-meta { color:#777777; }
 
-/* ============================================================
-   MOTION — Lenis (scroll suave) + reveals (GSAP/ScrollTrigger)
-   ============================================================ */
+/* MOTION — Lenis (scroll suave) + reveals (GSAP/ScrollTrigger) */
 html.lenis, html.lenis body { height: auto; }
 .lenis.lenis-smooth { scroll-behavior: auto !important; }
 .lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
 .lenis.lenis-stopped { overflow: hidden; }
 .lenis.lenis-smooth iframe { pointer-events: none; }
 
-/* O estado inicial escondido dos reveals é aplicado por JS (gsap.set), não por
-   CSS — assim, sem JS ou com prefers-reduced-motion, o conteúdo aparece normal
-   e não há mismatch de hidratação. */
-
-/* ============================================================
-   BASE
-   ============================================================ */
-* { box-sizing: border-box; }
-html { scroll-behavior: smooth; }
-body {
-  margin: 0;
-  background: var(--bg-main);
-  color: var(--text-primary);
-  font-family: var(--font-sans);
-  font-size: var(--fs-base);
-  line-height: 1.55;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-a { color: inherit; text-decoration: none; }
-input { font-family: inherit; }
 @keyframes ellevaGlow { 0%,100%{opacity:.55} 50%{opacity:.95} }
 
-/* ============================================================
-   TYPE
-   ============================================================ */
+/* TYPE legado */
 .h1 { font-family:var(--font-display); font-size:var(--fs-8xl); font-weight:500; letter-spacing:-.035em; line-height:1.02; text-wrap:balance; margin:0; }
 .h2 { font-family:var(--font-display); font-size:clamp(2rem,4.5vw,3.25rem); font-weight:500; letter-spacing:-.025em; line-height:1.08; text-wrap:balance; margin:0; }
 .h3 { font-family:var(--font-display); font-size:var(--fs-3xl); font-weight:500; letter-spacing:-.02em; line-height:1.15; margin:0; }
@@ -189,22 +330,18 @@ input { font-family: inherit; }
 .lede { font-size:var(--fs-xl); line-height:1.6; color:var(--text-secondary); text-wrap:pretty; }
 .body-lg { font-size:var(--fs-lg); line-height:1.7; color:var(--text-secondary); }
 .body { font-size:var(--fs-base); line-height:1.65; color:var(--text-secondary); }
-.serif { font-family:var(--font-display); font-weight:500; font-style:italic; letter-spacing:-.01em; }
+.serif { font-family:var(--font-display); font-weight:500; letter-spacing:-.01em; }
 .accent-gold { color:var(--text-gold); }
 .eyebrow { font-family:var(--font-mono); font-size:var(--fs-xs); font-weight:500; text-transform:uppercase; letter-spacing:.18em; color:var(--text-tertiary); display:inline-flex; align-items:center; gap:.5rem; }
 .eyebrow::before { content:""; display:inline-block; width:24px; height:1px; background:currentColor; opacity:.6; }
 .eyebrow.no-rule::before { display:none; }
 .eyebrow-gold { color:var(--text-gold); }
 
-/* ============================================================
-   LAYOUT
-   ============================================================ */
+/* LAYOUT legado */
 .container { max-width:var(--container); margin:0 auto; padding:0 48px; }
 .section { padding:40px 0; }
 
-/* ============================================================
-   BUTTONS
-   ============================================================ */
+/* BUTTONS legados */
 .btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; border:none; cursor:pointer; font-family:var(--font-sans); font-weight:600; border-radius:var(--r-pill); transition:transform .2s var(--ease-out-expo), box-shadow .2s var(--ease-out-expo); white-space:nowrap; }
 .btn-lg { padding:15px 32px; font-size:15px; }
 .btn-md { padding:12px 26px; font-size:14px; }
@@ -219,9 +356,7 @@ input { font-family: inherit; }
 .btn-ghost { background:transparent; border:1px solid var(--border); color:var(--text-primary); font-weight:500; }
 .btn-ghost:hover { transform:translateY(-2px); border-color:var(--border-strong); }
 
-/* ============================================================
-   NAV
-   ============================================================ */
+/* NAV legado */
 .nav { position:sticky; top:0; z-index:50; display:flex; align-items:center; justify-content:space-between; padding:16px 48px; background:rgba(255,255,255,.85); backdrop-filter:blur(14px); border-bottom:1px solid var(--border); }
 .nav-brand { display:flex; align-items:center; gap:12px; }
 .nav-brand img { height:36px; width:auto; }
@@ -232,7 +367,6 @@ input { font-family: inherit; }
 .nav-link:hover { color:var(--text-primary); }
 .nav-actions { display:flex; align-items:center; gap:20px; }
 
-/* ---- Header logado (estilo Sympla) ---- */
 .nav-top-link { display:inline-flex; align-items:center; gap:7px; white-space:nowrap; font-size:14px; font-weight:500; color:var(--text-secondary); background:none; border:none; cursor:pointer; }
 .nav-top-link:hover { color:var(--text-primary); }
 
@@ -260,15 +394,11 @@ input { font-family: inherit; }
 .account-item:hover { background:var(--bg-tint); color:var(--text-primary); }
 .account-menu__divider { height:1px; background:var(--border-subtle); margin:4px 8px; }
 
-/* ============================================================
-   POSTER (usado na página de evento)
-   ============================================================ */
+/* POSTER legado (página de evento) */
 .poster { aspect-ratio:4/5; border-radius:var(--r-xl); background:linear-gradient(155deg,#2A3C52,#0E1824); border:1px solid rgba(255,255,255,.08); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; box-shadow:0 18px 48px rgba(0,0,0,.4); }
 .poster-label { font-family:var(--font-mono); font-size:11px; letter-spacing:.2em; color:#5E6B80; }
 
-/* ============================================================
-   FEATURE / EVENT CARDS (grid)
-   ============================================================ */
+/* EVENT CARDS legados */
 .ev-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:24px; }
 .ev-card { display:block; background:var(--bg-elevated); border:1px solid var(--border); border-radius:var(--r-xl); overflow:hidden; box-shadow:var(--sh-sm); cursor:pointer; transition:transform .35s var(--ease-out-expo), box-shadow .35s var(--ease-out-expo); color:inherit; }
 .ev-card:hover { transform:translateY(-4px); box-shadow:0 18px 48px rgba(22,35,50,.12); }
@@ -276,7 +406,6 @@ input { font-family: inherit; }
 .ev-card__img { aspect-ratio:16/10; background:linear-gradient(155deg,#1E2E42,#0E1824); display:flex; align-items:center; justify-content:center; color:var(--gold-500); position:relative; overflow:hidden; }
 .ev-card__img img, .ev-card__img svg { transition:transform .55s var(--ease-out-expo); }
 .ev-card:hover .ev-card__img img, .ev-card:hover .ev-card__img svg { transform:scale(1.06); }
-/* pôster tipográfico do card sem capa (título grande em vez de ícone) */
 .ev-poster { display:flex; flex-direction:column; justify-content:space-between; width:100%; height:100%; padding:18px 20px; text-align:left; }
 .ev-poster__cat { font-family:var(--font-mono); font-size:11px; font-weight:500; letter-spacing:.2em; text-transform:uppercase; color:rgba(255,255,255,.6); }
 .ev-poster__title { font-family:var(--font-display); font-weight:500; font-size:clamp(20px,2.4vw,27px); line-height:1.06; letter-spacing:-.02em; color:#fff; text-wrap:balance; }
@@ -290,9 +419,7 @@ input { font-family: inherit; }
 .feature-card:hover { transform:translateY(-4px); box-shadow:0 18px 48px rgba(22,35,50,.12); }
 .feature-ico { width:48px; height:48px; border-radius:var(--r-md); background:var(--bg-tint); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; color:var(--text-gold); margin-bottom:18px; }
 
-/* ============================================================
-   AGENDA / LIST ROWS
-   ============================================================ */
+/* AGENDA legada */
 .agenda-list { display:flex; flex-direction:column; gap:14px; }
 .agenda-row { display:flex; align-items:center; gap:24px; background:var(--bg-elevated); border:1px solid var(--border); border-radius:var(--r-lg); padding:18px 24px; box-shadow:var(--sh-sm); cursor:pointer; color:inherit; transition:transform .35s var(--ease-out-expo), box-shadow .35s var(--ease-out-expo); }
 .agenda-row:hover { transform:translateY(-2px); box-shadow:var(--sh-md); }
@@ -301,16 +428,12 @@ input { font-family: inherit; }
 .date-block .m { font-family:var(--font-mono); font-size:10px; letter-spacing:.18em; margin-top:4px; color:var(--gold-500); }
 .cat-pill { font-family:var(--font-mono); font-size:11px; letter-spacing:.1em; color:var(--text-gold); background:var(--bg-tint); border:1px solid var(--border); padding:6px 12px; border-radius:9999px; }
 
-/* ============================================================
-   CHIPS
-   ============================================================ */
+/* CHIPS legados */
 .chips { display:flex; flex-wrap:wrap; gap:10px; }
 .chip { background:var(--bg-elevated); border:1px solid var(--border); color:var(--text-secondary); font-size:14px; padding:11px 22px; border-radius:9999px; cursor:pointer; transition:all .2s var(--ease-in-out); }
 .chip--active { background:var(--navy-800); color:var(--text-invert); border-color:var(--navy-800); font-weight:600; }
 
-/* ============================================================
-   DETAIL / TICKET-STYLE PANELS
-   ============================================================ */
+/* DETAIL / TICKET-STYLE PANELS legados */
 .event-layout { display:grid; grid-template-columns:1fr .85fr; gap:40px; align-items:start; }
 .banner { aspect-ratio:16/9; border-radius:var(--r-2xl); background:linear-gradient(155deg,#2A3C52,#0E1824); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; box-shadow:var(--sh-lg); position:relative; overflow:hidden; }
 .banner-glow { position:absolute; left:-60px; top:-40px; width:300px; height:300px; background:radial-gradient(circle,rgba(198,168,106,.18),transparent 65%); }
@@ -328,24 +451,18 @@ input { font-family: inherit; }
 .step { width:34px; height:34px; display:flex; align-items:center; justify-content:center; color:var(--text-secondary); cursor:pointer; user-select:none; transition:background .15s, color .15s; }
 .step:hover { background:#162332; color:#F6F3EB; }
 
-/* ============================================================
-   FORMS
-   ============================================================ */
+/* FORMS legados */
 .field-label { display:block; font-family:var(--font-mono); font-size:10px; letter-spacing:.16em; color:var(--text-tertiary); margin-bottom:6px; text-transform:uppercase; }
 .input { width:100%; font-size:15px; padding:13px 16px; border:1px solid var(--border); border-radius:var(--r-md); background:var(--bg-elevated); color:var(--text-primary); transition:border-color .15s; }
 .input:focus { outline:none; border-color:var(--border-gold); }
 .field-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
 
-/* ============================================================
-   CHECKOUT / SUMMARY
-   ============================================================ */
+/* CHECKOUT / SUMMARY legados */
 .checkout-layout { display:grid; grid-template-columns:1.4fr .9fr; gap:36px; align-items:start; }
 .summary { position:sticky; top:96px; background:var(--bg-elevated); border:1px solid var(--border); border-radius:var(--r-xl); padding:28px; box-shadow:var(--sh-sm); color:var(--text-primary); }
 .summary-row { display:flex; align-items:center; justify-content:space-between; color:var(--text-secondary); font-size:14px; }
 
-/* ============================================================
-   PURCHASE FLOW — seleção de ingressos (leve, em etapas)
-   ============================================================ */
+/* PURCHASE FLOW legado */
 .buy-steps { display:flex; align-items:center; gap:10px; font-family:var(--font-mono); font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--text-tertiary); }
 .buy-steps b { color:var(--text-primary); font-weight:600; }
 .buy-steps .sep { opacity:.4; }
@@ -375,7 +492,7 @@ input { font-family: inherit; }
 .buy-total .v { font-family:var(--font-display); font-size:26px; font-weight:500; }
 @media (max-width:900px) { .buy-layout { grid-template-columns:1fr; } .buy-panel { position:static; } }
 
-/* modal de login/cadastro */
+/* modal de login/cadastro legado */
 .modal-overlay { position:fixed; inset:0; background:rgba(10,10,10,.55); backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center; padding:24px; z-index:100; }
 .modal-card { background:var(--bg-elevated); border-radius:var(--r-2xl); width:100%; max-width:420px; padding:32px; box-shadow:0 30px 80px rgba(0,0,0,.32); position:relative; }
 .modal-close { position:absolute; right:16px; top:16px; background:none; border:none; cursor:pointer; color:var(--text-tertiary); display:flex; }
@@ -383,9 +500,7 @@ input { font-family: inherit; }
 .modal-tab { padding:0 0 12px; font-size:15px; font-weight:500; color:var(--text-tertiary); background:none; border:none; border-bottom:2px solid transparent; cursor:pointer; margin-bottom:-1px; }
 .modal-tab--active { color:var(--text-primary); border-bottom-color:var(--text-primary); }
 
-/* ============================================================
-   AUTH — login / cadastro (clean, P&B)
-   ============================================================ */
+/* AUTH legado */
 .auth-shell { min-height:100vh; background:#fff; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px 24px; gap:28px; }
 .auth-brand { display:flex; align-items:center; gap:10px; font-family:var(--font-sans); font-weight:800; font-size:20px; letter-spacing:-.02em; color:var(--text-primary); }
 .auth-card { width:100%; max-width:410px; border:1px solid var(--border); border-radius:var(--r-2xl); background:var(--bg-elevated); padding:38px 34px; box-shadow:var(--sh-sm); }
@@ -402,27 +517,23 @@ input { font-family: inherit; }
 .auth-success { text-align:center; padding:8px 0; }
 .auth-success__icon { width:56px; height:56px; border-radius:50%; background:#0A0A0A; display:flex; align-items:center; justify-content:center; margin:0 auto 16px; }
 
-/* banner do evento (sem capa): pôster tipográfico com cor da categoria */
+/* banner do evento legado */
 .banner-poster { width:100%; height:100%; display:flex; flex-direction:column; justify-content:flex-end; gap:12px; padding:36px 40px; text-align:left; }
 .banner-poster__cat { font-family:var(--font-mono); font-size:12px; font-weight:500; letter-spacing:.22em; text-transform:uppercase; color:rgba(255,255,255,.72); }
 .banner-poster__title { font-family:var(--font-display); font-weight:500; font-size:clamp(30px,4vw,52px); line-height:1.02; letter-spacing:-.02em; color:#fff; }
 
-/* checkout: itens do carrinho e opções de pagamento */
+/* checkout legado */
 .cart-item { display:flex; align-items:center; gap:16px; background:var(--bg-elevated); border:1px solid var(--border); border-radius:var(--r-lg); padding:14px 18px; }
 .cart-item .thumb { width:54px; height:54px; border-radius:var(--r-md); background:linear-gradient(150deg,#1A1A1A,#0A0A0A); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
 .pay-option { flex:1; display:flex; align-items:center; gap:10px; border:1px solid var(--border); border-radius:var(--r-md); padding:14px 16px; cursor:pointer; transition:border-color .15s, background .15s; }
 .pay-option:hover { border-color:var(--border-strong); }
 .pay-option--active { border-color:var(--border-strong); background:var(--bg-tint); }
 
-/* ============================================================
-   CTA
-   ============================================================ */
+/* CTA legado */
 .cta { position:relative; overflow:hidden; background:linear-gradient(135deg,#162332,#1E2E42); border-radius:var(--r-2xl); padding:56px; display:flex; align-items:center; justify-content:space-between; gap:40px; }
 .cta-glow { position:absolute; right:-80px; top:-80px; width:300px; height:300px; background:radial-gradient(circle,rgba(198,168,106,.22),transparent 70%); animation:ellevaGlow 4s var(--ease-in-out) infinite; }
 
-/* ============================================================
-   FOOTER
-   ============================================================ */
+/* FOOTER legado */
 .footer { background:var(--navy-900); padding:56px 48px 40px; margin-top:24px; text-align:center; }
 .footer-inner { max-width:640px; margin:0 auto; }
 .footer-col { display:flex; flex-direction:column; align-items:center; gap:10px; }
@@ -431,9 +542,7 @@ input { font-family: inherit; }
 .footer-bottom { max-width:640px; margin:40px auto 0; padding-top:24px; border-top:1px solid rgba(255,255,255,.08); display:flex; align-items:center; justify-content:center; gap:24px; flex-wrap:wrap; }
 .footer-meta { font-family:var(--font-mono); font-size:11px; letter-spacing:.12em; color:#5E6B80; }
 
-/* ============================================================
-   RESPONSIVE
-   ============================================================ */
+/* RESPONSIVE legado */
 @media (max-width: 980px) {
   .nav-links { display:none; }
   .event-layout, .checkout-layout { grid-template-columns:1fr; }
