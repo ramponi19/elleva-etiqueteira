@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { Badge } from "@/components/ui/badge";
 import { Duotone } from "@/components/ui/duotone";
 import { CanhotoCheckout } from "@/components/elleva/canhoto-checkout";
+import { TickerEscassez } from "@/components/elleva/ticker-escassez";
 import { getEvent, getEventSlugs } from "@/lib/events";
 import { arteDaCategoria, duotoneDaCategoria, numeroSerie } from "@/lib/arte";
 import { cidadeDoEvento } from "@/lib/cidades";
@@ -26,9 +27,18 @@ export async function generateMetadata({
   const data = await getEvent(id);
   if (!data) return { title: "Evento" };
   const { event } = data;
+  const title = `${event.title} em ${cidadeDoEvento(event)} · ${event.dateFull} | Elleva Tickets`;
+  const description = `${event.venueCity} · a partir de ${fmtBRL(event.priceFrom)}. Garanta seu lugar na Elleva.`;
+  const ogImage = `/api/og/evento/${event.id}`;
   return {
-    title: `${event.title} em ${cidadeDoEvento(event)} · ${event.dateFull} | Elleva Tickets`,
-    description: `${event.venueCity} · a partir de ${fmtBRL(event.priceFrom)}. Garanta seu lugar na Elleva.`,
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      images: [{ url: ogImage, width: 1200, height: 630, alt: event.title }],
+    },
+    twitter: { card: "summary_large_image", title, description, images: [ogImage] },
   };
 }
 
@@ -54,6 +64,13 @@ export default async function EventPage({
   const arte = arteDaCategoria(event.catLabel);
   const serie = numeroSerie(event.serial);
   const cidade = cidadeDoEvento(event);
+
+  // escassez honesta (§11): número só existe se TODOS os lotes são limitados
+  const todosLimitados = tiers.length > 0 && tiers.every((t) => t.available != null);
+  const restam = todosLimitados
+    ? tiers.reduce((a, t) => a + (t.available ?? 0), 0)
+    : null;
+  const garantiram = tiers.reduce((a, t) => a + t.sold, 0);
 
   return (
     <div className="mx-auto max-w-[1100px] px-5 pb-20 pt-8 sm:px-10">
@@ -116,6 +133,13 @@ export default async function EventPage({
               </div>
             </div>
           </div>
+
+          {/* ticker de escassez — rodapé do cartaz, só com dados reais */}
+          <TickerEscassez
+            eventId={event.uuid}
+            inicialRestam={restam}
+            inicialGarantiram={garantiram}
+          />
         </article>
 
         {/* CANHOTO */}

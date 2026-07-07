@@ -66,7 +66,8 @@ export async function generateTickets(svc: Svc, orderId: string) {
   if (rows.length) await svc.from("tickets").insert(rows);
 }
 
-/** E-mail de confirmação (silencioso se Resend não estiver configurado). */
+/** E-mail de confirmação com o visual do ingresso (spec Fase C).
+ *  Silencioso se Resend não estiver configurado. */
 export async function sendConfirmationEmail(svc: Svc, orderId: string) {
   const resend = getResend();
   if (!resend) return;
@@ -78,31 +79,62 @@ export async function sendConfirmationEmail(svc: Svc, orderId: string) {
     .single();
   if (!order?.buyer_email) return;
 
+  const { data: tickets } = await svc
+    .from("tickets")
+    .select("code, event_title, tier_name")
+    .eq("order_id", orderId);
+
   const items = (order.order_items ?? []) as { event_title: string; tier_name: string; quantity: number }[];
+  // Paleta Cartaz de Show: papel #FAF5EC · tinta #141210 · sol #E8481F
   const rows = items
-    .map((i) => `<tr><td style="padding:6px 0;color:#162332">${i.event_title} — ${i.tier_name}</td><td style="padding:6px 0;text-align:right;color:#73829A">×${i.quantity}</td></tr>`)
+    .map((i) => `<tr>
+      <td style="padding:8px 0;color:#141210;font-weight:bold;text-transform:uppercase;font-size:15px">${i.event_title}<br>
+        <span style="font-weight:normal;text-transform:none;color:rgba(20,18,16,.6);font-size:13px">${i.tier_name} × ${i.quantity}</span></td>
+    </tr>`)
+    .join("");
+
+  const codes = (tickets ?? [])
+    .map((t) => `<tr>
+      <td style="padding:6px 0;color:#141210;font-size:14px;font-weight:bold;letter-spacing:2px">${t.code}</td>
+      <td style="padding:6px 0;text-align:right;color:rgba(20,18,16,.6);font-size:12px">${t.tier_name}</td>
+    </tr>`)
     .join("");
 
   const html = `
-  <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;background:#F6F3EB">
-    <h1 style="font-family:Georgia,serif;color:#162332;font-size:24px;margin:0 0 4px">Elleva <span style="color:#C6A86A">Tickets</span></h1>
-    <p style="color:#4A5A70;font-size:15px">Olá, ${order.buyer_name}! Sua compra foi confirmada. 🎉</p>
-    <div style="background:#fff;border:1px solid #D2CBB8;border-radius:14px;padding:20px;margin-top:16px">
-      <table style="width:100%;border-collapse:collapse;font-size:14px">${rows}</table>
-      <div style="border-top:1px solid #ECE9E0;margin-top:12px;padding-top:12px;display:flex;justify-content:space-between">
-        <strong style="color:#162332">Total</strong>
-        <strong style="color:#162332">R$ ${Number(order.total).toLocaleString("pt-BR")}</strong>
+  <div style="font-family:Arial,Helvetica,sans-serif;max-width:480px;margin:0 auto;padding:32px 20px;background:#FAF5EC">
+    <p style="margin:0;color:#C93A15;font-size:11px;letter-spacing:3px;text-transform:uppercase;font-weight:bold">Pix aprovado</p>
+    <h1 style="margin:6px 0 0;color:#141210;font-size:30px;line-height:1;text-transform:uppercase;font-weight:900">Lugar garantido!</h1>
+    <p style="color:#141210;font-size:15px;margin:14px 0 0">${order.buyer_name}, seu ingresso chegou. A gente se vê lá.</p>
+
+    <!-- o ingresso -->
+    <div style="margin-top:22px;border:2px solid #141210;border-radius:14px;background:#fff;overflow:hidden">
+      <div style="padding:18px 20px">
+        <p style="margin:0 0 10px;color:#C93A15;font-size:10px;letter-spacing:3px;text-transform:uppercase;font-weight:bold">Elleva Tickets</p>
+        <table style="width:100%;border-collapse:collapse">${rows}</table>
+      </div>
+      <div style="border-top:2px dashed #141210;padding:14px 20px;background:#F3ECDF">
+        ${codes ? `<table style="width:100%;border-collapse:collapse">${codes}</table>` : ""}
+        <table style="width:100%;border-collapse:collapse;margin-top:8px">
+          <tr>
+            <td style="color:rgba(20,18,16,.6);font-size:11px;letter-spacing:2px;text-transform:uppercase">Total pago</td>
+            <td style="text-align:right;color:#141210;font-size:20px;font-weight:900">R$ ${Number(order.total).toLocaleString("pt-BR")}</td>
+          </tr>
+        </table>
       </div>
     </div>
-    <a href="${APP_URL}/conta" style="display:inline-block;margin-top:20px;background:#C6A86A;color:#0E1824;text-decoration:none;font-weight:600;padding:12px 24px;border-radius:9999px">Ver meus ingressos</a>
-    <p style="color:#A2ADBE;font-size:12px;margin-top:24px">Os ingressos com QR code estão disponíveis na sua conta Elleva.</p>
+
+    <a href="${APP_URL}/conta" style="display:inline-block;margin-top:22px;background:#E8481F;color:#141210;text-decoration:none;font-weight:bold;padding:13px 26px;border-radius:9999px;font-size:15px">Ver meus ingressos</a>
+    <p style="color:rgba(20,18,16,.6);font-size:12px;margin-top:20px;line-height:1.5">
+      O QR code de cada ingresso está na sua conta Elleva — é ele que entra.
+      Guarda este e-mail: os códigos acima também valem na portaria.
+    </p>
   </div>`;
 
   try {
     await resend.emails.send({
       from: FROM_EMAIL,
       to: order.buyer_email,
-      subject: "Sua compra foi confirmada — Elleva Tickets",
+      subject: "Lugar garantido! Seu ingresso chegou — Elleva Tickets",
       html,
     });
   } catch {
@@ -177,12 +209,12 @@ export async function sendRefundEmail(svc: Svc, orderId: string) {
   if (!order?.buyer_email) return;
 
   const html = `
-  <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;background:#F6F3EB">
-    <h1 style="font-family:Georgia,serif;color:#162332;font-size:24px;margin:0 0 4px">Elleva <span style="color:#C6A86A">Tickets</span></h1>
-    <p style="color:#4A5A70;font-size:15px">Olá, ${order.buyer_name}. Seu pedido foi <strong>reembolsado</strong>.</p>
-    <div style="background:#fff;border:1px solid #D2CBB8;border-radius:14px;padding:20px;margin-top:16px">
-      <p style="margin:0;color:#162332">Valor reembolsado: <strong>R$ ${Number(order.total).toLocaleString("pt-BR")}</strong></p>
-      <p style="margin:8px 0 0;color:#73829A;font-size:13px">O estorno pode levar alguns dias para aparecer, conforme o meio de pagamento. Os ingressos deste pedido foram cancelados.</p>
+  <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;background:#FAF5EC">
+    <h1 style="font-weight:900;text-transform:uppercase;color:#141210;font-size:24px;margin:0 0 4px">Elleva <span style="color:#E8481F">Tickets</span></h1>
+    <p style="color:#141210;font-size:15px">Olá, ${order.buyer_name}. Seu pedido foi <strong>reembolsado</strong>.</p>
+    <div style="background:#fff;border:1px solid #141210;border-radius:14px;padding:20px;margin-top:16px">
+      <p style="margin:0;color:#141210">Valor reembolsado: <strong>R$ ${Number(order.total).toLocaleString("pt-BR")}</strong></p>
+      <p style="margin:8px 0 0;color:rgba(20,18,16,.6);font-size:13px">O estorno pode levar alguns dias para aparecer, conforme o meio de pagamento. Os ingressos deste pedido foram cancelados.</p>
     </div>
   </div>`;
   try {
@@ -201,14 +233,14 @@ export async function sendReminderEmail(to: string, name: string, eventTitle: st
   if (!resend) return;
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
   const html = `
-  <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;background:#F6F3EB">
-    <h1 style="font-family:Georgia,serif;color:#162332;font-size:24px;margin:0 0 4px">Elleva <span style="color:#C6A86A">Tickets</span></h1>
-    <p style="color:#4A5A70;font-size:15px">Olá, ${name}! Seu evento está chegando. 🎉</p>
-    <div style="background:#fff;border:1px solid #D2CBB8;border-radius:14px;padding:20px;margin-top:16px">
-      <p style="font-family:Georgia,serif;font-size:18px;color:#162332;margin:0">${eventTitle}</p>
-      <p style="color:#73829A;font-size:14px;margin:6px 0 0">${when}</p>
+  <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;background:#FAF5EC">
+    <h1 style="font-weight:900;text-transform:uppercase;color:#141210;font-size:24px;margin:0 0 4px">Elleva <span style="color:#E8481F">Tickets</span></h1>
+    <p style="color:#141210;font-size:15px">Olá, ${name}! Seu evento está chegando. 🎉</p>
+    <div style="background:#fff;border:1px solid #141210;border-radius:14px;padding:20px;margin-top:16px">
+      <p style="font-weight:900;text-transform:uppercase;font-size:18px;color:#141210;margin:0">${eventTitle}</p>
+      <p style="color:rgba(20,18,16,.6);font-size:14px;margin:6px 0 0">${when}</p>
     </div>
-    <a href="${appUrl}/conta" style="display:inline-block;margin-top:20px;background:#C6A86A;color:#0E1824;text-decoration:none;font-weight:600;padding:12px 24px;border-radius:9999px">Ver meus ingressos</a>
+    <a href="${appUrl}/conta" style="display:inline-block;margin-top:20px;background:#E8481F;color:#141210;text-decoration:none;font-weight:600;padding:12px 24px;border-radius:9999px">Ver meus ingressos</a>
   </div>`;
   try {
     await resend.emails.send({ from: FROM_EMAIL, to, subject: `Lembrete: ${eventTitle} — Elleva Tickets`, html });

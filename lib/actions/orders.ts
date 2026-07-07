@@ -23,6 +23,7 @@ const BaseSchema = z.object({
   buyerName: z.string().min(1, "Informe seu nome"),
   buyerEmail: z.string().email("E-mail inválido"),
   buyerCpf: z.string().optional(),
+  buyerWhatsapp: z.string().optional(),
   couponCode: z.string().optional(),
   items: z.array(ItemSchema).min(1, "Carrinho vazio"),
 });
@@ -88,7 +89,7 @@ async function checkStock(svc: Svc, items: Items): Promise<string | null> {
 
 async function insertPendingOrder(
   svc: Svc,
-  data: { buyerName: string; buyerEmail: string; buyerCpf?: string; method: "pix" | "card"; provider: string; items: Items; userId: string | null; discount?: number; couponCode?: string | null }
+  data: { buyerName: string; buyerEmail: string; buyerCpf?: string; buyerWhatsapp?: string; method: "pix" | "card"; provider: string; items: Items; userId: string | null; discount?: number; couponCode?: string | null }
 ): Promise<{ error: string } | { orderId: string; total: number }> {
   const { subtotal, discount, fee, total } = finalTotals(data.items, data.discount ?? 0);
   const { data: order, error } = await svc
@@ -97,6 +98,7 @@ async function insertPendingOrder(
       buyer_name: data.buyerName,
       buyer_email: data.buyerEmail,
       buyer_cpf: data.buyerCpf || null,
+      buyer_whatsapp: data.buyerWhatsapp || null,
       payment_method: data.method,
       payment_provider: data.provider,
       status: "pending",

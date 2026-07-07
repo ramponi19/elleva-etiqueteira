@@ -13,6 +13,7 @@ export interface Tier {
   desc: string;
   price: number;
   available: number | null; // null = ilimitado
+  sold: number;             // pra "m pessoas já garantiram" (§11)
 }
 
 export interface EventItem {
@@ -152,6 +153,7 @@ export async function getEvent(
         desc: t.description ?? "",
         price: Number(t.price),
         available: t.capacity == null ? null : Math.max(0, t.capacity - (t.sold ?? 0)),
+        sold: t.sold ?? 0,
       }));
     return { event: toEventItem(row), tiers };
   } catch {
@@ -196,9 +198,9 @@ export const MOCK_EVENTS: EventItem[] = [
 
 function mockTiers(priceFrom: number): Tier[] {
   return [
-    { id: "pista", name: "Pista", desc: "Acesso à área geral", price: priceFrom, available: null },
-    { id: "vip", name: "VIP", desc: "Área elevada + open bar", price: priceFrom + 70, available: null },
-    { id: "camarote", name: "Camarote", desc: "Vista privilegiada + lounge", price: priceFrom + 190, available: null },
+    { id: "pista", name: "Pista", desc: "Acesso à área geral", price: priceFrom, available: null, sold: 0 },
+    { id: "vip", name: "VIP", desc: "Área elevada + open bar", price: priceFrom + 70, available: null, sold: 0 },
+    { id: "camarote", name: "Camarote", desc: "Vista privilegiada + lounge", price: priceFrom + 190, available: null, sold: 0 },
   ];
 }
 

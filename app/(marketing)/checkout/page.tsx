@@ -7,16 +7,33 @@ import { useCart } from "@/lib/cart";
 import { fmtBRL } from "@/lib/format";
 import { createOrder, getOrderStatus, previewCoupon } from "@/lib/actions/orders";
 import CardForm from "@/components/marketing/card-form";
-import { createClient } from "@/lib/supabase/client";
+import { Barras } from "@/components/ui/barras";
+import { Button } from "@/components/ui/button";
+import { ConfirmacaoRasgo, type ItemConfirmado } from "@/components/elleva/confirmacao-rasgo";
 
 type Pix = { qrBase64: string; copyPaste: string; orderId: string; expiresAt: string };
 
+const inputCls =
+  "w-full rounded-[10px] border-[1.5px] border-tinta bg-white px-3.5 py-3 text-[15px] text-tinta placeholder:text-tinta-35";
+const labelCls = "rotulo mb-1.5 block text-tinta-60";
+
+function Notch({ lado }: { lado: "esquerda" | "direita" }) {
+  return (
+    <span
+      aria-hidden
+      className="absolute top-0 z-10 h-[17px] w-[17px] -translate-y-1/2 rounded-full border-[1.5px] border-tinta bg-papel"
+      style={lado === "esquerda" ? { left: -9 } : { right: -9 }}
+    />
+  );
+}
+
 export default function CheckoutPage() {
   const { items, subtotal, removeItem, clear } = useCart();
-  const [confirmed, setConfirmed] = useState(false);
+  const [confirmado, setConfirmado] = useState<{ itens: ItemConfirmado[]; total: number } | null>(null);
   const [pay, setPay] = useState<"pix" | "card">("pix");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [whatsapp, setWhatsapp] = useState("");
   const [cpf, setCpf] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -46,6 +63,14 @@ export default function CheckoutPage() {
   const feeAdj = Math.round(base * 0.1);
   const totalAdj = base + feeAdj;
 
+  function confirmar() {
+    setConfirmado({
+      itens: items.map((i) => ({ eventTitle: i.eventTitle, tierName: i.tierName, qty: i.qty })),
+      total: totalAdj,
+    });
+    clear();
+  }
+
   // Contagem regressiva do Pix
   useEffect(() => {
     if (!pix) return;
@@ -62,13 +87,12 @@ export default function CheckoutPage() {
       const status = await getOrderStatus(pix.orderId);
       if (status === "paid") {
         clearInterval(t);
-        clear();
-        setConfirmed(true);
+        confirmar();
         setPix(null);
       } else if (status === "cancelled") {
         clearInterval(t);
         setPix(null);
-        setError("O pagamento não foi concluído. Tente novamente.");
+        setError("O pagamento não foi concluído. Tenta de novo?");
       }
     }, 4000);
     return () => clearInterval(t);
@@ -78,6 +102,7 @@ export default function CheckoutPage() {
   // pré-preenche nome/e-mail do usuário logado (veio pelo gate de acesso)
   useEffect(() => {
     (async () => {
+      const { createClient } = await import("@/lib/supabase/client");
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
@@ -91,7 +116,7 @@ export default function CheckoutPage() {
     if (!items.length) return;
     setError(null);
     if (!name.trim() || !email.trim()) {
-      setError("Preencha nome e e-mail para continuar.");
+      setError("Faltou nome ou e-mail. Preenche pra gente emitir o ingresso.");
       return;
     }
     setLoading(true);
@@ -99,6 +124,7 @@ export default function CheckoutPage() {
       buyerName: name,
       buyerEmail: email,
       buyerCpf: cpf,
+      buyerWhatsapp: whatsapp,
       couponCode: coupon || undefined,
       items: cartItems,
     });
@@ -108,228 +134,235 @@ export default function CheckoutPage() {
       return;
     }
     if (res.paid) {
-      clear();
-      setConfirmed(true);
+      confirmar();
       return;
     }
     setPix({ ...res.pix, orderId: res.orderId, expiresAt: res.expiresAt });
   };
 
-  if (confirmed) {
-    return (
-      <div className="container" style={{ maxWidth: 1100, padding: "40px 48px 64px" }}>
-        <div style={{ textAlign: "center", padding: "64px 0" }}>
-          <div style={{ width: 88, height: 88, borderRadius: "50%", background: "var(--navy-800)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto" }}>
-            <Icon icon="solar:check-circle-bold" style={{ fontSize: 48, color: "#fff" }} />
-          </div>
-          <h1 className="h1" style={{ fontSize: 42, marginTop: 28 }}>
-            Compra <span className="serif accent-gold">confirmada</span>.
-          </h1>
-          <p className="lede" style={{ maxWidth: 440, margin: "16px auto 0" }}>
-            Seus ingressos foram enviados para o seu e-mail e já estão na sua conta Elleva.
-          </p>
-          <Link href="/" className="btn btn-navy btn-lg" style={{ marginTop: 32 }}>
-            Voltar para a home
-          </Link>
-        </div>
-      </div>
-    );
+  if (confirmado) {
+    return <ConfirmacaoRasgo itens={confirmado.itens} total={confirmado.total} />;
   }
 
+  // ------- TELA DO PIX -------
   if (pix) {
     return (
-      <div className="container" style={{ maxWidth: 1100, padding: "40px 48px 64px" }}>
-        <div style={{ maxWidth: 460, margin: "0 auto", textAlign: "center" }}>
-          <span className="eyebrow eyebrow-gold no-rule" style={{ justifyContent: "center" }}>Pague com Pix</span>
-          <h1 className="h1" style={{ fontSize: 36, marginTop: 14 }}>
-            Escaneie o <span className="serif accent-gold">QR code</span>
-          </h1>
-          <p className="body" style={{ marginTop: 8 }}>
-            Total: <strong>{fmtBRL(totalAdj)}</strong> · O pedido confirma automaticamente após o pagamento.
-          </p>
+      <div className="mx-auto max-w-[440px] px-5 pb-20 pt-12 text-center">
+        <p className="rotulo m-0 text-sol-escuro">Pagar com Pix</p>
+        <h1 className="display-2 mt-3">Escaneia e pronto</h1>
+        <p className="corpo mt-3">
+          <strong className="numero">{fmtBRL(totalAdj)}</strong> · confirma sozinho
+          assim que o banco avisar.
+        </p>
 
-          {remaining > 0 ? (
-            <>
-              <div style={{ background: "var(--bg-elevated)", border: "1px solid var(--border)", borderRadius: "var(--r-xl)", padding: 24, marginTop: 24, display: "inline-block" }}>
-                {pix.qrBase64 ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={`data:image/png;base64,${pix.qrBase64}`} alt="QR code Pix" width={240} height={240} style={{ display: "block" }} />
-                ) : (
-                  <p className="body" style={{ width: 240 }}>QR indisponível — use o código abaixo.</p>
-                )}
-              </div>
-
-              <p style={{ marginTop: 14, fontFamily: "var(--font-mono)", fontSize: 13, color: "var(--text-gold)" }}>
-                Expira em {Math.floor(remaining / 60)}:{String(remaining % 60).padStart(2, "0")}
+        {remaining > 0 ? (
+          <>
+            <div className="mt-7 inline-block rounded-[var(--radius-card)] border-[1.5px] border-tinta bg-white p-5">
+              {pix.qrBase64 ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={`data:image/png;base64,${pix.qrBase64}`} alt="QR code Pix" width={230} height={230} className="block" />
+              ) : (
+                <p className="corpo w-[230px]">QR indisponível — usa o código abaixo.</p>
+              )}
+              <p className="numero mt-3 text-[15px] text-sol-escuro">
+                expira em {Math.floor(remaining / 60)}:{String(remaining % 60).padStart(2, "0")}
               </p>
-
-              <div style={{ marginTop: 16, textAlign: "left" }}>
-                <label className="field-label">PIX COPIA E COLA</label>
-                <div style={{ display: "flex", gap: 8 }}>
-                  <input className="input" readOnly value={pix.copyPaste} style={{ fontFamily: "var(--font-mono)", fontSize: 12 }} />
-                  <button
-                    className="btn btn-navy btn-md"
-                    onClick={() => {
-                      navigator.clipboard?.writeText(pix.copyPaste);
-                      setCopied(true);
-                      setTimeout(() => setCopied(false), 2000);
-                    }}
-                  >
-                    {copied ? "Copiado!" : "Copiar"}
-                  </button>
-                </div>
-              </div>
-
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginTop: 24, color: "var(--text-tertiary)", fontSize: 14 }}>
-                <Icon icon="svg-spinners:ring-resize" style={{ fontSize: 18, color: "var(--text-gold)" }} />
-                Aguardando confirmação do pagamento...
-              </div>
-            </>
-          ) : (
-            <div style={{ marginTop: 28 }}>
-              <Icon icon="solar:clock-circle-bold-duotone" style={{ fontSize: 48, color: "var(--text-muted)" }} />
-              <p className="lede" style={{ marginTop: 12 }}>Este Pix expirou.</p>
-              <button
-                className="btn btn-gold btn-lg"
-                style={{ marginTop: 16 }}
-                disabled={loading}
-                onClick={() => { setPix(null); finalize(); }}
-              >
-                {loading ? "Gerando..." : "Gerar novo Pix"}
-              </button>
             </div>
-          )}
-        </div>
+
+            <div className="mt-5 text-left">
+              <label className={labelCls}>Pix copia e cola</label>
+              <div className="flex gap-2">
+                <input className={`${inputCls} text-[12px]`} readOnly value={pix.copyPaste} />
+                <Button
+                  variante="tinta"
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard?.writeText(pix.copyPaste);
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                  }}
+                >
+                  {copied ? "Copiado!" : "Copiar"}
+                </Button>
+              </div>
+            </div>
+
+            <p className="corpo-suave mt-6 inline-flex items-center gap-2">
+              <Icon icon="svg-spinners:ring-resize" style={{ fontSize: 17, color: "var(--color-sol-escuro)" }} />
+              Esperando o pagamento cair...
+            </p>
+          </>
+        ) : (
+          <div className="mt-8">
+            <p className="corpo">Esse Pix expirou. Sem drama:</p>
+            <Button className="mt-4" disabled={loading} onClick={() => { setPix(null); finalize(); }}>
+              {loading ? "Gerando..." : "Gerar novo Pix"}
+            </Button>
+          </div>
+        )}
       </div>
     );
   }
 
+  // ------- CHECKOUT (uma coluna, spec 8.4) -------
   return (
-    <div className="container" style={{ maxWidth: 1100, padding: "40px 48px 64px" }}>
-      <div className="buy-steps" style={{ marginBottom: 18 }}>
-        <span>Ingressos</span><span className="sep">·</span>
-        <span>Acesso</span><span className="sep">·</span>
-        <b>Pagamento</b>
-      </div>
-      <h1 className="h1" data-reveal-lines style={{ fontSize: 40, marginTop: 4 }}>
-        Finalizar <span className="serif accent-gold">compra</span>
-      </h1>
+    <div className="mx-auto max-w-[560px] px-5 pb-20 pt-10">
+      <p className="rotulo m-0 text-tinta-60">
+        Ingressos · Acesso · <span className="text-sol-escuro">Pagamento</span>
+      </p>
+      <h1 className="display-2 mt-3">Garantir meu lugar</h1>
 
       {items.length === 0 ? (
-        <div style={{ textAlign: "center", padding: "64px 0" }}>
-          <Icon icon="solar:cart-cross-bold-duotone" style={{ fontSize: 64, color: "var(--text-muted)" }} />
-          <p className="lede" style={{ marginTop: 18 }}>Seu carrinho está vazio.</p>
-          <Link href="/agenda" className="btn btn-navy btn-lg" style={{ marginTop: 24 }}>
-            Explorar eventos
-          </Link>
+        <div className="py-16 text-center">
+          <p className="corpo">Nada por aqui ainda. Escolhe um evento primeiro?</p>
+          <Button variante="tinta" href="/agenda" className="mt-6">
+            Ver o que está em cartaz
+          </Button>
         </div>
       ) : (
-        <div className="checkout-layout" style={{ marginTop: 36 }}>
-          {/* items + form */}
-          <div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              {items.map((item, idx) => (
-                <div className="cart-item" key={idx}>
-                  <div className="thumb">
-                    <Icon icon="solar:ticket-bold-duotone" style={{ fontSize: 26, color: "#fff" }} />
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontFamily: "var(--font-display)", fontSize: 17, fontWeight: 500 }}>{item.eventTitle}</div>
-                    <div style={{ fontSize: 13, color: "var(--text-tertiary)", marginTop: 3 }}>
-                      {item.tierName} · {item.qty} ingresso(s)
+        <>
+          {/* RESUMO EM FORMATO DE INGRESSO */}
+          <div className="relative mt-8 rounded-[var(--radius-card)] border-[1.5px] border-tinta bg-white">
+            <div className="p-5">
+              <div className="flex items-start justify-between gap-3">
+                <span className="rotulo text-sol-escuro">Seu ingresso</span>
+                <Barras />
+              </div>
+              <div className="mt-4 flex flex-col gap-3">
+                {items.map((item, idx) => (
+                  <div key={idx} className="flex items-center gap-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="titulo-card m-0 text-[15px]">{item.eventTitle}</p>
+                      <p className="corpo-suave m-0 mt-0.5">
+                        {item.tierName} × {item.qty}
+                      </p>
                     </div>
+                    <span className="numero flex-shrink-0 text-[16px]">{fmtBRL(item.price * item.qty)}</span>
+                    <button
+                      type="button"
+                      aria-label={`Remover ${item.eventTitle}`}
+                      onClick={() => removeItem(idx)}
+                      className="flex cursor-pointer text-tinta-35 hover:text-sol-escuro"
+                    >
+                      <Icon icon="lucide:trash-2" style={{ fontSize: 17 }} />
+                    </button>
                   </div>
-                  <span style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 500 }}>
-                    {fmtBRL(item.price * item.qty)}
-                  </span>
-                  <span className="nav-link" onClick={() => removeItem(idx)} style={{ color: "var(--text-muted)", display: "flex", cursor: "pointer" }}>
-                    <Icon icon="lucide:trash-2" style={{ fontSize: 18 }} />
-                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* picote + canhoto do resumo */}
+            <div className="relative">
+              <Notch lado="esquerda" />
+              <Notch lado="direita" />
+              <div className="picote-h border-tinta p-5">
+                <div className="flex gap-2">
+                  <input
+                    value={coupon}
+                    onChange={(e) => setCoupon(e.target.value.toUpperCase())}
+                    placeholder="Cupom"
+                    className={`${inputCls} max-w-[180px] py-2 text-[13px]`}
+                  />
+                  <Button variante="contorno" type="button" onClick={applyCoupon} className="px-4 py-2 text-[13px]">
+                    Aplicar
+                  </Button>
                 </div>
-              ))}
-            </div>
+                {couponMsg && (
+                  <p className={`corpo-suave m-0 mt-2 ${discount > 0 ? "text-palco" : "text-sol-escuro"}`}>
+                    {couponMsg}
+                  </p>
+                )}
 
-            <h3 className="h3" style={{ fontSize: 22, marginTop: 36 }}>Seus dados</h3>
-            <div className="field-grid" style={{ marginTop: 18 }}>
-              <div style={{ gridColumn: "1 / -1" }}>
-                <label className="field-label">NOME COMPLETO</label>
-                <input className="input" placeholder="Seu nome" value={name} onChange={(e) => setName(e.target.value)} />
-              </div>
-              <div>
-                <label className="field-label">E-MAIL</label>
-                <input className="input" type="email" placeholder="voce@email.com" value={email} onChange={(e) => setEmail(e.target.value)} />
-              </div>
-              <div>
-                <label className="field-label">CPF</label>
-                <input className="input" placeholder="000.000.000-00" value={cpf} onChange={(e) => setCpf(e.target.value)} />
-              </div>
-            </div>
-
-            <h3 className="h3" style={{ fontSize: 22, marginTop: 32 }}>Pagamento</h3>
-            <div style={{ display: "flex", gap: 12, marginTop: 18 }}>
-              <div className={`pay-option${pay === "pix" ? " pay-option--active" : ""}`} onClick={() => setPay("pix")}>
-                <Icon icon="solar:qr-code-bold-duotone" style={{ fontSize: 24, color: pay === "pix" ? "var(--text-primary)" : "var(--text-tertiary)" }} />
-                <span style={{ fontWeight: 600, fontSize: 14 }}>Pix</span>
-              </div>
-              <div className={`pay-option${pay === "card" ? " pay-option--active" : ""}`} onClick={() => setPay("card")}>
-                <Icon icon="solar:card-bold-duotone" style={{ fontSize: 24, color: pay === "card" ? "var(--text-primary)" : "var(--text-tertiary)" }} />
-                <span style={{ fontWeight: 600, fontSize: 14, color: "var(--text-secondary)" }}>Cartão</span>
+                <div className="corpo-suave mt-4 flex justify-between">
+                  <span>Subtotal</span><span>{fmtBRL(subtotal)}</span>
+                </div>
+                {discount > 0 && (
+                  <div className="corpo-suave mt-1.5 flex justify-between text-palco">
+                    <span>Desconto</span><span>− {fmtBRL(discount)}</span>
+                  </div>
+                )}
+                <div className="corpo-suave mt-1.5 flex justify-between">
+                  <span>Taxa de serviço</span><span>{fmtBRL(feeAdj)}</span>
+                </div>
+                <div className="mt-3 flex items-baseline justify-between border-t-[1.5px] border-tinta pt-3">
+                  <span className="rotulo text-tinta-60">Total</span>
+                  <span className="numero text-[26px]">{fmtBRL(totalAdj)}</span>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* summary */}
-          <div className="summary">
-            <h4 style={{ fontFamily: "var(--font-sans)", fontWeight: 600, fontSize: 17, color: "var(--text-primary)", margin: 0 }}>Resumo</h4>
-
-            {/* Cupom */}
-            <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
-              <input
-                value={coupon}
-                onChange={(e) => setCoupon(e.target.value.toUpperCase())}
-                placeholder="Cupom"
-                style={{ flex: 1, fontSize: 13, padding: "10px 12px", borderRadius: 8, border: "1px solid var(--border)", background: "var(--bg-tint)", color: "var(--text-primary)", fontFamily: "var(--font-mono)" }}
-              />
-              <button type="button" onClick={applyCoupon} className="btn btn-navy btn-sm">Aplicar</button>
+          {/* DADOS */}
+          <h2 className="rotulo mt-10 text-sol-escuro">Quem vai receber o ingresso</h2>
+          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="sm:col-span-2">
+              <label className={labelCls} htmlFor="ck-nome">Nome completo</label>
+              <input id="ck-nome" className={inputCls} placeholder="Seu nome" value={name} onChange={(e) => setName(e.target.value)} />
             </div>
-            {couponMsg && (
-              <p style={{ fontSize: 12, marginTop: 6, color: discount > 0 ? "var(--text-primary)" : "#B4291F" }}>{couponMsg}</p>
-            )}
-
-            <div className="summary-row" style={{ marginTop: 18 }}><span>Subtotal</span><span>{fmtBRL(subtotal)}</span></div>
-            {discount > 0 && (
-              <div className="summary-row" style={{ marginTop: 12, color: "var(--text-primary)" }}><span>Desconto</span><span>− {fmtBRL(discount)}</span></div>
-            )}
-            <div className="summary-row" style={{ marginTop: 12 }}><span>Taxa de serviço</span><span>{fmtBRL(feeAdj)}</span></div>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 18, paddingTop: 18, borderTop: "1px solid var(--border)" }}>
-              <span style={{ color: "var(--text-primary)", fontSize: 15 }}>Total</span>
-              <span style={{ fontFamily: "var(--font-display)", fontSize: 28, fontWeight: 500, color: "var(--text-primary)" }}>{fmtBRL(totalAdj)}</span>
+            <div>
+              <label className={labelCls} htmlFor="ck-email">E-mail</label>
+              <input id="ck-email" className={inputCls} type="email" placeholder="voce@email.com" value={email} onChange={(e) => setEmail(e.target.value)} />
             </div>
-            {error && (
-              <p style={{ marginTop: 16, fontSize: 13, color: "#B4291F", background: "rgba(180,41,31,.08)", border: "1px solid rgba(180,41,31,.2)", borderRadius: 10, padding: "8px 12px" }}>
-                {error}
-              </p>
-            )}
+            <div>
+              <label className={labelCls} htmlFor="ck-zap">WhatsApp</label>
+              <input id="ck-zap" className={inputCls} inputMode="tel" placeholder="(19) 99999-9999" value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} />
+            </div>
+            <div className="sm:col-span-2">
+              <label className={labelCls} htmlFor="ck-cpf">CPF (pra meia-entrada)</label>
+              <input id="ck-cpf" className={inputCls} inputMode="numeric" placeholder="000.000.000-00" value={cpf} onChange={(e) => setCpf(e.target.value)} />
+            </div>
+          </div>
 
-            {pay === "card" ? (
+          {/* PAGAMENTO — Pix primário */}
+          <h2 className="rotulo mt-9 text-sol-escuro">Como você paga</h2>
+          <div className="mt-4 flex gap-3" role="radiogroup" aria-label="Método de pagamento">
+            {(["pix", "card"] as const).map((m) => (
+              <button
+                key={m}
+                type="button"
+                role="radio"
+                aria-checked={pay === m}
+                onClick={() => setPay(m)}
+                className={`flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-[10px] border-[1.5px] px-4 py-3.5 text-[14px] font-medium transition-colors duration-[var(--dur-micro)] ${
+                  pay === m ? "border-tinta bg-tinta text-papel" : "border-tinta bg-transparent text-tinta hover:bg-papel-2"
+                }`}
+              >
+                <Icon icon={m === "pix" ? "solar:qr-code-bold" : "solar:card-bold"} style={{ fontSize: 20 }} />
+                {m === "pix" ? "Pix — na hora" : "Cartão"}
+              </button>
+            ))}
+          </div>
+
+          {error && (
+            <p className="corpo mt-5 rounded-[10px] border-[1.5px] border-sol-escuro bg-papel-2 px-3.5 py-2.5 text-sol-escuro">
+              {error}
+            </p>
+          )}
+
+          {pay === "card" ? (
+            <div className="mt-6">
               <CardForm
                 buyer={{ name, email, cpf }}
                 items={items}
                 couponCode={coupon || undefined}
-                onSuccess={() => { clear(); setConfirmed(true); }}
+                onSuccess={confirmar}
               />
-            ) : (
-              <>
-                <button className="btn btn-gold btn-block" style={{ marginTop: 22, opacity: loading ? 0.6 : 1 }} onClick={finalize} disabled={loading}>
-                  {loading ? "Processando..." : "Pagar com Pix"}
-                </button>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginTop: 14, fontSize: 12, color: "var(--text-tertiary)" }}>
-                  <Icon icon="solar:lock-keyhole-bold-duotone" style={{ color: "var(--text-tertiary)", fontSize: 16 }} /> Pagamento criptografado
-                </div>
-              </>
-            )}
-          </div>
-        </div>
+            </div>
+          ) : (
+            <>
+              <Button className="mt-6 w-full" onClick={finalize} disabled={loading}>
+                {loading ? "Gerando o Pix..." : `Pagar com Pix · ${fmtBRL(totalAdj)}`}
+              </Button>
+              <p className="corpo-suave mt-3 text-center">
+                Pix aprovado na hora · ingresso no e-mail e na sua conta
+              </p>
+            </>
+          )}
+
+          <p className="corpo-suave mt-8 text-center">
+            Deu dúvida? <Link href="/ajuda" className="text-sol-escuro underline underline-offset-2">Central de Ajuda</Link>
+          </p>
+        </>
       )}
     </div>
   );

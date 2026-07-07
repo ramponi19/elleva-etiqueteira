@@ -6,7 +6,9 @@ import { Duotone } from "@/components/ui/duotone";
 import { Marquee } from "@/components/ui/marquee";
 import { PosterFallback } from "@/components/ui/poster-fallback";
 import { CityPills } from "@/components/elleva/city-pills";
+import { ConfirmacaoRasgo } from "@/components/elleva/confirmacao-rasgo";
 import { EventStubRow } from "@/components/elleva/event-stub-row";
+import { TickerEscassez } from "@/components/elleva/ticker-escassez";
 import { TicketCard } from "@/components/elleva/ticket-card";
 
 export const metadata: Metadata = {
@@ -16,7 +18,8 @@ export const metadata: Metadata = {
 
 // Página interna de aceite da Fase A (spec §16). Não linkar em produção.
 
-const FOTO_DEMO = "https://picsum.photos/seed/elleva-show/800/500";
+const FOTO_DEMO =
+  "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&fit=crop&w=800&q=70";
 
 function Secao({ titulo, children }: { titulo: string; children: React.ReactNode }) {
   return (
@@ -264,6 +267,25 @@ export default function DevUiPage() {
               { label: "Mogi Guaçu", href: "#", ativa: true },
               { label: "Itapira", href: "#" },
             ]}
+          />
+        </div>
+      </Secao>
+
+      <Secao titulo="TickerEscassez — só com números reais (§11)">
+        <div className="max-w-[420px]">
+          <TickerEscassez eventId="demo" inicialRestam={12} inicialGarantiram={38} />
+          <p className="corpo-suave mt-3">
+            Com restam &gt; 50, lote ilimitado ou 0, o ticker simplesmente não
+            renderiza — escassez só quando verdadeira.
+          </p>
+        </div>
+      </Secao>
+
+      <Secao titulo="ConfirmacaoRasgo — Pix aprovado (Fase C)">
+        <div className="overflow-hidden rounded-[var(--radius-card)] border-[1.5px] border-tinta">
+          <ConfirmacaoRasgo
+            itens={[{ eventTitle: "Uma noite inteira de Rita", tierName: "Pista", qty: 2 }]}
+            total={198}
           />
         </div>
       </Secao>
