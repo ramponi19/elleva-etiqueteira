@@ -8,8 +8,10 @@ export interface Arte {
   tone: Tone;
   /** fundo do pôster/card quando não há foto */
   bg: string;
-  /** cor do texto sobre a arte */
+  /** cor do texto sobre a arte (display/números grandes) */
   fg: string;
+  /** cor pra texto PEQUENO sobre a arte — §4: sobre sol, sempre tinta */
+  fgPequeno: string;
   /** true quando a arte é clara e precisa de badge tinta */
   clara: boolean;
   /** arte papel-2 precisa de borda tinta pra não sumir no papel */
@@ -17,11 +19,11 @@ export interface Arte {
 }
 
 const ARTES: Record<Tone, Arte> = {
-  sol:    { tone: "sol",    bg: "var(--color-sol)",     fg: "var(--color-papel)", clara: false, borda: false },
-  cartaz: { tone: "cartaz", bg: "var(--color-cartaz)",  fg: "var(--color-tinta)", clara: true,  borda: false },
-  palco:  { tone: "palco",  bg: "var(--color-palco)",   fg: "var(--color-papel)", clara: false, borda: false },
-  tinta:  { tone: "tinta",  bg: "var(--color-tinta)",   fg: "var(--color-papel)", clara: false, borda: false },
-  papel:  { tone: "papel",  bg: "var(--color-papel-2)", fg: "var(--color-tinta)", clara: true,  borda: true },
+  sol:    { tone: "sol",    bg: "var(--color-sol)",     fg: "var(--color-papel)", fgPequeno: "var(--color-tinta)", clara: false, borda: false },
+  cartaz: { tone: "cartaz", bg: "var(--color-cartaz)",  fg: "var(--color-tinta)", fgPequeno: "var(--color-tinta)", clara: true,  borda: false },
+  palco:  { tone: "palco",  bg: "var(--color-palco)",   fg: "var(--color-papel)", fgPequeno: "var(--color-papel)", clara: false, borda: false },
+  tinta:  { tone: "tinta",  bg: "var(--color-tinta)",   fg: "var(--color-papel)", fgPequeno: "var(--color-papel)", clara: false, borda: false },
+  papel:  { tone: "papel",  bg: "var(--color-papel-2)", fg: "var(--color-tinta)", fgPequeno: "var(--color-tinta)", clara: true,  borda: true },
 };
 
 // show/música→sol · festa/balada→cartaz · esporte→palco · teatro/cultura→tinta

@@ -2,8 +2,13 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
 import { clsx } from "clsx";
-import AuthModal from "@/components/marketing/auth-modal";
+
+// modal (e o supabase-js dele) só baixa quando o usuário precisa logar
+const AuthModal = dynamic(() => import("@/components/marketing/auth-modal"), {
+  ssr: false,
+});
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/lib/cart";

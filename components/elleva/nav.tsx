@@ -6,7 +6,6 @@ import { useEffect, useRef, useState } from "react";
 import Icon from "@/components/shared/icon";
 import { LogoElleva } from "@/components/elleva/logo";
 import { Button } from "@/components/ui/button";
-import { createClient } from "@/lib/supabase/client";
 import { becomeProducerAndGo } from "@/lib/actions/producer";
 import type { Role } from "@/lib/auth";
 
@@ -41,6 +40,8 @@ export default function Nav({
   }, []);
 
   async function signOut() {
+    // import dinâmico: supabase-js fica fora do bundle de toda página
+    const { createClient } = await import("@/lib/supabase/client");
     const supabase = createClient();
     await supabase.auth.signOut();
     setMenuOpen(false);

@@ -41,7 +41,7 @@ export function EventStubRow({
         style={{ background: arte.bg, color: arte.fg }}
       >
         <span className="numero text-[22px]">{dia}</span>
-        <span className="rotulo">{mes}</span>
+        <span className="rotulo" style={{ color: arte.fgPequeno }}>{mes}</span>
       </div>
       <div className="picote-v flex min-w-0 flex-1 items-center justify-between gap-4 px-4 py-3.5">
         <div className="min-w-0">
@@ -50,7 +50,8 @@ export function EventStubRow({
           </h3>
           <p className="corpo-suave mt-1 truncate">{meta}</p>
         </div>
-        <span className="rotulo flex-shrink-0 text-sol-escuro [[data-theme=noite]_&]:text-sol">
+        {/* §4: destaque pequeno no modo noite é cartaz (9:1); sol ficaria 4,1:1 */}
+        <span className="rotulo flex-shrink-0 text-sol-escuro [[data-theme=noite]_&]:text-cartaz">
           {esgotado ? "Sold out" : fmtBRL(precoDesde)}
         </span>
       </div>

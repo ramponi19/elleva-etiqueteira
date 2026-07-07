@@ -72,34 +72,39 @@
 }
 
 /* ============================================================
-   BASE
+   BASE — dentro de @layer base pra NUNCA vencer utilitários
+   (a { color:inherit } fora de layer engolia text-tinta em links)
    ============================================================ */
-* { box-sizing: border-box; }
-html { scroll-behavior: smooth; }
-body {
-  margin: 0;
-  background: var(--color-papel);
-  color: var(--color-tinta);
-  font-family: var(--font-sans);
-  font-size: 16px;
-  line-height: 1.55;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-a { color: inherit; text-decoration: none; }
-input, button, select, textarea { font-family: inherit; }
-::selection { background: var(--color-sol); color: var(--color-tinta); }
+@layer base {
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--color-papel);
+    color: var(--color-tinta);
+    font-family: var(--font-sans);
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  a { color: inherit; text-decoration: none; }
+  input, button, select, textarea { font-family: inherit; }
+  ::selection { background: var(--color-sol); color: var(--color-tinta); }
 
-/* Foco visível obrigatório (spec §7) */
-:focus-visible {
-  outline: 2px solid var(--color-sol-escuro);
-  outline-offset: 2px;
+  /* Foco visível obrigatório (spec §7) */
+  :focus-visible {
+    outline: 2px solid var(--color-sol-escuro);
+    outline-offset: 2px;
+  }
 }
 
 /* ============================================================
    TIPOGRAFIA — Archivo, três vozes (spec §3)
    caps só em display, títulos de card e rótulos; pesos 400/500/900
+   Em @layer components: utilitários (text-[15px] etc.) podem ajustar.
    ============================================================ */
+@layer components {
 .display-1 {
   font-weight: 900; font-stretch: 120%;
   text-transform: uppercase;
@@ -142,57 +147,64 @@ input, button, select, textarea { font-family: inherit; }
   font-variant-numeric: tabular-nums;
   line-height: 1;
 }
+}
 
 /* ============================================================
    GEOMETRIA DE INGRESSO (spec §6)
    ============================================================ */
-.picote-h { border-top: var(--border-width-tinta) dashed var(--cor-borda); }
-.picote-v { border-left: var(--border-width-tinta) dashed var(--cor-borda); }
+@layer components {
+  .picote-h { border-top: var(--border-width-tinta) dashed var(--cor-borda); }
+  .picote-v { border-left: var(--border-width-tinta) dashed var(--cor-borda); }
+}
 
 /* ============================================================
    DUOTONE tinta→sol (spec §5.1) — toda foto de evento passa por aqui
    ============================================================ */
-.duotone { position: relative; overflow: hidden; background: var(--color-tinta); }
-.duotone img {
-  display: block; width: 100%; height: 100%; object-fit: cover;
-  filter: grayscale(1) contrast(1.15) brightness(1.05);
-  mix-blend-mode: screen; /* sombras afundam na tinta */
+@layer components {
+  .duotone { position: relative; overflow: hidden; background: var(--color-tinta); }
+  .duotone img {
+    display: block; width: 100%; height: 100%; object-fit: cover;
+    filter: grayscale(1) contrast(1.15) brightness(1.05);
+    mix-blend-mode: screen; /* sombras afundam na tinta */
+  }
+  .duotone::after {
+    content: ""; position: absolute; inset: 0;
+    background: var(--color-sol);
+    mix-blend-mode: multiply; /* altas luzes ganham o laranja */
+    pointer-events: none;
+  }
+  .duotone[data-tone="cartaz"]::after { background: var(--color-cartaz); }
+  .duotone[data-tone="palco"]::after { background: var(--color-palco); }
 }
-.duotone::after {
-  content: ""; position: absolute; inset: 0;
-  background: var(--color-sol);
-  mix-blend-mode: multiply; /* altas luzes ganham o laranja */
-  pointer-events: none;
-}
-.duotone[data-tone="cartaz"]::after { background: var(--color-cartaz); }
-.duotone[data-tone="palco"]::after { background: var(--color-palco); }
 
 /* ============================================================
    MARQUEE (spec §7) — CSS puro, pausa no hover, respeita
    prefers-reduced-motion
    ============================================================ */
 @keyframes marquee-rolar { to { transform: translateX(-50%); } }
-.marquee {
-  position: relative;
-  overflow: hidden;
-  height: 38px;
-  background: var(--color-tinta);
-  color: var(--color-papel);
-  white-space: nowrap;
-}
-/* track absoluto: o max-content (~2500px) não pode inflar a largura
-   intrínseca da página (main é flex item do body flex-col) */
-.marquee__track {
-  position: absolute;
-  top: 0; bottom: 0; left: 0;
-  display: flex;
-  align-items: center;
-  width: max-content;
-  animation: marquee-rolar 30s linear infinite;
-}
-.marquee:hover .marquee__track { animation-play-state: paused; }
-@media (prefers-reduced-motion: reduce) {
-  .marquee__track { animation: none; }
+@layer components {
+  .marquee {
+    position: relative;
+    overflow: hidden;
+    height: 38px;
+    background: var(--color-tinta);
+    color: var(--color-papel);
+    white-space: nowrap;
+  }
+  /* track absoluto: o max-content (~2500px) não pode inflar a largura
+     intrínseca da página (main é flex item do body flex-col) */
+  .marquee__track {
+    position: absolute;
+    top: 0; bottom: 0; left: 0;
+    display: flex;
+    align-items: center;
+    width: max-content;
+    animation: marquee-rolar 30s linear infinite;
+  }
+  .marquee:hover .marquee__track { animation-play-state: paused; }
+  @media (prefers-reduced-motion: reduce) {
+    .marquee__track { animation: none; }
+  }
 }
 
 /* ============================================================

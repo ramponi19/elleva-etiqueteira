@@ -33,7 +33,7 @@ export function PosterFallback({
       )}
       style={{ background: arte.bg, color: arte.fg }}
     >
-      <div className="flex items-start justify-between gap-2">
+      <div className="flex items-start justify-between gap-2" style={{ color: arte.fgPequeno }}>
         <span className="rotulo">{categoria}</span>
         {numeroSerie && <span className="rotulo opacity-80">Nº {numeroSerie}</span>}
       </div>
@@ -51,7 +51,9 @@ export function PosterFallback({
           {data && cidade && (
             <span aria-hidden className="h-5 w-[1.5px] bg-current" />
           )}
-          {cidade && <span className="rotulo">{cidade}</span>}
+          {cidade && (
+            <span className="rotulo" style={{ color: arte.fgPequeno }}>{cidade}</span>
+          )}
         </div>
       )}
     </div>
