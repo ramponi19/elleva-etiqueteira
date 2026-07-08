@@ -5,12 +5,13 @@ import dynamic from "next/dynamic";
 import { clsx } from "clsx";
 import Icon from "@/components/shared/icon";
 import { Button } from "@/components/ui/button";
-import { validateTicket, type ValidateResult } from "@/lib/actions/tickets";
+import { validateTicket, validateByToken, type ValidateResult } from "@/lib/actions/tickets";
 
 const CameraScanner = dynamic(() => import("@/components/app/camera-scanner"), { ssr: false });
 
 // Validador de ingresso no design Cartaz de Show (papel/tinta).
-export function TicketValidatorElleva() {
+// Com `token`, valida via link de portaria (sem login); senão, via sessão.
+export function TicketValidatorElleva({ token }: { token?: string } = {}) {
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [scanning, setScanning] = useState(false);
@@ -19,7 +20,7 @@ export function TicketValidatorElleva() {
   async function run(value: string) {
     if (!value.trim()) return;
     setLoading(true);
-    const res = await validateTicket(value);
+    const res = token ? await validateByToken(token, value) : await validateTicket(value);
     setLoading(false);
     setResult(res);
     if (res.ok) setCode("");
