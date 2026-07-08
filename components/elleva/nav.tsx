@@ -13,6 +13,7 @@ import type { Role } from "@/lib/auth";
 // logo · Agenda · Cidades · Produtores · Entrar (único primario da viewport).
 export default function Nav({
   loggedIn,
+  role,
   name,
   email,
   avatarUrl,
@@ -127,6 +128,11 @@ export default function Nav({
                       <Icon icon="lucide:calendar-check" style={{ fontSize: 17 }} /> Meus eventos
                     </button>
                   </form>
+                  {role === "admin" && (
+                    <Link href="/admin" className={itemCls} onClick={() => setMenuOpen(false)}>
+                      <Icon icon="lucide:shield-check" style={{ fontSize: 17 }} /> Administração
+                    </Link>
+                  )}
                   <Link href="/ajuda" className={itemCls} onClick={() => setMenuOpen(false)}>
                     <Icon icon="lucide:circle-help" style={{ fontSize: 17 }} /> Central de Ajuda
                   </Link>
