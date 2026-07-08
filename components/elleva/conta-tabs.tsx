@@ -14,7 +14,7 @@ const TABS = [
 export function ContaTabs() {
   const pathname = usePathname();
   return (
-    <nav className="flex gap-1 overflow-x-auto border-b-[1.5px] border-tinta">
+    <nav className="flex gap-1 overflow-x-auto overflow-y-hidden border-b-[1.5px] border-tinta">
       {TABS.map((t) => {
         const active = pathname === t.href;
         return (

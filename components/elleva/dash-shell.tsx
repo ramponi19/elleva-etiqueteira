@@ -86,7 +86,7 @@ export function DashShell({
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <div className="flex items-center gap-1 overflow-x-auto border-b-[1.5px] border-tinta bg-white px-3 py-2 sm:hidden">
+        <div className="flex items-center gap-1 overflow-x-auto overflow-y-hidden border-b-[1.5px] border-tinta bg-white px-3 py-2 sm:hidden">
           {items.map((item) => (
             <Link
               key={item.href}

@@ -166,6 +166,34 @@ export async function updateEvent(id: string, input: EventInput): Promise<EventF
   return { ok: true };
 }
 
+export async function deleteEvent(id: string): Promise<EventFormState> {
+  const auth = await authorize();
+  if (!auth) return { ok: false, error: "Sem permissão." };
+
+  const supabase = await createClient();
+  if (auth.role === "producer") {
+    const { data: ev } = await supabase.from("events").select("producer_id").eq("id", id).single();
+    if (!ev || ev.producer_id !== auth.user.id) return { ok: false, error: "Evento não é seu." };
+  }
+
+  await supabase.from("ticket_tiers").delete().eq("event_id", id);
+  const { error } = await supabase.from("events").delete().eq("id", id);
+  if (error) {
+    return {
+      ok: false,
+      error: error.message.includes("foreign key")
+        ? "Evento tem pedidos/ingressos vinculados — cancele em vez de excluir."
+        : error.message,
+    };
+  }
+
+  revalidatePath("/admin/eventos");
+  revalidatePath("/produtor");
+  revalidatePath("/agenda");
+  revalidatePath("/");
+  return { ok: true };
+}
+
 export async function setFeatured(id: string, featured: boolean): Promise<EventFormState> {
   const { user, role } = await getAuth();
   if (!user || role !== "admin") return { ok: false, error: "Sem permissão." };
