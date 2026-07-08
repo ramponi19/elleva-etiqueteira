@@ -1,5 +1,12 @@
 import { requireRole } from "@/lib/auth";
-import { ProducerShell } from "@/components/elleva/producer-shell";
+import { DashShell } from "@/components/elleva/dash-shell";
+
+const NAV = [
+  { href: "/produtor", label: "Início", icon: "lucide:home" },
+  { href: "/produtor/vendas", label: "Vendas", icon: "lucide:wallet" },
+  { href: "/produtor/validar", label: "Validar ingresso", icon: "lucide:qr-code" },
+  { href: "/produtor/checkin", label: "Check-in", icon: "lucide:clipboard-list" },
+];
 
 export default async function ProdutorLayout({
   children,
@@ -8,8 +15,8 @@ export default async function ProdutorLayout({
 }) {
   const { fullName, user } = await requireRole(["producer", "admin"]);
   return (
-    <ProducerShell userName={fullName ?? user!.email ?? "Produtor"}>
+    <DashShell area="Área do produtor" items={NAV} userName={fullName ?? user!.email ?? "Produtor"}>
       {children}
-    </ProducerShell>
+    </DashShell>
   );
 }

@@ -2,7 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
 import { createCoupon } from "@/lib/actions/admin";
+
+const field =
+  "rounded-[10px] border-[1.5px] border-tinta bg-white px-3 py-2 text-[14px] text-tinta outline-none focus:border-sol";
 
 export default function CouponForm() {
   const router = useRouter();
@@ -12,8 +16,6 @@ export default function CouponForm() {
   const [maxUses, setMaxUses] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const input = { fontSize: 14, padding: "10px 14px", border: "1px solid var(--border)", borderRadius: "var(--r-md)", background: "var(--bg-elevated)", color: "var(--text-primary)" } as const;
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -26,22 +28,34 @@ export default function CouponForm() {
       maxUses: maxUses ? Number(maxUses) : undefined,
     });
     setLoading(false);
-    if (!res.ok) { setError(res.error ?? "Erro"); return; }
-    setCode(""); setValue(""); setMaxUses("");
+    if (!res.ok) {
+      setError(res.error ?? "Erro");
+      return;
+    }
+    setCode("");
+    setValue("");
+    setMaxUses("");
     router.refresh();
   }
 
   return (
-    <form onSubmit={submit} style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center" }}>
-      <input style={{ ...input, fontFamily: "var(--font-mono)", textTransform: "uppercase", width: 140 }} placeholder="CÓDIGO" value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} />
-      <select style={input} value={type} onChange={(e) => setType(e.target.value as "percent" | "fixed")}>
+    <form onSubmit={submit} className="flex flex-wrap items-center gap-2.5">
+      <input
+        className={`${field} w-[140px] font-mono uppercase`}
+        placeholder="CÓDIGO"
+        value={code}
+        onChange={(e) => setCode(e.target.value.toUpperCase())}
+      />
+      <select className={field} value={type} onChange={(e) => setType(e.target.value as "percent" | "fixed")}>
         <option value="percent">% percentual</option>
         <option value="fixed">R$ fixo</option>
       </select>
-      <input style={{ ...input, width: 110 }} type="number" placeholder={type === "percent" ? "Ex: 10" : "Ex: 20"} value={value} onChange={(e) => setValue(e.target.value)} />
-      <input style={{ ...input, width: 130 }} type="number" placeholder="Usos (opc.)" value={maxUses} onChange={(e) => setMaxUses(e.target.value)} />
-      <button className="btn btn-gold btn-md" disabled={loading} type="submit">{loading ? "..." : "Criar cupom"}</button>
-      {error && <span style={{ fontSize: 13, color: "#d64545", width: "100%" }}>{error}</span>}
+      <input className={`${field} w-[110px]`} type="number" placeholder={type === "percent" ? "Ex: 10" : "Ex: 20"} value={value} onChange={(e) => setValue(e.target.value)} />
+      <input className={`${field} w-[130px]`} type="number" placeholder="Usos (opc.)" value={maxUses} onChange={(e) => setMaxUses(e.target.value)} />
+      <Button type="submit" variante="primario" disabled={loading}>
+        {loading ? "..." : "Criar cupom"}
+      </Button>
+      {error && <span className="w-full text-[13px] text-sol-escuro">{error}</span>}
     </form>
   );
 }

@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
-import PageHeader from "@/components/app/page-header";
 import RoleSelect from "@/components/app/role-select";
 import type { Role } from "@/lib/actions/admin";
 
@@ -13,29 +12,29 @@ export default async function AdminClientes() {
     .select("id, full_name, role, created_at")
     .order("created_at", { ascending: false });
 
+  const card = "rounded-[var(--radius-card)] border-[1.5px] border-tinta bg-white";
+
   return (
-    <>
-      <PageHeader title="Clientes & usuários" subtitle={`${users?.length ?? 0} usuário(s).`} />
-      <main style={{ padding: 32 }}>
-        <div style={{ background: "var(--bg-elevated)", border: "1px solid var(--border)", borderRadius: "var(--r-xl)", overflow: "hidden" }}>
-          {(users ?? []).map((u, i) => (
-            <div key={u.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 20px", borderTop: i ? "1px solid var(--border-subtle)" : "none" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <div style={{ width: 34, height: 34, borderRadius: 9999, background: "var(--navy-800)", color: "#F6F3EB", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--font-mono)", fontSize: 12, fontWeight: 700 }}>
-                  {(u.full_name ?? "?").slice(0, 2).toUpperCase()}
-                </div>
-                <p style={{ fontSize: 14, fontWeight: 600, margin: 0 }}>{u.full_name ?? "Sem nome"}</p>
-              </div>
-              <RoleSelect userId={u.id} current={u.role as Role} />
+    <div className="p-6 sm:p-8">
+      <h1 className="display-2 text-tinta">Clientes &amp; usuários</h1>
+      <p className="corpo-suave mb-6 mt-1">{users?.length ?? 0} usuário(s).</p>
+      <div className={card}>
+        {(users ?? []).map((u, i) => (
+          <div
+            key={u.id}
+            className={`flex flex-wrap items-center justify-between gap-3 px-5 py-3.5 ${i ? "border-t-[1.5px] border-dashed border-tinta" : ""}`}
+          >
+            <div className="flex min-w-0 items-center gap-3">
+              <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-tinta text-[12px] font-bold text-papel">
+                {(u.full_name ?? "?").slice(0, 2).toUpperCase()}
+              </span>
+              <p className="m-0 truncate text-[14px] font-medium text-tinta">{u.full_name ?? "Sem nome"}</p>
             </div>
-          ))}
-          {!users?.length && (
-            <p style={{ color: "var(--text-tertiary)", fontSize: 14, textAlign: "center", padding: "40px 0" }}>
-              Nenhum usuário cadastrado ainda.
-            </p>
-          )}
-        </div>
-      </main>
-    </>
+            <RoleSelect userId={u.id} current={u.role as Role} />
+          </div>
+        ))}
+        {!users?.length && <p className="corpo-suave px-5 py-12 text-center">Nenhum usuário cadastrado ainda.</p>}
+      </div>
+    </div>
   );
 }

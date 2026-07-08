@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { fmtBRL } from "@/lib/format";
-import PageHeader from "@/components/app/page-header";
+import { Badge } from "@/components/ui/badge";
 import CouponForm from "@/components/app/coupon-form";
 
 export const metadata: Metadata = { title: "Cupons · Admin" };
@@ -13,37 +13,36 @@ export default async function AdminCupons() {
     .select("code, discount_type, discount_value, max_uses, used_count, active, expires_at, created_at")
     .order("created_at", { ascending: false });
 
-  return (
-    <>
-      <PageHeader title="Cupons de desconto" subtitle="Crie e acompanhe cupons." />
-      <main style={{ padding: 32, maxWidth: 900 }}>
-        <div style={{ background: "var(--bg-elevated)", border: "1px solid var(--border)", borderRadius: "var(--r-xl)", padding: 20, marginBottom: 20 }}>
-          <CouponForm />
-        </div>
+  const card = "rounded-[var(--radius-card)] border-[1.5px] border-tinta bg-white";
 
-        <div style={{ background: "var(--bg-elevated)", border: "1px solid var(--border)", borderRadius: "var(--r-xl)", overflow: "hidden" }}>
-          {(coupons ?? []).map((c, i) => (
-            <div key={c.code} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 20px", borderTop: i ? "1px solid var(--border-subtle)" : "none" }}>
-              <div>
-                <p style={{ fontFamily: "var(--font-mono)", fontSize: 14, fontWeight: 600, margin: 0, letterSpacing: ".05em" }}>{c.code}</p>
-                <p style={{ fontSize: 12, color: "var(--text-tertiary)", margin: 0 }}>
-                  {c.discount_type === "percent" ? `${c.discount_value}% off` : `${fmtBRL(Number(c.discount_value))} off`}
-                  {" · "}
-                  {c.used_count}{c.max_uses != null ? `/${c.max_uses}` : ""} usos
-                </p>
-              </div>
-              <span className="cat-pill" style={{ color: c.active ? "var(--text-gold)" : "var(--text-muted)" }}>
-                {c.active ? "Ativo" : "Inativo"}
-              </span>
+  return (
+    <div className="p-6 sm:p-8">
+      <h1 className="display-2 text-tinta">Cupons de desconto</h1>
+      <p className="corpo-suave mb-6 mt-1">Crie e acompanhe cupons.</p>
+
+      <div className={`${card} mb-5 p-5`}>
+        <CouponForm />
+      </div>
+
+      <div className={card}>
+        {(coupons ?? []).map((c, i) => (
+          <div
+            key={c.code}
+            className={`flex flex-wrap items-center justify-between gap-3 px-5 py-3.5 ${i ? "border-t-[1.5px] border-dashed border-tinta" : ""}`}
+          >
+            <div>
+              <p className="m-0 font-mono text-[14px] font-semibold tracking-wide text-tinta">{c.code}</p>
+              <p className="corpo-suave m-0">
+                {c.discount_type === "percent" ? `${c.discount_value}% off` : `${fmtBRL(Number(c.discount_value))} off`}
+                {" · "}
+                {c.used_count}{c.max_uses != null ? `/${c.max_uses}` : ""} usos
+              </p>
             </div>
-          ))}
-          {!coupons?.length && (
-            <p style={{ color: "var(--text-tertiary)", fontSize: 14, textAlign: "center", padding: "40px 0" }}>
-              Nenhum cupom criado ainda.
-            </p>
-          )}
-        </div>
-      </main>
-    </>
+            <Badge tom={c.active ? "sol" : "papel"}>{c.active ? "Ativo" : "Inativo"}</Badge>
+          </div>
+        ))}
+        {!coupons?.length && <p className="corpo-suave px-5 py-12 text-center">Nenhum cupom criado ainda.</p>}
+      </div>
+    </div>
   );
 }

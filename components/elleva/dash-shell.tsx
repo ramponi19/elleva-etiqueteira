@@ -6,24 +6,28 @@ import { clsx } from "clsx";
 import Icon from "@/components/shared/icon";
 import { LogoElleva } from "@/components/elleva/logo";
 
-// Shell da Área do Produtor (spec Cartaz de Show): sidebar fixa papel/tinta,
-// item ativo em tinta sólida, atalho de sair. Substitui o AppShell navy antigo.
-const NAV = [
-  { href: "/produtor", label: "Início", icon: "lucide:home" },
-  { href: "/produtor/vendas", label: "Vendas", icon: "lucide:wallet" },
-  { href: "/produtor/validar", label: "Validar ingresso", icon: "lucide:qr-code" },
-  { href: "/produtor/checkin", label: "Check-in", icon: "lucide:clipboard-list" },
-];
+export interface DashNavItem {
+  href: string;
+  label: string;
+  icon: string;
+}
 
-export function ProducerShell({
+// Shell de painel (produtor/admin) no sistema Cartaz de Show: sidebar fixa
+// papel/tinta, item ativo em tinta sólida, top-nav no mobile.
+export function DashShell({
+  area,
+  items,
   userName,
   children,
 }: {
+  area: string;
+  items: DashNavItem[];
   userName: string;
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
   const router = useRouter();
+  const rootHref = items[0]?.href ?? "/";
 
   async function signOut() {
     const { createClient } = await import("@/lib/supabase/client");
@@ -41,26 +45,25 @@ export function ProducerShell({
       .join("")
       .toUpperCase() || "?";
 
-  const isActive = (href: string) =>
-    href === "/produtor" ? pathname === href : pathname.startsWith(href);
-
-  const itemCls = (active: boolean) =>
-    clsx(
-      "flex items-center gap-3 rounded-[8px] px-3 py-2.5 text-[14px] font-medium transition-colors",
-      active ? "bg-tinta text-papel" : "text-tinta hover:bg-papel-2"
-    );
+  const isActive = (href: string) => (href === rootHref ? pathname === href : pathname.startsWith(href));
 
   return (
     <div className="flex min-h-screen bg-papel">
-      {/* Sidebar (desktop) */}
       <aside className="sticky top-0 hidden h-screen w-[248px] flex-shrink-0 flex-col border-r-[1.5px] border-tinta bg-white sm:flex">
         <Link href="/" className="flex items-center border-b-[1.5px] border-tinta px-5 py-4 text-tinta">
           <LogoElleva />
         </Link>
-        <p className="rotulo px-5 pb-1 pt-4 text-tinta-60">Área do produtor</p>
+        <p className="rotulo px-5 pb-1 pt-4 text-tinta-60">{area}</p>
         <nav className="flex flex-1 flex-col gap-1 px-3 pt-2">
-          {NAV.map((item) => (
-            <Link key={item.href} href={item.href} className={itemCls(isActive(item.href))}>
+          {items.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={clsx(
+                "flex items-center gap-3 rounded-[8px] px-3 py-2.5 text-[14px] font-medium transition-colors",
+                isActive(item.href) ? "bg-tinta text-papel" : "text-tinta hover:bg-papel-2"
+              )}
+            >
               <Icon icon={item.icon} style={{ fontSize: 18 }} /> {item.label}
             </Link>
           ))}
@@ -83,9 +86,8 @@ export function ProducerShell({
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        {/* Top nav (mobile) */}
         <div className="flex items-center gap-1 overflow-x-auto border-b-[1.5px] border-tinta bg-white px-3 py-2 sm:hidden">
-          {NAV.map((item) => (
+          {items.map((item) => (
             <Link
               key={item.href}
               href={item.href}

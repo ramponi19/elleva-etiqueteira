@@ -18,7 +18,7 @@ export default function RoleSelect({
     setRole(next);
     startTransition(async () => {
       const res = await setUserRole(userId, next);
-      if (!res.ok) setRole(current); // reverte em erro
+      if (!res.ok) setRole(current);
     });
   }
 
@@ -27,8 +27,7 @@ export default function RoleSelect({
       value={role}
       onChange={onChange}
       disabled={pending}
-      className="input"
-      style={{ width: "auto", padding: "6px 10px", fontSize: 13, borderRadius: 9999, opacity: pending ? 0.6 : 1 }}
+      className="rounded-full border-[1.5px] border-tinta bg-white px-3 py-1.5 text-[13px] text-tinta outline-none focus:border-sol disabled:opacity-60"
     >
       <option value="customer">Cliente</option>
       <option value="producer">Produtor</option>

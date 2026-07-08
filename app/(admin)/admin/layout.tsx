@@ -1,14 +1,14 @@
 import { requireRole } from "@/lib/auth";
-import AppShell from "@/components/app/app-shell";
+import { DashShell } from "@/components/elleva/dash-shell";
 
 const NAV = [
-  { href: "/admin", label: "Visão geral", icon: "solar:chart-2-bold-duotone" },
-  { href: "/admin/eventos", label: "Eventos", icon: "solar:ticket-bold-duotone" },
-  { href: "/admin/pedidos", label: "Pedidos", icon: "solar:cart-large-2-bold-duotone" },
-  { href: "/admin/clientes", label: "Clientes", icon: "solar:users-group-rounded-bold-duotone" },
-  { href: "/admin/cupons", label: "Cupons", icon: "solar:ticket-sale-bold-duotone" },
-  { href: "/admin/validar", label: "Validar ingresso", icon: "solar:qr-code-bold-duotone" },
-  { href: "/admin/checkin", label: "Check-in", icon: "solar:clipboard-list-bold-duotone" },
+  { href: "/admin", label: "Visão geral", icon: "lucide:layout-dashboard" },
+  { href: "/admin/eventos", label: "Eventos", icon: "lucide:ticket" },
+  { href: "/admin/pedidos", label: "Pedidos", icon: "lucide:shopping-cart" },
+  { href: "/admin/clientes", label: "Clientes", icon: "lucide:users" },
+  { href: "/admin/cupons", label: "Cupons", icon: "lucide:badge-percent" },
+  { href: "/admin/validar", label: "Validar ingresso", icon: "lucide:qr-code" },
+  { href: "/admin/checkin", label: "Check-in", icon: "lucide:clipboard-list" },
 ];
 
 export default async function AdminLayout({
@@ -18,8 +18,8 @@ export default async function AdminLayout({
 }) {
   const { fullName, user } = await requireRole(["admin"]);
   return (
-    <AppShell area="ADMIN" items={NAV} userName={fullName ?? user!.email ?? "Admin"}>
+    <DashShell area="Administração" items={NAV} userName={fullName ?? user!.email ?? "Admin"}>
       {children}
-    </AppShell>
+    </DashShell>
   );
 }

@@ -15,7 +15,7 @@ export default function OrderCancelButton({
   const [error, setError] = useState<string | null>(null);
 
   if (status === "refunded" || status === "cancelled" || done) {
-    return <span className="cat-pill" style={{ color: "var(--text-muted)" }}>—</span>;
+    return <span className="rotulo text-tinta-45">—</span>;
   }
 
   const label = status === "paid" ? "Reembolsar" : "Cancelar";
@@ -31,15 +31,16 @@ export default function OrderCancelButton({
   }
 
   return (
-    <span style={{ display: "inline-flex", flexDirection: "column", alignItems: "flex-end", gap: 2 }}>
+    <span className="inline-flex flex-col items-end gap-1">
       <button
+        type="button"
         onClick={onClick}
         disabled={pending}
-        style={{ background: "none", border: "1px solid var(--border)", borderRadius: 9999, padding: "5px 12px", fontSize: 12, cursor: "pointer", color: "#d64545" }}
+        className="rounded-full border-[1.5px] border-tinta px-3 py-1.5 text-[12px] font-medium text-sol-escuro transition-colors hover:bg-papel-2 disabled:opacity-50"
       >
         {pending ? "..." : label}
       </button>
-      {error && <span style={{ fontSize: 10, color: "#d64545" }}>{error}</span>}
+      {error && <span className="text-[10px] text-sol-escuro">{error}</span>}
     </span>
   );
 }

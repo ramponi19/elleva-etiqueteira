@@ -1,10 +1,17 @@
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { fmtBRL } from "@/lib/format";
-import PageHeader from "@/components/app/page-header";
+import { Badge } from "@/components/ui/badge";
 import OrderCancelButton from "@/components/app/order-cancel-button";
 
 export const metadata: Metadata = { title: "Pedidos · Admin" };
+
+const TOM: Record<string, "sol" | "papel" | "tinta" | "cartaz"> = {
+  paid: "sol",
+  pending: "cartaz",
+  cancelled: "tinta",
+  refunded: "tinta",
+};
 
 export default async function AdminPedidos() {
   const supabase = await createClient();
@@ -13,36 +20,32 @@ export default async function AdminPedidos() {
     .select("id, buyer_name, buyer_email, total, status, payment_method, created_at")
     .order("created_at", { ascending: false });
 
+  const card = "rounded-[var(--radius-card)] border-[1.5px] border-tinta bg-white";
+
   return (
-    <>
-      <PageHeader title="Pedidos" subtitle={`${orders?.length ?? 0} pedido(s).`} />
-      <main style={{ padding: 32 }}>
-        <div style={{ background: "var(--bg-elevated)", border: "1px solid var(--border)", borderRadius: "var(--r-xl)", overflow: "hidden" }}>
-          {(orders ?? []).map((o, i) => (
-            <div key={o.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 20px", borderTop: i ? "1px solid var(--border-subtle)" : "none" }}>
-              <div>
-                <p style={{ fontSize: 14, fontWeight: 600, margin: 0 }}>{o.buyer_name}</p>
-                <p style={{ fontSize: 12, color: "var(--text-tertiary)", margin: 0 }}>
-                  {o.buyer_email} · {new Date(o.created_at).toLocaleString("pt-BR")}
-                </p>
-              </div>
-              <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-                <span className="cat-pill">{o.payment_method}</span>
-                <span className="cat-pill">{o.status}</span>
-                <span style={{ fontFamily: "var(--font-display)", fontSize: 16, fontWeight: 500, minWidth: 90, textAlign: "right" }}>
-                  {fmtBRL(Number(o.total))}
-                </span>
-                <OrderCancelButton orderId={o.id} status={o.status} />
-              </div>
+    <div className="p-6 sm:p-8">
+      <h1 className="display-2 text-tinta">Pedidos</h1>
+      <p className="corpo-suave mb-6 mt-1">{orders?.length ?? 0} pedido(s).</p>
+      <div className={card}>
+        {(orders ?? []).map((o, i) => (
+          <div
+            key={o.id}
+            className={`flex flex-wrap items-center justify-between gap-3 px-5 py-3.5 ${i ? "border-t-[1.5px] border-dashed border-tinta" : ""}`}
+          >
+            <div className="min-w-0">
+              <p className="m-0 truncate text-[14px] font-medium text-tinta">{o.buyer_name}</p>
+              <p className="corpo-suave m-0 truncate">{o.buyer_email} · {new Date(o.created_at).toLocaleString("pt-BR")}</p>
             </div>
-          ))}
-          {!orders?.length && (
-            <p style={{ color: "var(--text-tertiary)", fontSize: 14, textAlign: "center", padding: "40px 0" }}>
-              Nenhum pedido ainda.
-            </p>
-          )}
-        </div>
-      </main>
-    </>
+            <div className="flex flex-shrink-0 items-center gap-2">
+              <Badge tom="papel">{o.payment_method}</Badge>
+              <Badge tom={TOM[o.status] ?? "papel"}>{o.status}</Badge>
+              <span className="numero min-w-[86px] text-right text-[15px] text-tinta">{fmtBRL(Number(o.total))}</span>
+              <OrderCancelButton orderId={o.id} status={o.status} />
+            </div>
+          </div>
+        ))}
+        {!orders?.length && <p className="corpo-suave px-5 py-12 text-center">Nenhum pedido ainda.</p>}
+      </div>
+    </div>
   );
 }
