@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { clsx } from "clsx";
 import Icon from "@/components/shared/icon";
 import { Button } from "@/components/ui/button";
-import { createEvent } from "@/lib/actions/events";
+import { createEvent, updateEvent } from "@/lib/actions/events";
 import { createClient } from "@/lib/supabase/client";
 
 // ── estilos base compartilhados ────────────────────────────────────────────
@@ -83,7 +83,7 @@ const emptyTier = (isFree: boolean): Tier => ({
   isFree,
 });
 
-const initial: FormState = {
+const EMPTY: FormState = {
   title: "",
   coverUrl: "",
   category: "",
@@ -111,9 +111,16 @@ const initial: FormState = {
   visibility: "public",
 };
 
-export function CriarEventoForm() {
+export function CriarEventoForm({
+  eventId,
+  initial,
+}: {
+  eventId?: string;
+  initial?: FormState;
+} = {}) {
   const router = useRouter();
-  const [f, setF] = useState<FormState>(initial);
+  const isEdit = !!eventId;
+  const [f, setF] = useState<FormState>(initial ?? EMPTY);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -198,7 +205,7 @@ export function CriarEventoForm() {
       return setError("Aceite as responsabilidades para publicar.");
 
     setSaving(true);
-    const res = await createEvent({
+    const payload = {
       title: f.title,
       description: f.description || undefined,
       category: f.category as "SHOW",
@@ -230,15 +237,16 @@ export function CriarEventoForm() {
         capacity: t.capacity || undefined,
         isFree: t.isFree,
       })),
-    });
+    };
+    const res = isEdit ? await updateEvent(eventId!, payload) : await createEvent(payload);
     setSaving(false);
     if (!res.ok) return setError(res.error ?? "Erro ao salvar.");
     then(res.slug);
   }
 
-  const publicar = () => persist("published", () => { router.push("/meus-eventos"); router.refresh(); });
-  const rascunho = () => persist("draft", () => { router.push("/meus-eventos"); router.refresh(); });
-  const preview = () => persist("draft", (slug) => router.push(slug ? `/evento/${slug}` : "/produtor/eventos"));
+  const publicar = () => persist("published", () => { router.push("/produtor"); router.refresh(); });
+  const rascunho = () => persist("draft", () => { router.push("/produtor"); router.refresh(); });
+  const preview = () => persist("draft", (slug) => router.push(slug ? `/evento/${slug}` : "/produtor"));
 
   return (
     <div className="flex flex-col gap-6">
@@ -604,7 +612,7 @@ export function CriarEventoForm() {
             Pré-visualizar
           </Button>
           <Button variante="primario" type="button" onClick={publicar} disabled={saving}>
-            {saving ? "Publicando..." : "Publicar Evento"}
+            {saving ? "Salvando..." : isEdit ? "Salvar alterações" : "Publicar Evento"}
           </Button>
         </div>
       </div>
