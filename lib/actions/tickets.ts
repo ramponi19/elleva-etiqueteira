@@ -58,10 +58,17 @@ export async function validateTicket(rawCode: string): Promise<ValidateResult> {
     };
   }
 
-  await svc
+  // Claim atômico: só a PRIMEIRA leitura consegue marcar 'used' (where status='valid').
+  // Leituras simultâneas do mesmo código não afetam nenhuma linha → recusadas.
+  const { data: claimed } = await svc
     .from("tickets")
     .update({ status: "used", used_at: new Date().toISOString() })
-    .eq("id", ticket.id);
+    .eq("id", ticket.id)
+    .eq("status", "valid")
+    .select("id");
+  if (!claimed || claimed.length === 0) {
+    return { ok: false, reason: "used", message: "Ingresso já utilizado." };
+  }
 
   return { ok: true, eventTitle: ticket.event_title, tierName: ticket.tier_name, code: ticket.code };
 }
@@ -105,10 +112,17 @@ export async function validateByToken(token: string, rawCode: string): Promise<V
     return { ok: false, reason: "used", message: "Ingresso já utilizado.", usedAt: ticket.used_at ?? undefined };
   }
 
-  await svc
+  // Claim atômico: só a PRIMEIRA leitura consegue marcar 'used' (where status='valid').
+  // Leituras simultâneas do mesmo código não afetam nenhuma linha → recusadas.
+  const { data: claimed } = await svc
     .from("tickets")
     .update({ status: "used", used_at: new Date().toISOString() })
-    .eq("id", ticket.id);
+    .eq("id", ticket.id)
+    .eq("status", "valid")
+    .select("id");
+  if (!claimed || claimed.length === 0) {
+    return { ok: false, reason: "used", message: "Ingresso já utilizado." };
+  }
 
   return { ok: true, eventTitle: ticket.event_title, tierName: ticket.tier_name, code: ticket.code };
 }
