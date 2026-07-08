@@ -1,6 +1,5 @@
 import Link from "next/link";
 import Icon from "@/components/shared/icon";
-import { Marquee } from "@/components/ui/marquee";
 import { Button } from "@/components/ui/button";
 import { TicketCard } from "@/components/elleva/ticket-card";
 import { becomeProducerAndGo } from "@/lib/actions/producer";
@@ -8,32 +7,18 @@ import { getEvents } from "@/lib/events";
 
 export const revalidate = 300;
 
-const CIDADES_MARQUEE = [
-  "Mogi Guaçu",
-  "Mogi Mirim",
-  "Itapira",
-  "Americana",
-  "Sul de MG",
-  "Hoje tem show",
-];
-
 export default async function HomePage() {
   const events = await getEvents();
 
   return (
     <>
-      <Marquee itens={CIDADES_MARQUEE} />
-
       {/* HERO — alinhado à esquerda (spec 8.1) */}
       <section className="mx-auto max-w-[1320px] px-5 pb-4 pt-14 sm:px-10 sm:pt-20">
         {/* sem data-reveal no hero: é o LCP — esconder/reanimar acima da
             dobra empurra o LCP pra depois do JS (Lighthouse caiu de 90+ pra
             80 por isso). Reveal fica só nas seções abaixo da dobra (§9). */}
-        <p className="rotulo m-0 text-sol-escuro">
-          Bilheteria oficial · Interior de SP e Sul de MG
-        </p>
-        <h1 className="display-1 mt-4 max-w-[13ch]">
-          O palco do <span className="text-sol">interior</span> é aqui
+        <h1 className="display-1 max-w-[13ch]">
+          O palco é <span className="text-sol">aqui</span>
         </h1>
         <p className="corpo mt-5 max-w-[46ch]">
           Shows, festas, teatro e esporte na sua cidade. Sem taxa escondida,
@@ -109,7 +94,7 @@ export default async function HomePage() {
             tempo real. A divulgação regional é por nossa conta.
           </p>
           <form action={becomeProducerAndGo}>
-            <input type="hidden" name="to" value="/produtor/eventos/novo" />
+            <input type="hidden" name="to" value="/criar-evento" />
             <Button type="submit">Publicar evento na Elleva →</Button>
           </form>
         </div>

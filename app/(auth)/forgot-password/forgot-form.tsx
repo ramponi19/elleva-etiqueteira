@@ -2,7 +2,12 @@
 
 import { useState } from "react";
 import Icon from "@/components/shared/icon";
+import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
+
+const input =
+  "w-full rounded-[10px] border-[1.5px] border-tinta bg-white px-3.5 py-2.5 text-[15px] text-tinta outline-none placeholder:text-tinta-35 focus:border-sol";
+const label = "mb-1.5 block text-[12px] font-semibold uppercase tracking-wider text-tinta-60";
 
 export function ForgotForm() {
   const [email, setEmail] = useState("");
@@ -28,30 +33,28 @@ export function ForgotForm() {
 
   if (sent) {
     return (
-      <div className="auth-success">
-        <div className="auth-success__icon">
-          <Icon icon="solar:letter-bold" style={{ fontSize: 26, color: "#fff" }} />
-        </div>
-        <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 500, fontSize: 22, margin: "0 0 6px" }}>
-          Verifique seu email
-        </h2>
-        <p style={{ fontSize: 14, color: "var(--text-secondary)" }}>
-          Enviamos um link de redefinição para <strong>{email}</strong>.
+      <div className="flex flex-col items-center py-4 text-center">
+        <span className="flex h-12 w-12 items-center justify-center rounded-full bg-tinta text-papel">
+          <Icon icon="solar:letter-bold" style={{ fontSize: 24 }} />
+        </span>
+        <h2 className="mt-4 text-[20px] font-extrabold text-tinta">Verifique seu email</h2>
+        <p className="corpo-suave mt-1">
+          Enviamos um link de redefinição para <strong className="text-tinta">{email}</strong>.
         </p>
       </div>
     );
   }
 
   return (
-    <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+    <form onSubmit={submit} className="flex flex-col gap-3.5">
       <div>
-        <label className="field-label">E-MAIL</label>
-        <input className="input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="voce@email.com" required />
+        <label className={label}>E-mail</label>
+        <input className={input} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="voce@email.com" required />
       </div>
-      {error && <p className="auth-error">{error}</p>}
-      <button type="submit" className="btn btn-gold btn-block" disabled={loading} style={{ marginTop: 6 }}>
+      {error && <p className="rounded-[10px] border-[1.5px] border-sol bg-[rgb(232_72_31/0.08)] px-3.5 py-2.5 text-[13.5px] text-sol-escuro">{error}</p>}
+      <Button type="submit" variante="primario" className="mt-1 w-full" disabled={loading}>
         {loading ? "Enviando..." : "Enviar link"}
-      </button>
+      </Button>
     </form>
   );
 }

@@ -1,29 +1,21 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import Logo from "@/components/shared/logo";
 import { LoginForm } from "./login-form";
 
-export const metadata: Metadata = {
-  title: "Entrar",
-};
+export const metadata: Metadata = { title: "Entrar" };
 
 export default function LoginPage() {
   return (
-    <div className="marketing-mono auth-shell">
-      <Link href="/" className="auth-brand">
-        <Logo width={34} /> Elleva Tickets
-      </Link>
-
-      <div className="auth-card">
-        <h1 className="auth-title">Entrar</h1>
-        <p className="auth-sub">Acesse sua conta para continuar.</p>
-
-        <LoginForm />
-
-        <p className="auth-alt">
-          Não tem conta? <Link href="/signup">Criar conta</Link>
-        </p>
-      </div>
+    <div className="rounded-[var(--radius-card)] border-[1.5px] border-tinta bg-white p-7 shadow-[4px_4px_0_var(--color-tinta)]">
+      <h1 className="text-[26px] font-extrabold leading-tight text-tinta">Entrar</h1>
+      <p className="corpo-suave mb-5 mt-1">Acesse sua conta para continuar.</p>
+      <LoginForm />
+      <p className="corpo-suave mt-5 text-center">
+        Não tem conta?{" "}
+        <Link href="/signup" className="font-medium text-sol-escuro underline underline-offset-2">
+          Criar conta
+        </Link>
+      </p>
     </div>
   );
 }

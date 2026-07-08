@@ -54,9 +54,7 @@ export default function Footer() {
         </div>
 
         <div className="mt-12 border-t-[1.5px] border-[var(--color-papel-inv)] pt-6">
-          <p className="rotulo m-0 text-papel/60">
-            © 2026 Elleva Tickets · Interior de SP · Sul de MG
-          </p>
+          <p className="rotulo m-0 text-papel/60">© 2026 Elleva Tickets</p>
         </div>
       </div>
     </footer>

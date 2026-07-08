@@ -3,7 +3,12 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
+
+const input =
+  "w-full rounded-[10px] border-[1.5px] border-tinta bg-white px-3.5 py-2.5 text-[15px] text-tinta outline-none placeholder:text-tinta-35 focus:border-sol";
+const label = "mb-1.5 block text-[12px] font-semibold uppercase tracking-wider text-tinta-60";
 
 export function LoginForm() {
   const router = useRouter();
@@ -18,7 +23,6 @@ export function LoginForm() {
     setError(null);
     setInfo(null);
     setLoading(true);
-
     const supabase = createClient();
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error || !data.user) {
@@ -26,8 +30,6 @@ export function LoginForm() {
       setLoading(false);
       return;
     }
-
-    // Após o login o usuário permanece na página inicial (estilo Sympla).
     router.push("/");
     router.refresh();
   }
@@ -51,32 +53,33 @@ export function LoginForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+    <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">
       <div>
-        <label className="field-label">E-MAIL</label>
-        <input className="input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="voce@email.com" required />
+        <label className={label}>E-mail</label>
+        <input className={input} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="voce@email.com" required />
       </div>
-
       <div>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-          <label className="field-label">SENHA</label>
-          <Link href="/forgot-password" style={{ fontSize: 12, color: "var(--text-tertiary)" }}>Esqueceu?</Link>
+        <div className="flex items-baseline justify-between">
+          <label className={label}>Senha</label>
+          <Link href="/forgot-password" className="text-[12px] text-sol-escuro hover:underline">Esqueceu?</Link>
         </div>
-        <input className="input" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required />
+        <input className={input} type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required />
       </div>
 
-      {error && <p className="auth-error">{error}</p>}
-      {info && <p className="auth-info">{info}</p>}
+      {error && <p className="rounded-[10px] border-[1.5px] border-sol bg-[rgb(232_72_31/0.08)] px-3.5 py-2.5 text-[13.5px] text-sol-escuro">{error}</p>}
+      {info && <p className="rounded-[10px] border-[1.5px] border-tinta bg-papel-2 px-3.5 py-2.5 text-[13.5px] text-tinta">{info}</p>}
 
-      <button type="submit" className="btn btn-gold btn-block" disabled={loading} style={{ marginTop: 6 }}>
+      <Button type="submit" variante="primario" className="mt-1 w-full" disabled={loading}>
         {loading ? "Entrando..." : "Entrar"}
-      </button>
+      </Button>
 
-      <div className="auth-divider"><span>ou</span></div>
+      <div className="my-1 flex items-center gap-3 text-[12px] text-tinta-45">
+        <span className="h-px flex-1 bg-tinta/15" /> ou <span className="h-px flex-1 bg-tinta/15" />
+      </div>
 
-      <button type="button" className="btn btn-ghost btn-block" onClick={handleMagicLink} disabled={loading}>
+      <Button type="button" variante="contorno" className="w-full" onClick={handleMagicLink} disabled={loading}>
         Receber link por email
-      </button>
+      </Button>
     </form>
   );
 }

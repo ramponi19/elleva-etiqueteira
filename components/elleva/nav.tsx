@@ -59,17 +59,25 @@ export default function Nav({
           <LogoElleva />
         </Link>
 
-        <div className="hidden items-center gap-7 md:flex">
-          <Link href="/agenda" className="rotulo text-tinta hover:text-sol-escuro">
-            Agenda
-          </Link>
-          <Link href="/agenda#cidades" className="rotulo text-tinta hover:text-sol-escuro">
-            Cidades
-          </Link>
-          <Link href="/#produtores" className="rotulo text-tinta hover:text-sol-escuro">
-            Produtores
-          </Link>
-        </div>
+        {loggedIn && (
+          <div className="hidden items-center gap-6 md:flex">
+            <form action={becomeProducerAndGo}>
+              <input type="hidden" name="to" value="/criar-evento" />
+              <button type="submit" className="flex cursor-pointer items-center gap-1.5 text-[14px] font-medium text-tinta hover:text-sol-escuro">
+                <Icon icon="lucide:circle-plus" style={{ fontSize: 17 }} /> Criar evento
+              </button>
+            </form>
+            <form action={becomeProducerAndGo}>
+              <input type="hidden" name="to" value="/produtor" />
+              <button type="submit" className="flex cursor-pointer items-center gap-1.5 text-[14px] font-medium text-tinta hover:text-sol-escuro">
+                <Icon icon="lucide:calendar-check" style={{ fontSize: 17 }} /> Meus eventos
+              </button>
+            </form>
+            <Link href="/conta" className="flex items-center gap-1.5 text-[14px] font-medium text-tinta hover:text-sol-escuro">
+              <Icon icon="lucide:ticket" style={{ fontSize: 17 }} /> Meus ingressos
+            </Link>
+          </div>
+        )}
 
         {loggedIn ? (
           <div ref={menuRef} className="relative">
