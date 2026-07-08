@@ -39,6 +39,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
+      // hidratação do carrinho salvo: setState no mount é intencional e SSR-safe
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       if (raw) setItems(JSON.parse(raw));
     } catch {
       /* ignore */

@@ -1,5 +1,4 @@
 import { createClient } from "@/lib/supabase/server";
-import Icon from "@/components/shared/icon";
 import { EmBreve } from "@/components/elleva/em-breve";
 
 // Relatório de check-in no design Cartaz de Show.

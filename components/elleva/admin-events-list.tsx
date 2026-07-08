@@ -3,7 +3,6 @@
 import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { clsx } from "clsx";
-import Icon from "@/components/shared/icon";
 import { Badge } from "@/components/ui/badge";
 import FeaturedToggle from "@/components/app/featured-toggle";
 import { deleteEvent } from "@/lib/actions/events";
@@ -46,7 +45,7 @@ export function AdminEventsList({ events }: { events: AdminEvent[] }) {
   const [tab, setTab] = useState<TabKey>("ativos");
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const now = Date.now();
+  const [now] = useState(() => Date.now());
 
   const grouped = useMemo(() => {
     const g: Record<TabKey, AdminEvent[]> = { ativos: [], pendentes: [], encerrados: [], cancelados: [] };

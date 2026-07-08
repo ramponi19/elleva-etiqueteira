@@ -120,7 +120,6 @@ export async function createEvent(input: EventInput): Promise<EventFormState> {
   const v = parsed.data;
 
   const supabase = await createClient();
-  const starts_at = `${v.date}T${v.time}:00-03:00`;
   let slug = slugify(v.title);
 
   // garante slug único

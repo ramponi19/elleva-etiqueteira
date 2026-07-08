@@ -1,3 +1,4 @@
+import Link from "next/link";
 import Icon from "@/components/shared/icon";
 import { CityPills } from "@/components/elleva/city-pills";
 import { EventStubRow } from "@/components/elleva/event-stub-row";
@@ -69,16 +70,16 @@ export function AgendaNoite({
         {query && (
           <p className="corpo-suave mt-6">
             Resultados para <strong className="text-papel">“{query}”</strong> —{" "}
-            <a href="/agenda" className="underline underline-offset-2">limpar busca</a>
+            <Link href="/agenda" className="underline underline-offset-2">limpar busca</Link>
           </p>
         )}
 
         {grupos.length === 0 ? (
           <p className="corpo mt-10 max-w-[46ch] text-papel">
             Nada em cartaz por aqui ainda. Avisa um produtor ou{" "}
-            <a href="/#produtores" className="text-cartaz underline underline-offset-2">
+            <Link href="/#produtores" className="text-cartaz underline underline-offset-2">
               traz o seu evento
-            </a>.
+            </Link>.
           </p>
         ) : (
           grupos.map(([mes, lista]) => (
