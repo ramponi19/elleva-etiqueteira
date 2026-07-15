@@ -18,8 +18,10 @@ const nextConfig: NextConfig = {
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           {
+            // camera=(self): o scanner de QR do check-in (portaria) usa a
+            // câmera do celular — bloquear aqui mata a validação de ingresso.
             key: "Permissions-Policy",
-            value: "camera=(), microphone=(), geolocation=()",
+            value: "camera=(self), microphone=(), geolocation=()",
           },
           {
             key: "Strict-Transport-Security",

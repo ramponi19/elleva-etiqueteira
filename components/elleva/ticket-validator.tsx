@@ -65,9 +65,9 @@ export function TicketValidatorElleva({ token }: { token?: string } = {}) {
           setScanning((s) => !s);
           setResult(null);
         }}
-        className="mt-3 inline-flex items-center gap-2 text-[14px] font-medium text-sol-escuro"
+        className="mt-3 inline-flex min-h-[44px] items-center gap-2 rounded-[10px] border-[1.5px] border-tinta px-4 text-[15px] font-medium text-tinta transition-colors hover:bg-papel-2"
       >
-        <Icon icon={scanning ? "lucide:x" : "solar:qr-code-bold-duotone"} style={{ fontSize: 18 }} />
+        <Icon icon={scanning ? "lucide:x" : "solar:qr-code-bold-duotone"} style={{ fontSize: 19, color: "var(--color-sol-escuro)" }} />
         {scanning ? "Fechar câmera" : "Escanear com câmera"}
       </button>
 
