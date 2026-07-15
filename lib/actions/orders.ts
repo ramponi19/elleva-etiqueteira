@@ -8,6 +8,11 @@ import { markOrderPaid } from "@/lib/orders-helpers";
 const isUuid = (s: string) =>
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
 
+// Fail-safe: sem Mercado Pago configurado, o modo mock (aprova sem cobrar) só
+// é permitido fora de produção — ou com opt-in explícito via env.
+const mockAllowed = () =>
+  process.env.NODE_ENV !== "production" || process.env.ALLOW_MOCK_PAYMENTS === "1";
+
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
 const ItemSchema = z.object({
@@ -166,6 +171,9 @@ export async function createOrder(input: z.input<typeof BaseSchema>): Promise<Cr
   if (coupon && "error" in coupon) return { ok: false, error: coupon.error };
 
   const mp = getMpPayment();
+  if (!mp && !mockAllowed()) {
+    return { ok: false, error: "Pagamento indisponível no momento. Tente novamente em instantes." };
+  }
   const prep = await insertPendingOrder(svc, {
     ...parsed.data, method: "pix", provider: mp ? "mercadopago" : "mock", userId: await currentUserId(),
     discount: coupon?.discount ?? 0, couponCode: coupon?.code ?? null,
