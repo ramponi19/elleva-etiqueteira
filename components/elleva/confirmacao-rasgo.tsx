@@ -80,8 +80,8 @@ export function ConfirmacaoRasgo({
 
         <div className="mt-12 flex flex-col items-center gap-3 sm:flex-row">
           <Button href="/conta">Ver meus ingressos →</Button>
-          <Button variante="contorno-papel" href="/agenda">
-            Voltar pra agenda
+          <Button variante="contorno-papel" href="/">
+            Voltar pro início
           </Button>
         </div>
         <p className="corpo-suave m-0 mt-4 text-papel/60">

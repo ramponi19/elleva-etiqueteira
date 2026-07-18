@@ -41,7 +41,7 @@ export function IngressosTabs({ tickets }: { tickets: TicketView[] }) {
       <div className="flex flex-col items-center rounded-[var(--radius-card)] border-[1.5px] border-dashed border-tinta bg-white py-16 text-center">
         <Icon icon="solar:ticket-bold-duotone" style={{ fontSize: 56, color: "var(--color-tinta-35)" }} />
         <p className="corpo mt-4 text-tinta-60">Você ainda não tem ingressos.</p>
-        <Button href="/agenda" variante="primario" className="mt-6">
+        <Button href="/" variante="primario" className="mt-6">
           Explorar eventos
         </Button>
       </div>

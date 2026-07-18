@@ -215,7 +215,7 @@ export default function CheckoutPage() {
       {items.length === 0 ? (
         <div className="py-16 text-center">
           <p className="corpo">Nada por aqui ainda. Escolhe um evento primeiro?</p>
-          <Button variante="tinta" href="/agenda" className="mt-6">
+          <Button variante="tinta" href="/" className="mt-6">
             Ver o que está em cartaz
           </Button>
         </div>
