@@ -33,6 +33,9 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 
+# docs internos (estratégia — repo é público)
+/docs/benchmark-sympla-byma.md
+
 # vercel
 .vercel
 
