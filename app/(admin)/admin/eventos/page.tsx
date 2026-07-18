@@ -8,7 +8,7 @@ export default async function AdminEventos() {
   const supabase = await createClient();
   const { data: events } = await supabase
     .from("events")
-    .select("id, title, category, city, starts_at, status, is_featured")
+    .select("id, title, category, city, starts_at, status, is_featured, service_fee_pct")
     .order("starts_at", { ascending: false });
 
   const list: AdminEvent[] = (events ?? []).map((e) => ({
@@ -19,6 +19,7 @@ export default async function AdminEventos() {
     starts_at: e.starts_at,
     status: e.status,
     is_featured: !!e.is_featured,
+    service_fee_pct: Number(e.service_fee_pct ?? 10),
   }));
 
   return (

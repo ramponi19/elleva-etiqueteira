@@ -94,6 +94,28 @@ export async function cancelOrder(
   return { ok: true };
 }
 
+/** Taxa de serviço (%) de um evento — negociada pela Elleva com o produtor. */
+export async function setEventFeePct(
+  eventId: string,
+  pct: number
+): Promise<{ ok: boolean; error?: string }> {
+  const { role } = await getAuth();
+  if (role !== "admin") return { ok: false, error: "Sem permissão." };
+  if (!Number.isFinite(pct) || pct < 0 || pct > 100) {
+    return { ok: false, error: "Percentual inválido (0–100)." };
+  }
+
+  const svc = await createServiceClient();
+  const { error } = await svc
+    .from("events")
+    .update({ service_fee_pct: pct })
+    .eq("id", eventId);
+  if (error) return { ok: false, error: error.message };
+
+  revalidatePath("/admin/eventos");
+  return { ok: true };
+}
+
 export async function setCouponActive(code: string, active: boolean) {
   const { role } = await getAuth();
   if (role !== "admin") return { ok: false };

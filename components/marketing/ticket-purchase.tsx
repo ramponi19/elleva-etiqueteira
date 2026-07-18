@@ -45,6 +45,7 @@ export default function TicketPurchase({
         tierName: t.name,
         price: t.price,
         qty: qty[t.id],
+        feePct: event.feePct,
       }))
     );
     router.push("/checkout");

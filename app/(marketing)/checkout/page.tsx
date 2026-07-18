@@ -5,6 +5,7 @@ import Link from "next/link";
 import Icon from "@/components/shared/icon";
 import { useCart } from "@/lib/cart";
 import { fmtBRL } from "@/lib/format";
+import { feeOf, round2 } from "@/lib/fees";
 import { createOrder, getOrderStatus, previewCoupon } from "@/lib/actions/orders";
 import CardForm from "@/components/marketing/card-form";
 import { Barras } from "@/components/ui/barras";
@@ -58,10 +59,10 @@ export default function CheckoutPage() {
     setCouponMsg(`Desconto de ${fmtBRL(res.discount)} aplicado!`);
   }
 
-  // total com desconto: (subtotal - desconto) + taxa(10% sobre base)
-  const base = Math.max(0, subtotal - discount);
-  const feeAdj = Math.round(base * 0.1);
-  const totalAdj = base + feeAdj;
+  // taxa por item (feePct do evento, sobre o preço cheio do lote);
+  // o desconto do cupom abate só o subtotal. O servidor recalcula tudo.
+  const feeAdj = feeOf(items);
+  const totalAdj = round2(Math.max(0, subtotal - discount) + feeAdj);
 
   function confirmar() {
     setConfirmado({

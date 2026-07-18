@@ -441,6 +441,10 @@ export function CriarEventoForm({
       <section className={card}>
         <SectionHead n={5} title="Ingressos" />
         <p className="corpo-suave text-center">O que você deseja criar?</p>
+        <p className="corpo-suave mt-1 text-center">
+          Você recebe o valor cheio do lote: a taxa de serviço da Elleva
+          (padrão 10%, negociável) é paga pelo comprador, por fora.
+        </p>
         <div className="mt-3 flex flex-wrap justify-center gap-3">
           <Button variante="contorno" type="button" onClick={() => addTier(false)}>
             <Icon icon="lucide:plus" style={{ fontSize: 16 }} /> Ingresso pago

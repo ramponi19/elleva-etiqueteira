@@ -4,6 +4,7 @@ import { z } from "zod";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { getMpPayment } from "@/lib/mercadopago";
 import { markOrderPaid } from "@/lib/orders-helpers";
+import { feeUnit, round2, DEFAULT_FEE_PCT } from "@/lib/fees";
 
 const isUuid = (s: string) =>
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
@@ -40,12 +41,42 @@ function subtotalOf(items: Items) {
   return items.reduce((a, i) => a + i.price * i.qty, 0);
 }
 
-function finalTotals(items: Items, discount: number) {
+// O preço e a taxa NUNCA vêm do navegador: para cada item buscamos o preço
+// real do lote e o service_fee_pct do evento no banco. O price do cliente é
+// ignorado (só serve pra exibição). Tiers mock (id não-uuid) só passam quando
+// o modo mock é permitido (fora de produção).
+async function priceItems(
+  svc: Svc,
+  items: Items
+): Promise<{ items: Items; fee: number } | { error: string }> {
+  const priced: Items = [];
+  let fee = 0;
+  for (const it of items) {
+    if (isUuid(it.tierId)) {
+      const { data: tier } = await svc
+        .from("ticket_tiers")
+        .select("price, events(service_fee_pct)")
+        .eq("id", it.tierId)
+        .single();
+      if (!tier) return { error: `O lote "${it.tierName}" não está mais disponível.` };
+      const price = Number(tier.price);
+      const ev = tier.events as unknown as { service_fee_pct?: number } | null;
+      const pct = Number(ev?.service_fee_pct ?? DEFAULT_FEE_PCT);
+      priced.push({ ...it, price });
+      fee += feeUnit(price, pct) * it.qty;
+    } else {
+      if (!mockAllowed()) return { error: "Ingresso inválido." };
+      priced.push(it);
+      fee += feeUnit(it.price, DEFAULT_FEE_PCT) * it.qty;
+    }
+  }
+  return { items: priced, fee: round2(fee) };
+}
+
+function finalTotals(items: Items, discount: number, fee: number) {
   const subtotal = subtotalOf(items);
   const d = Math.min(discount, subtotal);
-  const base = subtotal - d;
-  const fee = Math.round(base * 0.1);
-  return { subtotal, discount: d, fee, total: base + fee };
+  return { subtotal, discount: d, fee, total: round2(subtotal - d + fee) };
 }
 
 /** Valida um cupom e retorna o desconto sobre o subtotal (0 se inválido). */
@@ -94,9 +125,9 @@ async function checkStock(svc: Svc, items: Items): Promise<string | null> {
 
 async function insertPendingOrder(
   svc: Svc,
-  data: { buyerName: string; buyerEmail: string; buyerCpf?: string; buyerWhatsapp?: string; method: "pix" | "card"; provider: string; items: Items; userId: string | null; discount?: number; couponCode?: string | null }
+  data: { buyerName: string; buyerEmail: string; buyerCpf?: string; buyerWhatsapp?: string; method: "pix" | "card"; provider: string; items: Items; itemsFee: number; userId: string | null; discount?: number; couponCode?: string | null }
 ): Promise<{ error: string } | { orderId: string; total: number }> {
-  const { subtotal, discount, fee, total } = finalTotals(data.items, data.discount ?? 0);
+  const { subtotal, discount, fee, total } = finalTotals(data.items, data.discount ?? 0, data.itemsFee);
   const { data: order, error } = await svc
     .from("orders")
     .insert({
@@ -164,10 +195,13 @@ export async function createOrder(input: z.input<typeof BaseSchema>): Promise<Cr
   let svc: Svc;
   try { svc = await createServiceClient(); } catch { return { ok: false, error: "Pagamento indisponível." }; }
 
-  const stockErr = await checkStock(svc, parsed.data.items);
+  const priced = await priceItems(svc, parsed.data.items);
+  if ("error" in priced) return { ok: false, error: priced.error };
+
+  const stockErr = await checkStock(svc, priced.items);
   if (stockErr) return { ok: false, error: stockErr };
 
-  const coupon = await couponDiscount(svc, parsed.data.couponCode, subtotalOf(parsed.data.items));
+  const coupon = await couponDiscount(svc, parsed.data.couponCode, subtotalOf(priced.items));
   if (coupon && "error" in coupon) return { ok: false, error: coupon.error };
 
   const mp = getMpPayment();
@@ -175,7 +209,8 @@ export async function createOrder(input: z.input<typeof BaseSchema>): Promise<Cr
     return { ok: false, error: "Pagamento indisponível no momento. Tente novamente em instantes." };
   }
   const prep = await insertPendingOrder(svc, {
-    ...parsed.data, method: "pix", provider: mp ? "mercadopago" : "mock", userId: await currentUserId(),
+    ...parsed.data, items: priced.items, itemsFee: priced.fee,
+    method: "pix", provider: mp ? "mercadopago" : "mock", userId: await currentUserId(),
     discount: coupon?.discount ?? 0, couponCode: coupon?.code ?? null,
   });
   if ("error" in prep) return { ok: false, error: prep.error };
@@ -242,14 +277,18 @@ export async function createCardOrder(input: z.input<typeof CardSchema>): Promis
   let svc: Svc;
   try { svc = await createServiceClient(); } catch { return { ok: false, error: "Pagamento indisponível." }; }
 
-  const stockErr = await checkStock(svc, parsed.data.items);
+  const priced = await priceItems(svc, parsed.data.items);
+  if ("error" in priced) return { ok: false, error: priced.error };
+
+  const stockErr = await checkStock(svc, priced.items);
   if (stockErr) return { ok: false, error: stockErr };
 
-  const coupon = await couponDiscount(svc, parsed.data.couponCode, subtotalOf(parsed.data.items));
+  const coupon = await couponDiscount(svc, parsed.data.couponCode, subtotalOf(priced.items));
   if (coupon && "error" in coupon) return { ok: false, error: coupon.error };
 
   const prep = await insertPendingOrder(svc, {
-    ...parsed.data, method: "card", provider: "mercadopago", userId: await currentUserId(),
+    ...parsed.data, items: priced.items, itemsFee: priced.fee,
+    method: "card", provider: "mercadopago", userId: await currentUserId(),
     discount: coupon?.discount ?? 0, couponCode: coupon?.code ?? null,
   });
   if ("error" in prep) return { ok: false, error: prep.error };

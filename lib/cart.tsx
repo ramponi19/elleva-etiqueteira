@@ -7,6 +7,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { feeOf, round2 } from "@/lib/fees";
 
 export interface CartItem {
   eventId: string;    // uuid do evento (para persistência)
@@ -16,13 +17,14 @@ export interface CartItem {
   tierName: string;   // nome do tier
   price: number;      // preço unitário (BRL)
   qty: number;
+  feePct: number;     // taxa de serviço (%) do evento — exibição; o servidor recalcula
 }
 
 interface CartContextValue {
   items: CartItem[];
   count: number;
   subtotal: number;
-  fee: number;        // taxa de serviço 10% (mock)
+  fee: number;        // taxa de serviço somada por item (feePct de cada evento)
   total: number;
   addItems: (items: CartItem[]) => void;
   removeItem: (index: number) => void;
@@ -40,8 +42,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       // hidratação do carrinho salvo: setState no mount é intencional e SSR-safe
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      if (raw) setItems(JSON.parse(raw));
+      // (carrinhos antigos não têm feePct — assume o padrão 10)
+      if (raw) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setItems(
+          (JSON.parse(raw) as CartItem[]).map((i) => ({ ...i, feePct: i.feePct ?? 10 }))
+        );
+      }
     } catch {
       /* ignore */
     }
@@ -63,8 +70,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const count = items.reduce((a, i) => a + i.qty, 0);
   const subtotal = items.reduce((a, i) => a + i.qty * i.price, 0);
-  const fee = Math.round(subtotal * 0.1);
-  const total = subtotal + fee;
+  const fee = feeOf(items);
+  const total = round2(subtotal + fee);
 
   return (
     <CartContext.Provider

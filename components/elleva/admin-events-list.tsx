@@ -6,6 +6,7 @@ import { clsx } from "clsx";
 import { Badge } from "@/components/ui/badge";
 import FeaturedToggle from "@/components/app/featured-toggle";
 import { deleteEvent } from "@/lib/actions/events";
+import { setEventFeePct } from "@/lib/actions/admin";
 
 export interface AdminEvent {
   id: string;
@@ -15,6 +16,7 @@ export interface AdminEvent {
   starts_at: string;
   status: string;
   is_featured: boolean;
+  service_fee_pct: number;
 }
 
 type TabKey = "ativos" | "pendentes" | "encerrados" | "cancelados";
@@ -65,6 +67,29 @@ export function AdminEventsList({ events }: { events: AdminEvent[] }) {
     });
   }
 
+  // taxa de serviço negociada por evento (padrão 10%) — só admin
+  function editFee(e: AdminEvent) {
+    const raw = prompt(
+      `Taxa de serviço (%) de "${e.title}" — paga pelo comprador:`,
+      String(e.service_fee_pct)
+    );
+    if (raw == null) return;
+    const pct = Number(raw.replace(",", "."));
+    if (!Number.isFinite(pct) || pct < 0 || pct > 100) {
+      setError("Percentual inválido (0–100).");
+      return;
+    }
+    setError(null);
+    startTransition(async () => {
+      const res = await setEventFeePct(e.id, pct);
+      if (res.ok) {
+        setItems((s) =>
+          s.map((ev) => (ev.id === e.id ? { ...ev, service_fee_pct: pct } : ev))
+        );
+      } else setError(res.error ?? "Erro ao salvar a taxa.");
+    });
+  }
+
   const card = "rounded-[var(--radius-card)] border-[1.5px] border-tinta bg-white";
 
   return (
@@ -110,6 +135,15 @@ export function AdminEventsList({ events }: { events: AdminEvent[] }) {
             <div className="flex flex-shrink-0 flex-wrap items-center gap-2">
               <Badge tom="papel">{e.category}</Badge>
               <Badge tom={STATUS_TOM[e.status] ?? "papel"}>{e.status}</Badge>
+              <button
+                type="button"
+                onClick={() => editFee(e)}
+                disabled={pending}
+                title="Taxa de serviço paga pelo comprador — clique pra negociar"
+                className="rounded-full border-[1.5px] border-tinta px-3 py-1.5 text-[12px] font-medium tabular-nums text-tinta transition-colors hover:bg-papel-2 disabled:opacity-50"
+              >
+                taxa {e.service_fee_pct}%
+              </button>
               <FeaturedToggle id={e.id} initial={e.is_featured} />
               <Link
                 href={`/produtor/eventos/${e.id}`}

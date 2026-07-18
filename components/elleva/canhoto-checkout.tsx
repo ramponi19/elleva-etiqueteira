@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/lib/cart";
 import { fmtBRL } from "@/lib/format";
+import { feeUnit, round2 } from "@/lib/fees";
 import type { EventItem, Tier } from "@/lib/events";
 
 // Coluna de compra da página de evento (spec §7/8.3): o "canhoto" do
@@ -42,7 +43,13 @@ export function CanhotoCheckout({
 
   const selecionados = tiers.filter((t) => (qty[t.id] || 0) > 0);
   const count = selecionados.reduce((a, t) => a + qty[t.id], 0);
-  const total = selecionados.reduce((a, t) => a + qty[t.id] * t.price, 0);
+  // total já com a taxa de serviço — o comprador nunca é surpreendido depois
+  const total = round2(
+    selecionados.reduce(
+      (a, t) => a + qty[t.id] * (t.price + feeUnit(t.price, event.feePct)),
+      0
+    )
+  );
 
   function proceed() {
     addItems(
@@ -54,6 +61,7 @@ export function CanhotoCheckout({
         tierName: t.name,
         price: t.price,
         qty: qty[t.id],
+        feePct: event.feePct,
       }))
     );
     router.push("/checkout");
@@ -106,7 +114,8 @@ export function CanhotoCheckout({
                 <p className="numero m-0 mt-1.5 text-[17px]">
                   {fmtBRL(t.price)}{" "}
                   <span className="rotulo font-medium text-tinta-60">
-                    · meia {fmtBRL(t.price / 2)}
+                    (+ {fmtBRL(feeUnit(t.price, event.feePct))} taxa) · meia{" "}
+                    {fmtBRL(t.price / 2)}
                   </span>
                 </p>
               </div>
@@ -143,7 +152,7 @@ export function CanhotoCheckout({
       {/* total após o picote */}
       <div className="mt-6 border-t-[1.5px] border-dashed border-tinta pt-4">
         <div className="flex items-baseline justify-between">
-          <span className="rotulo text-tinta-60">Total</span>
+          <span className="rotulo text-tinta-60">Total com taxas</span>
           <span className="numero text-[26px]">{fmtBRL(total)}</span>
         </div>
         <Button
