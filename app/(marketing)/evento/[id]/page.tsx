@@ -10,6 +10,8 @@ import { arteDaCategoria, duotoneDaCategoria, numeroSerie } from "@/lib/arte";
 import { cidadeDoEvento } from "@/lib/cidades";
 import { fmtBRL } from "@/lib/format";
 import { getAuth } from "@/lib/auth";
+import { JsonLd } from "@/components/seo/json-ld";
+import { SITE_URL } from "@/lib/site";
 
 export const dynamic = "force-dynamic"; // canhoto depende do login
 
@@ -72,8 +74,45 @@ export default async function EventPage({
     : null;
   const garantiram = tiers.reduce((a, t) => a + t.sold, 0);
 
+  // Dados estruturados schema.org/Event (rich results de eventos no Google)
+  const venue = event.venueCity.split("·")[0]?.trim() ?? event.venueCity;
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Event",
+    name: event.title,
+    startDate: event.startsAtISO,
+    eventStatus: "https://schema.org/EventScheduled",
+    eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
+    description: event.desc || undefined,
+    image: [`${SITE_URL}/api/og/evento/${event.id}`],
+    location: {
+      "@type": "Place",
+      name: venue,
+      address: {
+        "@type": "PostalAddress",
+        addressLocality: cidade,
+        addressCountry: "BR",
+      },
+    },
+    offers: {
+      "@type": "AggregateOffer",
+      url: `${SITE_URL}/evento/${event.id}`,
+      priceCurrency: "BRL",
+      lowPrice: event.priceFrom,
+      availability: event.soldOut
+        ? "https://schema.org/SoldOut"
+        : "https://schema.org/InStock",
+    },
+    organizer: {
+      "@type": "Organization",
+      name: "Elleva Tickets",
+      url: SITE_URL,
+    },
+  };
+
   return (
     <div className="mx-auto max-w-[1100px] px-5 pb-20 pt-8 sm:px-10">
+      <JsonLd data={jsonLd} />
       <Link href="/agenda" className="rotulo text-sol-escuro hover:text-sol">
         ← Agenda
       </Link>

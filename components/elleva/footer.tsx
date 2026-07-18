@@ -8,7 +8,7 @@ const COLUNAS: { titulo: string; links: { label: string; href: string }[] }[] = 
     titulo: "Elleva",
     links: [
       { label: "Agenda", href: "/agenda" },
-      { label: "Produtores", href: "/#produtores" },
+      { label: "Produtores", href: "/produtores" },
       { label: "Central de Ajuda", href: "/ajuda" },
     ],
   },

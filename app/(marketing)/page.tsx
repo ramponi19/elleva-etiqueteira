@@ -4,14 +4,43 @@ import { Button } from "@/components/ui/button";
 import { TicketCard } from "@/components/elleva/ticket-card";
 import { becomeProducerAndGo } from "@/lib/actions/producer";
 import { getEvents } from "@/lib/events";
+import { JsonLd } from "@/components/seo/json-ld";
+import { SITE_URL } from "@/lib/site";
 
 export const revalidate = 300;
+
+// Dados estruturados do site (Organization + busca interna via /agenda?q=)
+const JSONLD_SITE = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      name: "Elleva Tickets",
+      url: SITE_URL,
+      email: "contato@elleva.com.br",
+    },
+    {
+      "@type": "WebSite",
+      name: "Elleva Tickets",
+      url: SITE_URL,
+      potentialAction: {
+        "@type": "SearchAction",
+        target: {
+          "@type": "EntryPoint",
+          urlTemplate: `${SITE_URL}/agenda?q={search_term_string}`,
+        },
+        "query-input": "required name=search_term_string",
+      },
+    },
+  ],
+};
 
 export default async function HomePage() {
   const events = await getEvents();
 
   return (
     <>
+      <JsonLd data={JSONLD_SITE} />
       {/* HERO — alinhado à esquerda (spec 8.1) */}
       <section className="mx-auto max-w-[1320px] px-5 pb-4 pt-14 sm:px-10 sm:pt-20">
         {/* sem data-reveal no hero: é o LCP — esconder/reanimar acima da
@@ -93,10 +122,15 @@ export default async function HomePage() {
             Publica na Elleva, vende com Pix na hora e acompanha o público em
             tempo real. A divulgação regional é por nossa conta.
           </p>
-          <form action={becomeProducerAndGo}>
-            <input type="hidden" name="to" value="/criar-evento" />
-            <Button type="submit">Publicar evento na Elleva →</Button>
-          </form>
+          <div className="flex flex-wrap items-center gap-5">
+            <form action={becomeProducerAndGo}>
+              <input type="hidden" name="to" value="/criar-evento" />
+              <Button type="submit">Publicar evento na Elleva →</Button>
+            </form>
+            <Link href="/produtores" className="rotulo text-papel/70 hover:text-papel">
+              Como funciona →
+            </Link>
+          </div>
         </div>
       </section>
     </>

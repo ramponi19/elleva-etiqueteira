@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { archivo } from "./fonts";
+import { SITE_URL } from "@/lib/site";
+import CookieConsent from "@/components/elleva/cookie-consent";
 import "./globals.css";
 
 export const viewport: Viewport = {
@@ -11,9 +13,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  metadataBase: new URL(
-    process.env.NEXT_PUBLIC_APP_URL ?? "https://elleva.app"
-  ),
+  metadataBase: new URL(SITE_URL),
   title: {
     default: "Elleva Tickets — Ingressos para os melhores eventos",
     template: "%s | Elleva Tickets",
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "pt_BR",
-    url: "https://elleva.app",
+    url: SITE_URL,
     siteName: "Elleva Tickets",
     title: "Elleva Tickets — Ingressos para os melhores eventos",
     description:
@@ -52,6 +52,7 @@ export default function RootLayout({
     <html lang="pt-BR" className={`${archivo.variable} antialiased`}>
       <body className="min-h-screen flex flex-col">
         {children}
+        <CookieConsent gtmId={process.env.NEXT_PUBLIC_GTM_ID} />
         <Analytics />
         <SpeedInsights />
       </body>
