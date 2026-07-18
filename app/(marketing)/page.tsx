@@ -77,16 +77,11 @@ export default async function HomePage() {
 
       {/* EM CARTAZ */}
       <section className="mx-auto max-w-[1320px] px-5 pb-6 pt-14 sm:px-10">
-        <div className="mb-7 flex flex-wrap items-baseline justify-between gap-3">
-          <h2 className="display-2" data-reveal>Em cartaz</h2>
-          <Link
-            href="/agenda"
-            className="rotulo text-sol-escuro hover:text-sol"
-            data-reveal
-          >
-            Ver agenda →
-          </Link>
-        </div>
+        {/* catálogo pequeno: a home já é a agenda — /agenda segue viva só
+            como destino da busca e das rotas de SEO local por cidade */}
+        <h2 className="display-2 mb-7" data-reveal>
+          Em cartaz
+        </h2>
         {events.length === 0 ? (
           <p className="corpo max-w-[46ch]">
             Nada em cartaz por aqui ainda. Avisa um produtor ou traz o seu evento.
