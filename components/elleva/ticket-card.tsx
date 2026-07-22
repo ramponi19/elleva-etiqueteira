@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { CategoryLabel } from "@/lib/events";
-import { arteDaCategoria, duotoneDaCategoria } from "@/lib/arte";
+import { arteDaCategoria, duotoneDaCategoria, numeroSerie } from "@/lib/arte";
 import { Badge } from "@/components/ui/badge";
 import { Duotone } from "@/components/ui/duotone";
 import { fmtBRL } from "@/lib/format";
@@ -18,6 +18,8 @@ interface TicketCardProps {
   local: string;
   precoDesde: number;
   cover?: string | null;
+  /** nº de série do cartaz (Nº 0042) — mostrado no pôster sem foto */
+  serial?: number;
   esgotado?: boolean;
   /** true nos primeiros cards da dobra (LCP): carrega a capa eager/high */
   prioridade?: boolean;
@@ -41,6 +43,7 @@ export function TicketCard({
   local,
   precoDesde,
   cover,
+  serial,
   esgotado,
   prioridade,
 }: TicketCardProps) {
@@ -67,9 +70,23 @@ export function TicketCard({
             />
           </div>
         )}
+        {/* pôster sem foto: textura de risografia (grade de pontos sutil) */}
+        {!cover && (
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 opacity-[0.12]"
+            style={{ backgroundImage: "radial-gradient(currentColor 1.2px, transparent 1.2px)", backgroundSize: "13px 13px" }}
+          />
+        )}
         <div className="relative z-[1] flex items-start justify-between p-3.5">
           <Badge tom={cover || !arte.clara ? "papel" : "tinta"}>{categoria}</Badge>
-          {esgotado && <Badge tom="tinta">Sold out</Badge>}
+          {esgotado ? (
+            <Badge tom="tinta">Sold out</Badge>
+          ) : !cover && serial != null ? (
+            <span className="numero text-[11px] tracking-wider opacity-70" style={{ color: arte.fg }}>
+              Nº {numeroSerie(serial)}
+            </span>
+          ) : null}
         </div>
         <h3
           className="titulo-card relative z-[1] p-3.5"

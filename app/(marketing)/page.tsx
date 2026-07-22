@@ -98,6 +98,7 @@ export default async function HomePage() {
                 local={e.venueCity}
                 precoDesde={e.priceFrom}
                 cover={e.cover}
+                serial={e.serial}
                 esgotado={e.soldOut}
                 prioridade={i === 0}
               />
