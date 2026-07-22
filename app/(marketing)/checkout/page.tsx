@@ -48,6 +48,7 @@ export default function CheckoutPage() {
   const cartItems = items.map((i) => ({
     eventId: i.eventId, eventTitle: i.eventTitle, tierId: i.tierId,
     tierName: i.tierName, price: i.price, qty: i.qty,
+    seatId: i.seatId, seatLabel: i.seatLabel,
   }));
 
   async function applyCoupon() {
