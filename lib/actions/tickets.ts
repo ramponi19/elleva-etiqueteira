@@ -1,5 +1,6 @@
 "use server";
 
+import { randomBytes } from "crypto";
 import { revalidatePath } from "next/cache";
 import { getAuth } from "@/lib/auth";
 import { createServiceClient } from "@/lib/supabase/server";
@@ -125,6 +126,48 @@ export async function validateByToken(token: string, rawCode: string): Promise<V
   }
 
   return { ok: true, eventTitle: ticket.event_title, tierName: ticket.tier_name, code: ticket.code };
+}
+
+/** Transfere um ingresso para outra pessoa (por e-mail). Rotaciona o código. */
+export async function transferTicket(
+  ticketId: string,
+  toEmail: string
+): Promise<{ ok: boolean; error?: string }> {
+  const email = toEmail.trim().toLowerCase();
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return { ok: false, error: "E-mail inválido." };
+
+  const { user } = await getAuth();
+  if (!user) return { ok: false, error: "Sem sessão." };
+  if (email === (user.email ?? "").toLowerCase()) return { ok: false, error: "Esse ingresso já é seu." };
+
+  let svc;
+  try {
+    svc = await createServiceClient();
+  } catch {
+    return { ok: false, error: "Serviço indisponível." };
+  }
+
+  const { data: t } = await svc
+    .from("tickets")
+    .select("id, status, transferred, order_id, orders(user_id)")
+    .eq("id", ticketId)
+    .single();
+  if (!t) return { ok: false, error: "Ingresso não encontrado." };
+  if (t.status !== "valid") return { ok: false, error: "Só ingressos válidos podem ser transferidos." };
+
+  const orderUser = (Array.isArray(t.orders) ? t.orders[0] : t.orders) as { user_id: string } | null;
+  const isOwner = !t.transferred && orderUser?.user_id === user.id;
+  if (!isOwner) return { ok: false, error: "Este ingresso não é seu para transferir." };
+
+  const newCode = "ELV-" + randomBytes(5).toString("hex").toUpperCase();
+  const { error } = await svc
+    .from("tickets")
+    .update({ transfer_email: email, transferred: true, code: newCode })
+    .eq("id", ticketId);
+  if (error) return { ok: false, error: error.message };
+
+  revalidatePath("/conta");
+  return { ok: true };
 }
 
 /** Regenera o token de check-in de um evento (revoga o link antigo). */
