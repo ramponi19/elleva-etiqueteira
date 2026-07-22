@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
-import { getMpPayment } from "@/lib/mercadopago";
+import { getPaymentProvider } from "@/lib/payments";
 import { markOrderPaid, claimSeats } from "@/lib/orders-helpers";
 import { feeUnit, round2, DEFAULT_FEE_PCT } from "@/lib/fees";
 
@@ -247,20 +247,21 @@ export async function createOrder(input: z.input<typeof BaseSchema>): Promise<Cr
     return { ok: true, orderId: prep.orderId, paid: true };
   }
 
-  const mp = getMpPayment();
-  if (!mp && !mockAllowed()) {
+  const provider = getPaymentProvider();
+  const configured = provider.isConfigured();
+  if (!configured && !mockAllowed()) {
     return { ok: false, error: "Pagamento indisponível no momento. Tente novamente em instantes." };
   }
   const prep = await insertPendingOrder(svc, {
     ...parsed.data, items: priced.items, itemsFee: priced.fee,
-    method: "pix", provider: mp ? "mercadopago" : "mock", userId: await currentUserId(),
+    method: "pix", provider: configured ? provider.id : "mock", userId: await currentUserId(),
     discount: coupon?.discount ?? 0, couponCode: coupon?.code ?? null,
   });
   if ("error" in prep) return { ok: false, error: prep.error };
   const seatErr = await claimOrFail(svc, prep.orderId, priced.items);
   if (seatErr) return { ok: false, error: seatErr };
 
-  if (!mp) {
+  if (!configured) {
     await markOrderPaid(svc, prep.orderId);
     return { ok: true, orderId: prep.orderId, paid: true };
   }
@@ -268,30 +269,26 @@ export async function createOrder(input: z.input<typeof BaseSchema>): Promise<Cr
   try {
     const [firstName, ...rest] = parsed.data.buyerName.trim().split(" ");
     const exp = pixExpiration(PIX_TTL_MIN);
-    const payment = await mp.create({
-      body: {
-        transaction_amount: prep.total,
-        description: `Elleva Tickets — pedido ${prep.orderId}`,
-        payment_method_id: "pix",
-        date_of_expiration: exp.mp,
-        external_reference: prep.orderId,
-        notification_url: `${APP_URL}/api/webhooks/mercadopago`,
-        payer: {
-          email: parsed.data.buyerEmail,
-          first_name: firstName,
-          last_name: rest.join(" ") || undefined,
-          identification: parsed.data.buyerCpf ? { type: "CPF", number: parsed.data.buyerCpf.replace(/\D/g, "") } : undefined,
-        },
+    const pix = await provider.createPixCharge({
+      amount: prep.total,
+      description: `Elleva Tickets — pedido ${prep.orderId}`,
+      orderId: prep.orderId,
+      expiration: exp.mp,
+      notificationUrl: `${APP_URL}/api/webhooks/${provider.id}`,
+      buyer: {
+        email: parsed.data.buyerEmail,
+        firstName,
+        lastName: rest.join(" ") || undefined,
+        cpf: parsed.data.buyerCpf,
       },
     });
-    const tx = payment.point_of_interaction?.transaction_data;
     await svc.from("orders").update({
-      payment_id: String(payment.id),
-      pix_qr_base64: tx?.qr_code_base64 ?? "",
-      pix_copy_paste: tx?.qr_code ?? "",
+      payment_id: pix.paymentId,
+      pix_qr_base64: pix.qrBase64,
+      pix_copy_paste: pix.copyPaste,
       expires_at: exp.iso,
     }).eq("id", prep.orderId);
-    return { ok: true, orderId: prep.orderId, paid: false, pix: { qrBase64: tx?.qr_code_base64 ?? "", copyPaste: tx?.qr_code ?? "" }, total: prep.total, expiresAt: exp.iso };
+    return { ok: true, orderId: prep.orderId, paid: false, pix: { qrBase64: pix.qrBase64, copyPaste: pix.copyPaste }, total: prep.total, expiresAt: exp.iso };
   } catch (e) {
     await svc.from("order_items").delete().eq("order_id", prep.orderId);
     await svc.from("orders").delete().eq("id", prep.orderId);
@@ -316,8 +313,8 @@ export async function createCardOrder(input: z.input<typeof CardSchema>): Promis
   const parsed = CardSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Dados inválidos" };
 
-  const mp = getMpPayment();
-  if (!mp) return { ok: false, error: "Pagamento por cartão indisponível." };
+  const provider = getPaymentProvider();
+  if (!provider.isConfigured()) return { ok: false, error: "Pagamento por cartão indisponível." };
 
   let svc: Svc;
   try { svc = await createServiceClient(); } catch { return { ok: false, error: "Pagamento indisponível." }; }
@@ -341,29 +338,24 @@ export async function createCardOrder(input: z.input<typeof CardSchema>): Promis
   if (seatErr) return { ok: false, error: seatErr };
 
   try {
-    const payment = await mp.create({
-      body: {
-        transaction_amount: prep.total,
-        token: parsed.data.token,
-        payment_method_id: parsed.data.paymentMethodId,
-        installments: parsed.data.installments,
-        description: `Elleva Tickets — pedido ${prep.orderId}`,
-        external_reference: prep.orderId,
-        notification_url: `${APP_URL}/api/webhooks/mercadopago`,
-        payer: {
-          email: parsed.data.buyerEmail,
-          identification: parsed.data.buyerCpf ? { type: "CPF", number: parsed.data.buyerCpf.replace(/\D/g, "") } : undefined,
-        },
-      },
+    const res = await provider.createCardCharge({
+      amount: prep.total,
+      token: parsed.data.token,
+      paymentMethodId: parsed.data.paymentMethodId,
+      installments: parsed.data.installments,
+      description: `Elleva Tickets — pedido ${prep.orderId}`,
+      orderId: prep.orderId,
+      notificationUrl: `${APP_URL}/api/webhooks/${provider.id}`,
+      buyer: { email: parsed.data.buyerEmail, cpf: parsed.data.buyerCpf },
     });
 
-    await svc.from("orders").update({ payment_id: String(payment.id) }).eq("id", prep.orderId);
+    await svc.from("orders").update({ payment_id: res.paymentId }).eq("id", prep.orderId);
 
-    if (payment.status === "approved") {
+    if (res.status === "approved") {
       await markOrderPaid(svc, prep.orderId);
       return { ok: true, orderId: prep.orderId };
     }
-    if (payment.status === "in_process" || payment.status === "pending") {
+    if (res.status === "pending") {
       // em análise — webhook confirma depois
       return { ok: true, orderId: prep.orderId };
     }

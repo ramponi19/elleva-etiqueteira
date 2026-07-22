@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { getAuth } from "@/lib/auth";
 import { createServiceClient } from "@/lib/supabase/server";
-import { getMpRefund } from "@/lib/mercadopago";
+import { getPaymentProvider } from "@/lib/payments";
 import { reverseSold, cancelTickets, sendRefundEmail } from "@/lib/orders-helpers";
 
 export type Role = "customer" | "producer" | "admin";
@@ -70,15 +70,13 @@ export async function cancelOrder(
   }
 
   if (order.status === "paid") {
-    // tenta reembolsar no Mercado Pago
-    if (order.payment_provider === "mercadopago" && order.payment_id) {
-      const refund = getMpRefund();
-      if (refund) {
-        try {
-          await refund.create({ payment_id: order.payment_id });
-        } catch (e) {
-          return { ok: false, error: e instanceof Error ? e.message : "Falha ao reembolsar no Mercado Pago." };
-        }
+    // tenta reembolsar no provedor que processou o pedido
+    const provider = getPaymentProvider();
+    if (order.payment_id && order.payment_provider === provider.id) {
+      try {
+        await provider.refund(order.payment_id);
+      } catch (e) {
+        return { ok: false, error: e instanceof Error ? e.message : "Falha ao reembolsar no provedor de pagamento." };
       }
     }
     await svc.from("orders").update({ status: "refunded" }).eq("id", orderId);
