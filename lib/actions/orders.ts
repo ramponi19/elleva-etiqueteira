@@ -204,6 +204,20 @@ export async function createOrder(input: z.input<typeof BaseSchema>): Promise<Cr
   const coupon = await couponDiscount(svc, parsed.data.couponCode, subtotalOf(priced.items));
   if (coupon && "error" in coupon) return { ok: false, error: coupon.error };
 
+  // Ingresso gratuito (ou 100% de desconto): total zero não passa pelo
+  // gateway — confirma direto e emite os ingressos.
+  const totals = finalTotals(priced.items, coupon?.discount ?? 0, priced.fee);
+  if (totals.total <= 0) {
+    const prep = await insertPendingOrder(svc, {
+      ...parsed.data, items: priced.items, itemsFee: priced.fee,
+      method: "pix", provider: "free", userId: await currentUserId(),
+      discount: coupon?.discount ?? 0, couponCode: coupon?.code ?? null,
+    });
+    if ("error" in prep) return { ok: false, error: prep.error };
+    await markOrderPaid(svc, prep.orderId);
+    return { ok: true, orderId: prep.orderId, paid: true };
+  }
+
   const mp = getMpPayment();
   if (!mp && !mockAllowed()) {
     return { ok: false, error: "Pagamento indisponível no momento. Tente novamente em instantes." };
