@@ -10,6 +10,46 @@ function ticketCode() {
   return "ELV-" + randomBytes(5).toString("hex").toUpperCase();
 }
 
+// ============================================================
+// Assentos marcados
+// ============================================================
+
+/** Reserva assentos para um pedido (atômico). Só pega os disponíveis
+ *  (ou com reserva expirada). Se não conseguir todos, desfaz e falha. */
+export async function claimSeats(
+  svc: Svc,
+  orderId: string,
+  seatIds: string[],
+  holdMinutes = 30
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  if (!seatIds.length) return { ok: true };
+  const nowIso = new Date().toISOString();
+  const heldUntil = new Date(Date.now() + holdMinutes * 60000).toISOString();
+  const { data, error } = await svc
+    .from("seats")
+    .update({ status: "held", order_id: orderId, held_until: heldUntil })
+    .in("id", seatIds)
+    .or(`status.eq.available,and(status.eq.held,held_until.lt.${nowIso})`)
+    .select("id");
+  if (error) return { ok: false, error: "Não foi possível reservar os assentos." };
+  if ((data?.length ?? 0) < seatIds.length) {
+    // conflito: libera o que porventura pegamos e avisa
+    await svc.from("seats").update({ status: "available", order_id: null, held_until: null }).eq("order_id", orderId);
+    return { ok: false, error: "Um dos assentos escolhidos acabou de ser reservado. Escolha outro." };
+  }
+  return { ok: true };
+}
+
+/** Confirma a venda dos assentos do pedido (held -> sold). */
+export async function sellSeats(svc: Svc, orderId: string) {
+  await svc.from("seats").update({ status: "sold", held_until: null }).eq("order_id", orderId);
+}
+
+/** Libera os assentos do pedido (volta a disponível). */
+export async function releaseSeats(svc: Svc, orderId: string) {
+  await svc.from("seats").update({ status: "available", order_id: null, held_until: null }).eq("order_id", orderId);
+}
+
 /** Incrementa ticket_tiers.sold conforme os itens do pedido. */
 export async function bumpSold(svc: Svc, orderId: string) {
   const { data: its } = await svc
@@ -42,7 +82,7 @@ export async function generateTickets(svc: Svc, orderId: string) {
 
   const { data: its } = await svc
     .from("order_items")
-    .select("event_id, event_title, tier_name, quantity, is_addon")
+    .select("event_id, event_title, tier_name, quantity, is_addon, seats(label)")
     .eq("order_id", orderId);
 
   const rows: {
@@ -51,9 +91,11 @@ export async function generateTickets(svc: Svc, orderId: string) {
     code: string;
     event_title: string;
     tier_name: string;
+    seat_label: string | null;
   }[] = [];
   for (const it of its ?? []) {
     if (it.is_addon) continue; // add-on/produto não gera ingresso com QR
+    const seat = it.seats as unknown as { label: string } | null;
     for (let i = 0; i < it.quantity; i++) {
       rows.push({
         order_id: orderId,
@@ -61,6 +103,7 @@ export async function generateTickets(svc: Svc, orderId: string) {
         code: ticketCode(),
         event_title: it.event_title,
         tier_name: it.tier_name,
+        seat_label: seat?.label ?? null,
       });
     }
   }
@@ -191,11 +234,13 @@ export async function reverseSold(svc: Svc, orderId: string) {
   for (const id of eventIds) {
     await svc.from("events").update({ status: "published" }).eq("id", id).eq("status", "sold_out");
   }
+  await releaseSeats(svc, orderId);
 }
 
-/** Cancela os ingressos do pedido. */
+/** Cancela os ingressos do pedido e libera os assentos. */
 export async function cancelTickets(svc: Svc, orderId: string) {
   await svc.from("tickets").update({ status: "cancelled" }).eq("order_id", orderId);
+  await releaseSeats(svc, orderId);
 }
 
 /** E-mail de reembolso (silencioso se Resend não configurado). */
@@ -278,6 +323,7 @@ export async function markOrderPaid(svc: Svc, orderId: string) {
   }
 
   await bumpSold(svc, orderId);
+  await sellSeats(svc, orderId);
   await maybeMarkSoldOut(svc, orderId);
   await generateTickets(svc, orderId);
   await sendConfirmationEmail(svc, orderId);

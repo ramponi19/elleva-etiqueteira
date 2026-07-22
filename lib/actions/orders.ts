@@ -3,7 +3,7 @@
 import { z } from "zod";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { getMpPayment } from "@/lib/mercadopago";
-import { markOrderPaid } from "@/lib/orders-helpers";
+import { markOrderPaid, claimSeats } from "@/lib/orders-helpers";
 import { feeUnit, round2, DEFAULT_FEE_PCT } from "@/lib/fees";
 
 const isUuid = (s: string) =>
@@ -23,6 +23,8 @@ const ItemSchema = z.object({
   tierName: z.string(),
   price: z.number().nonnegative(),
   qty: z.number().int().positive(),
+  seatId: z.string().optional(),
+  seatLabel: z.string().optional(),
 });
 
 const BaseSchema = z.object({
@@ -165,6 +167,7 @@ async function insertPendingOrder(
       unit_price: it.price,
       quantity: it.qty,
       is_addon: it.isAddon,
+      seat_id: it.seatId && isUuid(it.seatId) ? it.seatId : null,
     }))
   );
   if (itemsErr) {
@@ -172,6 +175,21 @@ async function insertPendingOrder(
     return { error: itemsErr.message };
   }
   return { orderId: order.id as string, total };
+}
+
+/** Reserva os assentos do pedido (atômico). Em conflito, desfaz o pedido. */
+async function claimOrFail(svc: Svc, orderId: string, items: PricedItem[]): Promise<string | null> {
+  const seatIds = items
+    .map((i) => i.seatId)
+    .filter((s): s is string => !!s && isUuid(s));
+  if (!seatIds.length) return null;
+  const res = await claimSeats(svc, orderId, seatIds);
+  if (!res.ok) {
+    await svc.from("order_items").delete().eq("order_id", orderId);
+    await svc.from("orders").delete().eq("id", orderId);
+    return res.error;
+  }
+  return null;
 }
 
 async function currentUserId() {
@@ -223,6 +241,8 @@ export async function createOrder(input: z.input<typeof BaseSchema>): Promise<Cr
       discount: coupon?.discount ?? 0, couponCode: coupon?.code ?? null,
     });
     if ("error" in prep) return { ok: false, error: prep.error };
+    const seatErr = await claimOrFail(svc, prep.orderId, priced.items);
+    if (seatErr) return { ok: false, error: seatErr };
     await markOrderPaid(svc, prep.orderId);
     return { ok: true, orderId: prep.orderId, paid: true };
   }
@@ -237,6 +257,8 @@ export async function createOrder(input: z.input<typeof BaseSchema>): Promise<Cr
     discount: coupon?.discount ?? 0, couponCode: coupon?.code ?? null,
   });
   if ("error" in prep) return { ok: false, error: prep.error };
+  const seatErr = await claimOrFail(svc, prep.orderId, priced.items);
+  if (seatErr) return { ok: false, error: seatErr };
 
   if (!mp) {
     await markOrderPaid(svc, prep.orderId);
@@ -315,6 +337,8 @@ export async function createCardOrder(input: z.input<typeof CardSchema>): Promis
     discount: coupon?.discount ?? 0, couponCode: coupon?.code ?? null,
   });
   if ("error" in prep) return { ok: false, error: prep.error };
+  const seatErr = await claimOrFail(svc, prep.orderId, priced.items);
+  if (seatErr) return { ok: false, error: seatErr };
 
   try {
     const payment = await mp.create({

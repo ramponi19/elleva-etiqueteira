@@ -22,7 +22,7 @@ export default async function ContaOverview() {
   const [{ data: tickets }, { data: pend }] = await Promise.all([
     supabase
       .from("tickets")
-      .select("id, code, event_title, tier_name, status, created_at")
+      .select("id, code, event_title, tier_name, seat_label, status, created_at")
       .order("created_at", { ascending: false }),
     supabase
       .from("orders")
@@ -36,7 +36,7 @@ export default async function ContaOverview() {
       id: t.id,
       code: t.code,
       event_title: t.event_title,
-      tier_name: t.tier_name,
+      tier_name: t.seat_label ? `${t.tier_name} · ${t.seat_label}` : t.tier_name,
       status: t.status,
       qr: await QRCode.toDataURL(t.code, {
         margin: 1,

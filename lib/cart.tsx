@@ -18,6 +18,8 @@ export interface CartItem {
   price: number;      // preço unitário (BRL)
   qty: number;
   feePct: number;     // taxa de serviço (%) do evento — exibição; o servidor recalcula
+  seatId?: string;    // assento marcado (quando o evento usa mapa de assentos)
+  seatLabel?: string; // rótulo do assento, ex. "A12"
 }
 
 interface CartContextValue {

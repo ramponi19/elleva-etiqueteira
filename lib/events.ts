@@ -47,6 +47,21 @@ export interface EventItem {
   trackingGa?: string | null;
   /** tema da página (sobrepõe a cor da categoria); null = automático */
   theme?: string | null;
+  /** assentos marcados ativados neste evento (events.has_seating) */
+  hasSeating?: boolean;
+}
+
+/** Um assento do mapa (quando o evento tem assentos marcados). */
+export interface Seat {
+  id: string;
+  tierId: string | null;
+  sector: string;
+  rowLabel: string;
+  seatNum: number;
+  label: string;   // ex. "A12"
+  posRow: number;
+  posCol: number;
+  taken: boolean;  // vendido ou em reserva ativa — não selecionável
 }
 
 // ---------- Formatação de data (America/Sao_Paulo) ----------
@@ -90,6 +105,7 @@ type EventDbRow = {
   tracking_meta_pixel?: string | null;
   tracking_ga?: string | null;
   theme?: string | null;
+  has_seating?: boolean;
 };
 
 // Serial derivado do uuid enquanto a migration 0018 (coluna events.serial)
@@ -124,6 +140,7 @@ function toEventItem(row: EventDbRow): EventItem {
     trackingMetaPixel: row.tracking_meta_pixel ?? null,
     trackingGa: row.tracking_ga ?? null,
     theme: row.theme ?? null,
+    hasSeating: row.has_seating ?? false,
   };
 }
 
@@ -160,7 +177,7 @@ export async function getEvent(
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("events")
-      .select("id, slug, title, description, category, icon, venue, city, starts_at, status, cover_url, serial, service_fee_pct, max_installments, tracking_meta_pixel, tracking_ga, theme, ticket_tiers(id, name, description, price, sort_order, capacity, sold, is_addon)")
+      .select("id, slug, title, description, category, icon, venue, city, starts_at, status, cover_url, serial, service_fee_pct, max_installments, tracking_meta_pixel, tracking_ga, theme, has_seating, ticket_tiers(id, name, description, price, sort_order, capacity, sold, is_addon)")
       .eq("slug", slug)
       .in("status", ["published", "sold_out"])
       .single();
@@ -183,6 +200,37 @@ export async function getEvent(
     return { event: toEventItem(row), tiers };
   } catch {
     return mockEventBySlug(slug);
+  }
+}
+
+/** Mapa de assentos de um evento (vazio se o evento não usa assentos marcados). */
+export async function getSeats(eventId: string): Promise<Seat[]> {
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("seats")
+      .select("id, tier_id, sector, row_label, seat_num, label, pos_row, pos_col, status, held_until")
+      .eq("event_id", eventId)
+      .order("sector", { ascending: true })
+      .order("pos_row", { ascending: true })
+      .order("pos_col", { ascending: true });
+    if (error || !data) return [];
+    const now = Date.now();
+    return data.map((s) => ({
+      id: s.id as string,
+      tierId: (s.tier_id as string | null) ?? null,
+      sector: (s.sector as string) ?? "",
+      rowLabel: s.row_label as string,
+      seatNum: s.seat_num as number,
+      label: s.label as string,
+      posRow: (s.pos_row as number) ?? 0,
+      posCol: (s.pos_col as number) ?? 0,
+      taken:
+        s.status === "sold" ||
+        (s.status === "held" && !!s.held_until && new Date(s.held_until as string).getTime() > now),
+    }));
+  } catch {
+    return [];
   }
 }
 

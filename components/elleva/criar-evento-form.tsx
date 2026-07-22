@@ -49,6 +49,13 @@ interface Tier {
   isAddon: boolean;
 }
 
+interface Sector {
+  name: string;
+  tierIndex: number; // índice do lote (em tiers) que define o preço do setor
+  rows: string;
+  cols: string;
+}
+
 interface FormState {
   title: string;
   coverUrl: string;
@@ -69,6 +76,8 @@ interface FormState {
   state: string;
   showOnMaps: boolean;
   tiers: Tier[];
+  hasSeating: boolean;
+  sectors: Sector[];
   absorbFee: boolean;
   nomenclature: string;
   producerName: string;
@@ -109,6 +118,8 @@ const EMPTY: FormState = {
   state: "",
   showOnMaps: true,
   tiers: [],
+  hasSeating: false,
+  sectors: [],
   absorbFee: false,
   nomenclature: "Ingresso",
   producerName: "",
@@ -189,6 +200,17 @@ export function CriarEventoForm({
   const rmTier = (i: number) =>
     setF((s) => ({ ...s, tiers: s.tiers.filter((_, idx) => idx !== i) }));
 
+  // ── assentos marcados ───────────────────────────────────────────────────
+  const addSector = () =>
+    setF((s) => {
+      const firstSeat = s.tiers.findIndex((t) => !t.isAddon);
+      return { ...s, sectors: [...s.sectors, { name: "", tierIndex: firstSeat < 0 ? 0 : firstSeat, rows: "", cols: "" }] };
+    });
+  const setSector = (i: number, k: keyof Sector, v: string | number) =>
+    setF((s) => ({ ...s, sectors: s.sectors.map((sec, idx) => (idx === i ? { ...sec, [k]: v } : sec)) }));
+  const rmSector = (i: number) =>
+    setF((s) => ({ ...s, sectors: s.sectors.filter((_, idx) => idx !== i) }));
+
   // duração
   const durTxt = (() => {
     if (!f.date || !f.endDate) return null;
@@ -210,6 +232,11 @@ export function CriarEventoForm({
     if (!f.city.trim() || !f.state.trim()) return setError("Informe cidade e estado (o CEP preenche).");
     if (!f.tiers.length) return setError("Adicione ao menos um ingresso.");
     if (f.tiers.some((t) => !t.name.trim())) return setError("Dê um nome a cada ingresso.");
+    if (f.hasSeating) {
+      if (!f.sectors.length) return setError("Adicione ao menos um setor de assentos (ou desligue os assentos marcados).");
+      if (f.sectors.some((s) => !Number(s.rows) || !Number(s.cols)))
+        return setError("Cada setor precisa de nº de fileiras e assentos por fileira.");
+    }
     if (status === "published" && !f.accepted)
       return setError("Aceite as responsabilidades para publicar.");
 
@@ -250,6 +277,15 @@ export function CriarEventoForm({
         isFree: t.isFree,
         isAddon: t.isAddon,
       })),
+      hasSeating: f.hasSeating,
+      sectors: f.hasSeating
+        ? f.sectors.map((s) => ({
+            name: s.name || undefined,
+            tierIndex: s.tierIndex,
+            rows: Number(s.rows) || 1,
+            cols: Number(s.cols) || 1,
+          }))
+        : undefined,
     };
     const res = isEdit ? await updateEvent(eventId!, payload) : await createEvent(payload);
     setSaving(false);
@@ -546,6 +582,61 @@ export function CriarEventoForm({
             ))}
           </div>
         )}
+
+        {/* Assentos marcados (opt-in) */}
+        <div className="mt-6 rounded-[10px] border-[1.5px] border-tinta p-4">
+          <label className="flex cursor-pointer items-start gap-2.5 text-[14px] text-tinta">
+            <input
+              type="checkbox"
+              className="mt-0.5 h-4 w-4 accent-[var(--color-sol)]"
+              checked={f.hasSeating}
+              onChange={(e) => set("hasSeating", e.target.checked)}
+            />
+            <span>
+              <strong>Assentos marcados</strong> — o comprador escolhe o lugar no mapa.
+              <span className="corpo-suave block">Deixe desligado para venda por quantidade (geral). Cada setor vira uma grade de fileiras × assentos, com o preço do lote escolhido.</span>
+            </span>
+          </label>
+
+          {f.hasSeating && (
+            <div className="mt-4 flex flex-col gap-3">
+              {f.sectors.map((sec, i) => {
+                const seatTiers = f.tiers
+                  .map((t, idx) => ({ t, idx }))
+                  .filter(({ t }) => !t.isAddon);
+                const n = (Number(sec.rows) || 0) * (Number(sec.cols) || 0);
+                return (
+                  <div key={i} className="rounded-[8px] border-[1.5px] border-tinta/50 p-3">
+                    <div className="mb-2 flex items-center justify-between">
+                      <span className="rotulo text-tinta-60">Setor {i + 1}</span>
+                      <button type="button" onClick={() => rmSector(i)} aria-label="Remover setor" className="text-tinta-60 hover:text-sol-escuro">
+                        <Icon icon="lucide:trash-2" style={{ fontSize: 16 }} />
+                      </button>
+                    </div>
+                    <div className="grid gap-2 sm:grid-cols-[1.3fr_1.1fr_0.7fr_0.7fr]">
+                      <input className={input} placeholder="Nome (ex.: Plateia)" value={sec.name} onChange={(e) => setSector(i, "name", e.target.value)} />
+                      <select className={input} value={sec.tierIndex} onChange={(e) => setSector(i, "tierIndex", Number(e.target.value))}>
+                        {seatTiers.length === 0 && <option value={0}>Crie um ingresso antes</option>}
+                        {seatTiers.map(({ t, idx }) => (
+                          <option key={idx} value={idx}>{t.name || `Lote ${idx + 1}`}</option>
+                        ))}
+                      </select>
+                      <input className={input} type="number" min="1" placeholder="Fileiras" value={sec.rows} onChange={(e) => setSector(i, "rows", e.target.value)} />
+                      <input className={input} type="number" min="1" placeholder="Assentos/fila" value={sec.cols} onChange={(e) => setSector(i, "cols", e.target.value)} />
+                    </div>
+                    {n > 0 && <p className="corpo-suave mt-1.5">{n} assento(s) neste setor (fileiras A, B, C…).</p>}
+                  </div>
+                );
+              })}
+              <Button variante="contorno" type="button" onClick={addSector} className="self-start">
+                <Icon icon="lucide:plus" style={{ fontSize: 16 }} /> Adicionar setor
+              </Button>
+              <p className="corpo-suave text-[12.5px] text-tinta-45">
+                A capacidade passa a ser o total de assentos do mapa. Edite o mapa antes de começar a vender — depois da primeira venda ele fica travado.
+              </p>
+            </div>
+          )}
+        </div>
 
         {/* Configurações */}
         <div className="mt-6 rounded-[10px] border-[1.5px] border-tinta p-4">

@@ -4,8 +4,9 @@ import type { Metadata } from "next";
 import { Badge } from "@/components/ui/badge";
 import { Duotone } from "@/components/ui/duotone";
 import { CanhotoCheckout } from "@/components/elleva/canhoto-checkout";
+import { SeatMap } from "@/components/elleva/seat-map";
 import { TickerEscassez } from "@/components/elleva/ticker-escassez";
-import { getEvent, getEventSlugs } from "@/lib/events";
+import { getEvent, getEventSlugs, getSeats } from "@/lib/events";
 import { arteDoEvento, duotoneDoEvento, numeroSerie } from "@/lib/arte";
 import { cidadeDoEvento } from "@/lib/cidades";
 import { fmtBRL } from "@/lib/format";
@@ -185,7 +186,11 @@ export default async function EventPage({
         </article>
 
         {/* CANHOTO */}
-        <CanhotoCheckout event={event} tiers={tiers} loggedIn={!!user} />
+        {event.hasSeating ? (
+          <SeatMap event={event} tiers={tiers} seats={await getSeats(event.uuid)} loggedIn={!!user} />
+        ) : (
+          <CanhotoCheckout event={event} tiers={tiers} loggedIn={!!user} />
+        )}
       </div>
 
       {/* ABAIXO DO PICOTE — informação fria */}
