@@ -39,6 +39,8 @@ const EventSchema = z.object({
   visibility: z.enum(["public", "private"]).default("public"),
   absorbFee: z.coerce.boolean().optional(),
   nomenclature: optStr,
+  trackingMetaPixel: optStr,
+  trackingGa: optStr,
   icon: z.string().optional(),
   coverUrl: z.string().url().optional().or(z.literal("").transform(() => undefined)),
   status: z.enum(["draft", "published"]).default("published"),
@@ -88,6 +90,8 @@ function eventColumns(v: EventData) {
     visibility: v.visibility,
     absorb_fee: v.absorbFee ?? false,
     ticket_nomenclature: v.nomenclature || "Ingresso",
+    tracking_meta_pixel: v.trackingMetaPixel ?? null,
+    tracking_ga: v.trackingGa ?? null,
     status: v.status,
   };
 }

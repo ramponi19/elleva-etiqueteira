@@ -71,6 +71,8 @@ interface FormState {
   nomenclature: string;
   producerName: string;
   producerBio: string;
+  trackingMetaPixel: string;
+  trackingGa: string;
   accepted: boolean;
   visibility: "public" | "private";
 }
@@ -107,6 +109,8 @@ const EMPTY: FormState = {
   nomenclature: "Ingresso",
   producerName: "",
   producerBio: "",
+  trackingMetaPixel: "",
+  trackingGa: "",
   accepted: false,
   visibility: "public",
 };
@@ -226,6 +230,8 @@ export function CriarEventoForm({
       coverUrl: f.coverUrl || undefined,
       producerName: f.producerName || undefined,
       producerBio: f.producerBio || undefined,
+      trackingMetaPixel: f.trackingMetaPixel || undefined,
+      trackingGa: f.trackingGa || undefined,
       visibility: f.visibility,
       absorbFee: f.absorbFee,
       nomenclature: f.nomenclature || undefined,
@@ -565,9 +571,28 @@ export function CriarEventoForm({
         <span className={hint}>{500 - f.producerBio.length} caracteres restantes</span>
       </section>
 
-      {/* 7. Responsabilidades */}
+      {/* 7. Rastreamento (opcional) */}
       <section className={card}>
-        <SectionHead n={7} title="Responsabilidades" />
+        <SectionHead
+          n={7}
+          title="Rastreamento (opcional)"
+          sub="Meça sua divulgação. Os pixels só disparam com o consentimento de cookies do visitante (LGPD)."
+        />
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label className={labelCls}>Meta Pixel ID</label>
+            <input className={input} value={f.trackingMetaPixel} onChange={(e) => set("trackingMetaPixel", e.target.value)} placeholder="Ex.: 123456789012345" />
+          </div>
+          <div>
+            <label className={labelCls}>Google Analytics (GA4)</label>
+            <input className={input} value={f.trackingGa} onChange={(e) => set("trackingGa", e.target.value)} placeholder="Ex.: G-XXXXXXX" />
+          </div>
+        </div>
+      </section>
+
+      {/* 8. Responsabilidades */}
+      <section className={card}>
+        <SectionHead n={8} title="Responsabilidades" />
         <label className="flex cursor-pointer items-start gap-3 text-[14px] leading-relaxed text-tinta">
           <input
             type="checkbox"

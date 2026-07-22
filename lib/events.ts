@@ -41,6 +41,9 @@ export interface EventItem {
   feePct: number;
   /** nº máximo de parcelas no cartão — events.max_installments (padrão 12) */
   maxInstallments?: number;
+  /** IDs de rastreamento por evento (Meta Pixel / GA) */
+  trackingMetaPixel?: string | null;
+  trackingGa?: string | null;
 }
 
 // ---------- Formatação de data (America/Sao_Paulo) ----------
@@ -81,6 +84,8 @@ type EventDbRow = {
   serial?: number;
   service_fee_pct?: number;
   max_installments?: number;
+  tracking_meta_pixel?: string | null;
+  tracking_ga?: string | null;
 };
 
 // Serial derivado do uuid enquanto a migration 0018 (coluna events.serial)
@@ -112,6 +117,8 @@ function toEventItem(row: EventDbRow): EventItem {
     startsAtISO: row.starts_at,
     feePct: Number(row.service_fee_pct ?? 10),
     maxInstallments: Number(row.max_installments ?? 12),
+    trackingMetaPixel: row.tracking_meta_pixel ?? null,
+    trackingGa: row.tracking_ga ?? null,
   };
 }
 
@@ -148,7 +155,7 @@ export async function getEvent(
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("events")
-      .select("id, slug, title, description, category, icon, venue, city, starts_at, status, cover_url, serial, service_fee_pct, max_installments, ticket_tiers(id, name, description, price, sort_order, capacity, sold)")
+      .select("id, slug, title, description, category, icon, venue, city, starts_at, status, cover_url, serial, service_fee_pct, max_installments, tracking_meta_pixel, tracking_ga, ticket_tiers(id, name, description, price, sort_order, capacity, sold)")
       .eq("slug", slug)
       .in("status", ["published", "sold_out"])
       .single();

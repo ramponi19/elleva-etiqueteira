@@ -23,7 +23,7 @@ export default async function EditarEvento({ params }: { params: Promise<{ id: s
   const { data: ev } = await supabase
     .from("events")
     .select(
-      "id, title, description, category, subcategory, venue, city, state, cep, address, address_number, address_complement, neighborhood, show_on_maps, starts_at, ends_at, cover_url, producer_name, producer_bio, visibility, absorb_fee, ticket_nomenclature, status, ticket_tiers(name, description, price, capacity, is_free, sort_order)"
+      "id, title, description, category, subcategory, venue, city, state, cep, address, address_number, address_complement, neighborhood, show_on_maps, starts_at, ends_at, cover_url, producer_name, producer_bio, visibility, absorb_fee, ticket_nomenclature, tracking_meta_pixel, tracking_ga, status, ticket_tiers(name, description, price, capacity, is_free, sort_order)"
     )
     .eq("id", id)
     .single();
@@ -68,6 +68,8 @@ export default async function EditarEvento({ params }: { params: Promise<{ id: s
     nomenclature: ev.ticket_nomenclature ?? "Ingresso",
     producerName: ev.producer_name ?? "",
     producerBio: ev.producer_bio ?? "",
+    trackingMetaPixel: ev.tracking_meta_pixel ?? "",
+    trackingGa: ev.tracking_ga ?? "",
     accepted: true,
     visibility: (ev.visibility ?? "public") as "public" | "private",
   };

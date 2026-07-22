@@ -10,6 +10,7 @@ import { arteDaCategoria, duotoneDaCategoria, numeroSerie } from "@/lib/arte";
 import { cidadeDoEvento } from "@/lib/cidades";
 import { fmtBRL } from "@/lib/format";
 import { sanitizeRichText, toPlainText } from "@/lib/sanitize";
+import { EventTracking } from "@/components/elleva/event-tracking";
 import { getAuth } from "@/lib/auth";
 import { JsonLd } from "@/components/seo/json-ld";
 import { SITE_URL } from "@/lib/site";
@@ -114,6 +115,7 @@ export default async function EventPage({
   return (
     <div className="mx-auto max-w-[1100px] px-5 pb-20 pt-8 sm:px-10">
       <JsonLd data={jsonLd} />
+      <EventTracking metaPixel={event.trackingMetaPixel} ga={event.trackingGa} />
       <Link href="/agenda" className="rotulo text-sol-escuro hover:text-sol">
         ← Agenda
       </Link>

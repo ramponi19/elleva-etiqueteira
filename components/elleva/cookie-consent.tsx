@@ -26,12 +26,13 @@ function gravarEscolha(e: Escolha) {
   ouvintes.forEach((cb) => cb());
 }
 
+/** Hook de consentimento — "aceitos" | "essenciais" | null | "pendente". */
+export function useConsent() {
+  return useSyncExternalStore(assinar, lerEscolha, () => "pendente" as const);
+}
+
 export default function CookieConsent({ gtmId }: { gtmId?: string }) {
-  const escolha = useSyncExternalStore(
-    assinar,
-    lerEscolha,
-    () => "pendente" as const
-  );
+  const escolha = useConsent();
 
   if (!gtmId || escolha === "pendente") return null;
 
