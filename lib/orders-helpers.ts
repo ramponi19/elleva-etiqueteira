@@ -1,6 +1,7 @@
 import { randomBytes } from "crypto";
+import QRCode from "qrcode";
 import type { createServiceClient } from "@/lib/supabase/server";
-import { sendEmail, isMailerConfigured } from "@/lib/mailer";
+import { sendEmail, isMailerConfigured, type MailAttachment } from "@/lib/mailer";
 
 type Svc = Awaited<ReturnType<typeof createServiceClient>>;
 
@@ -124,52 +125,68 @@ export async function sendConfirmationEmail(svc: Svc, orderId: string) {
 
   const { data: tickets } = await svc
     .from("tickets")
-    .select("code, event_title, tier_name")
+    .select("code, event_title, tier_name, seat_label")
     .eq("order_id", orderId);
 
   const items = (order.order_items ?? []) as { event_title: string; tier_name: string; quantity: number }[];
+  const lista = (tickets ?? []) as { code: string; event_title: string; tier_name: string; seat_label: string | null }[];
+
   // Paleta Cartaz de Show: papel #FAF5EC · tinta #141210 · sol #E8481F
+  // Resumo do que foi comprado
   const rows = items
     .map((i) => `<tr>
-      <td style="padding:8px 0;color:#141210;font-weight:bold;text-transform:uppercase;font-size:15px">${i.event_title}<br>
+      <td style="padding:6px 0;color:#141210;font-weight:bold;text-transform:uppercase;font-size:14px">${i.event_title}<br>
         <span style="font-weight:normal;text-transform:none;color:rgba(20,18,16,.6);font-size:13px">${i.tier_name} × ${i.quantity}</span></td>
     </tr>`)
     .join("");
 
-  const codes = (tickets ?? [])
-    .map((t) => `<tr>
-      <td style="padding:6px 0;color:#141210;font-size:14px;font-weight:bold;letter-spacing:2px">${t.code}</td>
-      <td style="padding:6px 0;text-align:right;color:rgba(20,18,16,.6);font-size:12px">${t.tier_name}</td>
-    </tr>`)
-    .join("");
+  // Um QR por ingresso, embutido via CID (renderiza inline no Gmail/Outlook) + anexo PNG
+  const attachments: MailAttachment[] = [];
+  const ingressos: string[] = [];
+  for (const t of lista) {
+    let cid: string | null = null;
+    try {
+      const buf = await QRCode.toBuffer(t.code, { margin: 1, width: 320, color: { dark: "#141210", light: "#ffffff" } });
+      cid = `qr-${t.code}`;
+      attachments.push({ filename: `ingresso-${t.code}.png`, content: buf, cid, contentType: "image/png" });
+    } catch {
+      /* sem QR: mostra só o código */
+    }
+    ingressos.push(`
+      <div style="border:2px solid #141210;border-radius:14px;background:#fff;overflow:hidden;margin-top:16px">
+        <div style="padding:18px;text-align:center">
+          <p style="margin:0 0 12px;color:#C93A15;font-size:10px;letter-spacing:3px;text-transform:uppercase;font-weight:bold">Elleva Tickets</p>
+          ${cid ? `<img src="cid:${cid}" alt="QR do ingresso" width="184" height="184" style="display:block;margin:0 auto;border:1px solid #eee" />` : ""}
+          <p style="margin:14px 0 0;color:#141210;font-weight:bold;font-size:15px;text-transform:uppercase">${t.event_title}</p>
+          <p style="margin:3px 0 0;color:rgba(20,18,16,.6);font-size:13px">${t.tier_name}${t.seat_label ? ` · ${t.seat_label}` : ""}</p>
+          <p style="margin:10px 0 0;color:#141210;font-size:13px;font-weight:bold;letter-spacing:2px">${t.code}</p>
+        </div>
+      </div>`);
+  }
 
   const html = `
   <div style="font-family:Arial,Helvetica,sans-serif;max-width:480px;margin:0 auto;padding:32px 20px;background:#FAF5EC">
-    <p style="margin:0;color:#C93A15;font-size:11px;letter-spacing:3px;text-transform:uppercase;font-weight:bold">Pix aprovado</p>
+    <p style="margin:0;color:#C93A15;font-size:11px;letter-spacing:3px;text-transform:uppercase;font-weight:bold">Pagamento aprovado</p>
     <h1 style="margin:6px 0 0;color:#141210;font-size:30px;line-height:1;text-transform:uppercase;font-weight:900">Lugar garantido!</h1>
-    <p style="color:#141210;font-size:15px;margin:14px 0 0">${order.buyer_name}, seu ingresso chegou. A gente se vê lá.</p>
+    <p style="color:#141210;font-size:15px;margin:14px 0 0">${order.buyer_name}, seu ingresso chegou. Apresente o QR code na entrada.</p>
 
-    <!-- o ingresso -->
-    <div style="margin-top:22px;border:2px solid #141210;border-radius:14px;background:#fff;overflow:hidden">
-      <div style="padding:18px 20px">
-        <p style="margin:0 0 10px;color:#C93A15;font-size:10px;letter-spacing:3px;text-transform:uppercase;font-weight:bold">Elleva Tickets</p>
-        <table style="width:100%;border-collapse:collapse">${rows}</table>
-      </div>
-      <div style="border-top:2px dashed #141210;padding:14px 20px;background:#F3ECDF">
-        ${codes ? `<table style="width:100%;border-collapse:collapse">${codes}</table>` : ""}
-        <table style="width:100%;border-collapse:collapse;margin-top:8px">
-          <tr>
-            <td style="color:rgba(20,18,16,.6);font-size:11px;letter-spacing:2px;text-transform:uppercase">Total pago</td>
-            <td style="text-align:right;color:#141210;font-size:20px;font-weight:900">R$ ${Number(order.total).toLocaleString("pt-BR")}</td>
-          </tr>
-        </table>
-      </div>
+    ${ingressos.join("")}
+
+    <!-- resumo da compra -->
+    <div style="margin-top:22px;border:1px solid rgba(20,18,16,.15);border-radius:12px;background:#fff;padding:14px 18px">
+      <p style="margin:0 0 6px;color:#C93A15;font-size:10px;letter-spacing:3px;text-transform:uppercase;font-weight:bold">Sua compra</p>
+      <table style="width:100%;border-collapse:collapse">${rows}</table>
+      <table style="width:100%;border-collapse:collapse;margin-top:8px">
+        <tr>
+          <td style="padding-top:8px;border-top:1px dashed rgba(20,18,16,.2);color:rgba(20,18,16,.6);font-size:11px;letter-spacing:2px;text-transform:uppercase">Total pago</td>
+          <td style="padding-top:8px;border-top:1px dashed rgba(20,18,16,.2);text-align:right;color:#141210;font-size:20px;font-weight:900">R$ ${Number(order.total).toLocaleString("pt-BR")}</td>
+        </tr>
+      </table>
     </div>
 
     <a href="${APP_URL}/conta" style="display:inline-block;margin-top:22px;background:#E8481F;color:#141210;text-decoration:none;font-weight:bold;padding:13px 26px;border-radius:9999px;font-size:15px">Ver meus ingressos</a>
     <p style="color:rgba(20,18,16,.6);font-size:12px;margin-top:20px;line-height:1.5">
-      O QR code de cada ingresso está na sua conta Elleva — é ele que entra.
-      Guarda este e-mail: os códigos acima também valem na portaria.
+      O QR também fica na sua conta Elleva. Leve um documento com foto — o nome e o CPF do comprador podem ser conferidos na entrada.
     </p>
   </div>`;
 
@@ -178,6 +195,7 @@ export async function sendConfirmationEmail(svc: Svc, orderId: string) {
       to: order.buyer_email,
       subject: "Lugar garantido! Seu ingresso chegou — Elleva Tickets",
       html,
+      attachments,
     });
   } catch {
     /* e-mail não deve quebrar o fluxo de pagamento */

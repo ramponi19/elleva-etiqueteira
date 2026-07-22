@@ -99,8 +99,24 @@ export function TicketValidatorElleva({ token }: { token?: string } = {}) {
             {ok ? (
               <>
                 <p className="m-0 font-bold" style={{ color: tone }}>Entrada liberada ✓</p>
-                <p className="m-0 mt-0.5 text-[14px] text-tinta">{result.eventTitle} · {result.tierName}</p>
-                <p className="m-0 font-mono text-[12px] text-tinta-60">{result.code}</p>
+                <p className="m-0 mt-0.5 text-[14px] text-tinta">
+                  {result.eventTitle} · {result.tierName}{result.seat ? ` · ${result.seat}` : ""}
+                </p>
+                {result.holderName && (
+                  <p className="m-0 mt-1.5 text-[14px] text-tinta">
+                    Titular: <strong>{result.holderName}</strong>
+                    {result.holderDoc ? <> · CPF <strong>{result.holderDoc}</strong></> : null}
+                  </p>
+                )}
+                {result.transferEmail && (
+                  <p className="m-0 mt-1.5 text-[13px] text-tinta">
+                    Transferido para <strong>{result.transferEmail}</strong>
+                  </p>
+                )}
+                {(result.holderName || result.transferEmail) && (
+                  <p className="corpo-suave m-0 mt-1">Confira com o documento na entrada.</p>
+                )}
+                <p className="m-0 mt-1 font-mono text-[12px] text-tinta-60">{result.code}</p>
               </>
             ) : (
               <>

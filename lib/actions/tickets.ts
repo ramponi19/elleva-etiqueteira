@@ -6,8 +6,37 @@ import { getAuth } from "@/lib/auth";
 import { createServiceClient } from "@/lib/supabase/server";
 
 export type ValidateResult =
-  | { ok: true; eventTitle: string; tierName: string; code: string }
+  | {
+      ok: true;
+      eventTitle: string;
+      tierName: string;
+      code: string;
+      seat?: string;
+      /** titular a conferir com o documento na entrada (comprador) */
+      holderName?: string;
+      holderDoc?: string;
+      /** quando o ingresso foi transferido: o titular atual é este e-mail */
+      transferEmail?: string;
+    }
   | { ok: false; reason: "unauthorized" | "not_found" | "forbidden" | "used" | "cancelled" | "error"; message: string; usedAt?: string };
+
+/** Dados do titular pra portaria conferir (nome/CPF do comprador, ou o e-mail
+ *  de quem recebeu por transferência). */
+async function holderInfo(
+  svc: Awaited<ReturnType<typeof createServiceClient>>,
+  ticket: { order_id: string; transferred: boolean | null; transfer_email: string | null; seat_label: string | null }
+): Promise<{ seat?: string; holderName?: string; holderDoc?: string; transferEmail?: string }> {
+  const seat = ticket.seat_label ?? undefined;
+  if (ticket.transferred) {
+    return { seat, transferEmail: ticket.transfer_email ?? undefined };
+  }
+  const { data: o } = await svc
+    .from("orders")
+    .select("buyer_name, buyer_cpf")
+    .eq("id", ticket.order_id)
+    .single();
+  return { seat, holderName: o?.buyer_name ?? undefined, holderDoc: o?.buyer_cpf ?? undefined };
+}
 
 export async function validateTicket(rawCode: string): Promise<ValidateResult> {
   const code = rawCode.trim().toUpperCase();
@@ -27,7 +56,7 @@ export async function validateTicket(rawCode: string): Promise<ValidateResult> {
 
   const { data: ticket } = await svc
     .from("tickets")
-    .select("id, code, event_id, event_title, tier_name, status, used_at")
+    .select("id, code, event_id, event_title, tier_name, status, used_at, order_id, transferred, transfer_email, seat_label")
     .eq("code", code)
     .single();
 
@@ -71,7 +100,7 @@ export async function validateTicket(rawCode: string): Promise<ValidateResult> {
     return { ok: false, reason: "used", message: "Ingresso já utilizado." };
   }
 
-  return { ok: true, eventTitle: ticket.event_title, tierName: ticket.tier_name, code: ticket.code };
+  return { ok: true, eventTitle: ticket.event_title, tierName: ticket.tier_name, code: ticket.code, ...(await holderInfo(svc, ticket)) };
 }
 
 /**
@@ -100,7 +129,7 @@ export async function validateByToken(token: string, rawCode: string): Promise<V
 
   const { data: ticket } = await svc
     .from("tickets")
-    .select("id, code, event_id, event_title, tier_name, status, used_at")
+    .select("id, code, event_id, event_title, tier_name, status, used_at, order_id, transferred, transfer_email, seat_label")
     .eq("code", code)
     .single();
 
@@ -125,7 +154,7 @@ export async function validateByToken(token: string, rawCode: string): Promise<V
     return { ok: false, reason: "used", message: "Ingresso já utilizado." };
   }
 
-  return { ok: true, eventTitle: ticket.event_title, tierName: ticket.tier_name, code: ticket.code };
+  return { ok: true, eventTitle: ticket.event_title, tierName: ticket.tier_name, code: ticket.code, ...(await holderInfo(svc, ticket)) };
 }
 
 /** Transfere um ingresso para outra pessoa (por e-mail). Rotaciona o código. */

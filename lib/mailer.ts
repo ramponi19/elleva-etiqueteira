@@ -33,9 +33,28 @@ export function isMailerConfigured(): boolean {
   return !!(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
 }
 
+export interface MailAttachment {
+  filename: string;
+  content: Buffer;
+  /** referenciável no HTML como <img src="cid:..."> (renderiza inline no Gmail/Outlook) */
+  cid?: string;
+  contentType?: string;
+}
+
 /** Envia um e-mail. Silencioso se o SMTP não estiver configurado. */
-export async function sendEmail(opts: { to: string; subject: string; html: string }): Promise<void> {
+export async function sendEmail(opts: {
+  to: string;
+  subject: string;
+  html: string;
+  attachments?: MailAttachment[];
+}): Promise<void> {
   const tx = transporter();
   if (!tx) return;
-  await tx.sendMail({ from: FROM_EMAIL, to: opts.to, subject: opts.subject, html: opts.html });
+  await tx.sendMail({
+    from: FROM_EMAIL,
+    to: opts.to,
+    subject: opts.subject,
+    html: opts.html,
+    attachments: opts.attachments,
+  });
 }
