@@ -82,7 +82,7 @@ export function SeatMap({
           eventSlug: event.id,
           eventTitle: event.title,
           tierId: s.tierId ?? "",
-          tierName: `${t?.name ?? "Assento"} · ${s.label}`,
+          tierName: t?.name ?? "Assento",
           price: t?.price ?? 0,
           qty: 1,
           feePct: event.feePct,

@@ -67,7 +67,7 @@ export default function CheckoutPage() {
 
   function confirmar() {
     setConfirmado({
-      itens: items.map((i) => ({ eventTitle: i.eventTitle, tierName: i.tierName, qty: i.qty })),
+      itens: items.map((i) => ({ eventTitle: i.eventTitle, tierName: i.seatLabel ? `${i.tierName} · ${i.seatLabel}` : i.tierName, qty: i.qty })),
       total: totalAdj,
     });
     clear();
@@ -236,7 +236,7 @@ export default function CheckoutPage() {
                     <div className="min-w-0 flex-1">
                       <p className="titulo-card m-0 text-[15px]">{item.eventTitle}</p>
                       <p className="corpo-suave m-0 mt-0.5">
-                        {item.tierName} × {item.qty}
+                        {item.tierName}{item.seatLabel ? ` · ${item.seatLabel}` : ""} × {item.qty}
                       </p>
                     </div>
                     <span className="numero flex-shrink-0 text-[16px]">{fmtBRL(item.price * item.qty)}</span>
