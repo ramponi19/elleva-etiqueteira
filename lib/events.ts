@@ -119,6 +119,7 @@ export async function getEvents(): Promise<EventItem[]> {
       .from("events")
       .select("id, slug, title, description, category, icon, venue, city, starts_at, status, cover_url, is_featured, featured_order, serial, service_fee_pct, ticket_tiers(price)")
       .in("status", ["published", "sold_out"])
+      .or("visibility.eq.public,visibility.is.null") // privado só pelo link direto
       .order("starts_at", { ascending: true });
     if (error || !data?.length) return MOCK_EVENTS;
     return (data as EventDbRow[]).map(toEventItem);
@@ -174,7 +175,8 @@ export async function getEventSlugs(): Promise<string[]> {
     const { data, error } = await supabase
       .from("events")
       .select("slug")
-      .in("status", ["published", "sold_out"]);
+      .in("status", ["published", "sold_out"])
+      .or("visibility.eq.public,visibility.is.null"); // privado fora do sitemap
     if (error || !data?.length) return MOCK_EVENTS.map((e) => e.id);
     return data.map((r) => r.slug as string);
   } catch {

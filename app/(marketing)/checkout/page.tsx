@@ -63,6 +63,7 @@ export default function CheckoutPage() {
   // o desconto do cupom abate só o subtotal. O servidor recalcula tudo.
   const feeAdj = feeOf(items);
   const totalAdj = round2(Math.max(0, subtotal - discount) + feeAdj);
+  const isFree = totalAdj <= 0 && items.length > 0;
 
   function confirmar() {
     setConfirmado({
@@ -314,8 +315,11 @@ export default function CheckoutPage() {
             </div>
           </div>
 
-          {/* PAGAMENTO — Pix primário */}
+          {/* PAGAMENTO — Pix primário (oculto quando o ingresso é gratuito) */}
+          {!isFree && (
           <h2 className="rotulo mt-9 text-sol-escuro">Como você paga</h2>
+          )}
+          {!isFree && (
           <div className="mt-4 flex gap-3" role="radiogroup" aria-label="Método de pagamento">
             {(["pix", "card"] as const).map((m) => (
               <button
@@ -333,6 +337,7 @@ export default function CheckoutPage() {
               </button>
             ))}
           </div>
+          )}
 
           {error && (
             <p className="corpo mt-5 rounded-[10px] border-[1.5px] border-sol-escuro bg-papel-2 px-3.5 py-2.5 text-sol-escuro">
@@ -340,7 +345,16 @@ export default function CheckoutPage() {
             </p>
           )}
 
-          {pay === "card" ? (
+          {isFree ? (
+            <>
+              <Button className="mt-6 w-full" onClick={finalize} disabled={loading}>
+                {loading ? "Confirmando..." : "Confirmar ingresso grátis"}
+              </Button>
+              <p className="corpo-suave mt-3 text-center">
+                Sem custo · ingresso no e-mail e na sua conta
+              </p>
+            </>
+          ) : pay === "card" ? (
             <div className="mt-6">
               <CardForm
                 buyer={{ name, email, cpf }}
