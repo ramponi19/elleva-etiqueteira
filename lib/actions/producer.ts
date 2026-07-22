@@ -2,7 +2,14 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { getAuth } from "@/lib/auth";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
+
+async function ownsEvent(svc: Awaited<ReturnType<typeof createServiceClient>>, eventId: string, userId: string, isAdmin: boolean) {
+  if (isAdmin) return true;
+  const { data } = await svc.from("events").select("producer_id").eq("id", eventId).single();
+  return data?.producer_id === userId;
+}
 
 // Promove o usuário logado a "producer" (se ainda for "customer") e o leva a uma
 // área de produtor. Estilo Sympla: qualquer pessoa pode criar evento — ao clicar
@@ -61,5 +68,54 @@ export async function savePayoutAccount(input: {
   if (error) return { ok: false, error: error.message };
 
   revalidatePath("/produtor/financeiro");
+  return { ok: true };
+}
+
+/** Produtor cria um cupom escopado a um evento seu. */
+export async function createEventCoupon(input: {
+  eventId: string;
+  code: string;
+  discountType: "percent" | "fixed";
+  discountValue: number;
+  maxUses?: number;
+}): Promise<{ ok: boolean; error?: string }> {
+  const { user, role } = await getAuth();
+  if (!user || (role !== "producer" && role !== "admin")) return { ok: false, error: "Sem permissão." };
+
+  const code = input.code.trim().toUpperCase();
+  if (!code) return { ok: false, error: "Informe um código." };
+  if (!(input.discountValue > 0)) return { ok: false, error: "Valor de desconto inválido." };
+  if (input.discountType === "percent" && input.discountValue > 100) return { ok: false, error: "Percentual máximo é 100." };
+
+  const svc = await createServiceClient();
+  if (!(await ownsEvent(svc, input.eventId, user.id, role === "admin"))) {
+    return { ok: false, error: "Evento não é seu." };
+  }
+
+  const { error } = await svc.from("coupons").insert({
+    code,
+    discount_type: input.discountType,
+    discount_value: input.discountValue,
+    max_uses: input.maxUses ?? null,
+    event_id: input.eventId,
+    producer_id: user.id,
+  });
+  if (error) {
+    return { ok: false, error: error.message.includes("duplicate") ? "Já existe um cupom com esse código." : error.message };
+  }
+  revalidatePath("/produtor/cupons");
+  return { ok: true };
+}
+
+/** Ativa/desativa um cupom do próprio produtor. */
+export async function toggleEventCoupon(code: string, active: boolean): Promise<{ ok: boolean; error?: string }> {
+  const { user, role } = await getAuth();
+  if (!user) return { ok: false, error: "Sem permissão." };
+  const svc = await createServiceClient();
+  let q = svc.from("coupons").update({ active }).eq("code", code);
+  if (role !== "admin") q = q.eq("producer_id", user.id); // só mexe nos próprios
+  const { error } = await q;
+  if (error) return { ok: false, error: error.message };
+  revalidatePath("/produtor/cupons");
   return { ok: true };
 }

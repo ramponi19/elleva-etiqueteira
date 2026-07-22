@@ -83,23 +83,29 @@ function finalTotals(items: Items, discount: number, fee: number) {
 async function couponDiscount(
   svc: Svc,
   code: string | undefined,
-  subtotal: number
+  items: Items
 ): Promise<{ discount: number; code: string } | { error: string } | null> {
   if (!code || !code.trim()) return null;
   const norm = code.trim().toUpperCase();
   const { data: c } = await svc
     .from("coupons")
-    .select("code, discount_type, discount_value, max_uses, used_count, active, expires_at")
+    .select("code, discount_type, discount_value, max_uses, used_count, active, expires_at, event_id")
     .eq("code", norm)
     .single();
   if (!c || !c.active) return { error: "Cupom inválido." };
   if (c.expires_at && new Date(c.expires_at).getTime() < Date.now()) return { error: "Cupom expirado." };
   if (c.max_uses != null && c.used_count >= c.max_uses) return { error: "Cupom esgotado." };
 
+  // cupom de produtor vale só pros itens do evento dele; global (event_id null) vale pra tudo
+  const base = c.event_id
+    ? items.filter((i) => isUuid(i.eventId) && i.eventId === c.event_id).reduce((a, i) => a + i.price * i.qty, 0)
+    : subtotalOf(items);
+  if (base <= 0) return { error: "Este cupom não vale para os itens do carrinho." };
+
   const raw = c.discount_type === "percent"
-    ? Math.round((subtotal * Number(c.discount_value)) / 100)
+    ? Math.round((base * Number(c.discount_value)) / 100)
     : Number(c.discount_value);
-  const discount = Math.min(raw, subtotal);
+  const discount = Math.min(raw, base);
   return { discount, code: norm };
 }
 
@@ -201,7 +207,7 @@ export async function createOrder(input: z.input<typeof BaseSchema>): Promise<Cr
   const stockErr = await checkStock(svc, priced.items);
   if (stockErr) return { ok: false, error: stockErr };
 
-  const coupon = await couponDiscount(svc, parsed.data.couponCode, subtotalOf(priced.items));
+  const coupon = await couponDiscount(svc, parsed.data.couponCode, priced.items);
   if (coupon && "error" in coupon) return { ok: false, error: coupon.error };
 
   // Ingresso gratuito (ou 100% de desconto): total zero não passa pelo
@@ -297,7 +303,7 @@ export async function createCardOrder(input: z.input<typeof CardSchema>): Promis
   const stockErr = await checkStock(svc, priced.items);
   if (stockErr) return { ok: false, error: stockErr };
 
-  const coupon = await couponDiscount(svc, parsed.data.couponCode, subtotalOf(priced.items));
+  const coupon = await couponDiscount(svc, parsed.data.couponCode, priced.items);
   if (coupon && "error" in coupon) return { ok: false, error: coupon.error };
 
   const prep = await insertPendingOrder(svc, {
@@ -352,7 +358,7 @@ export async function previewCoupon(
   if (!parsedItems.success) return { ok: false, error: "Itens inválidos" };
   let svc: Svc;
   try { svc = await createServiceClient(); } catch { return { ok: false, error: "Indisponível" }; }
-  const res = await couponDiscount(svc, code, subtotalOf(parsedItems.data));
+  const res = await couponDiscount(svc, code, parsedItems.data);
   if (!res) return { ok: false, error: "Informe um cupom." };
   if ("error" in res) return { ok: false, error: res.error };
   return { ok: true, discount: res.discount };

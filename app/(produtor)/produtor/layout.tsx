@@ -6,6 +6,7 @@ const NAV = [
   { href: "/produtor/vendas", label: "Vendas", icon: "lucide:bar-chart-3" },
   { href: "/produtor/financeiro", label: "Financeiro", icon: "lucide:wallet" },
   { href: "/produtor/participantes", label: "Participantes", icon: "lucide:users" },
+  { href: "/produtor/cupons", label: "Cupons", icon: "lucide:ticket-percent" },
   { href: "/produtor/validar", label: "Validar ingresso", icon: "lucide:qr-code" },
   { href: "/produtor/checkin", label: "Check-in", icon: "lucide:clipboard-list" },
 ];
