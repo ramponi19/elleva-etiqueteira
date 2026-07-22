@@ -83,7 +83,7 @@ export function AgendaNoite({
           </p>
         ) : (
           grupos.map(([mes, lista]) => (
-            <section key={mes} className="mt-10">
+            <section key={mes} data-reveal className="mt-10">
               <h2 className="rotulo m-0 mb-4 text-papel/60">
                 {MES_LONGO[mes] ?? mes}
               </h2>

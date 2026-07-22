@@ -194,7 +194,7 @@ export default async function EventPage({
       </div>
 
       {/* ABAIXO DO PICOTE — informação fria */}
-      <div className="mt-14 grid grid-cols-1 gap-10 lg:grid-cols-[1.35fr_1fr]">
+      <div data-reveal className="mt-14 grid grid-cols-1 gap-10 lg:grid-cols-[1.35fr_1fr]">
         <section>
           <h2 className="display-2 text-[24px]">Sobre o evento</h2>
           {event.desc ? (
