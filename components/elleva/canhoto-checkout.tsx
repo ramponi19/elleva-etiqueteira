@@ -77,6 +77,38 @@ export function CanhotoCheckout({
   const stepBtn =
     "flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-[16px] leading-none transition-colors duration-[var(--dur-micro)] disabled:cursor-default disabled:opacity-35";
 
+  const ingressos = tiers.filter((t) => !t.isAddon);
+  const adicionais = tiers.filter((t) => t.isAddon);
+
+  const linha = (t: Tier) => {
+    const esgotado = t.available != null && t.available <= 0;
+    const noMax = t.available != null && (qty[t.id] || 0) >= t.available;
+    return (
+      <div key={t.id} className={clsx("flex items-center gap-3 rounded-[10px] border-[1.5px] border-tinta p-4", esgotado && "opacity-55")}>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <span className="text-[15px] font-medium text-tinta">{t.name}</span>
+            {esgotado && <Badge tom="tinta">Sold out</Badge>}
+          </div>
+          {t.desc && <p className="corpo-suave m-0 mt-0.5">{t.desc}</p>}
+          <p className="numero m-0 mt-1.5 text-[17px]">
+            {fmtBRL(t.price)}{" "}
+            <span className="rotulo font-medium text-tinta-60">
+              (+ {fmtBRL(feeUnit(t.price, event.feePct))} taxa){!t.isAddon && <> · meia {fmtBRL(t.price / 2)}</>}
+            </span>
+          </p>
+        </div>
+        {!esgotado && (
+          <div className="flex flex-shrink-0 items-center gap-2">
+            <button type="button" aria-label={`Tirar um ${t.name}`} disabled={(qty[t.id] || 0) === 0} onClick={() => dec(t.id)} className={clsx(stepBtn, "border-[1.5px] border-tinta text-tinta hover:bg-papel-2")}>−</button>
+            <span className="numero w-5 text-center text-[15px]" aria-live="polite">{qty[t.id] || 0}</span>
+            <button type="button" aria-label={`Adicionar um ${t.name}`} disabled={noMax} onClick={() => inc(t.id, t.available)} className={clsx(stepBtn, "bg-tinta text-papel hover:bg-sol-escuro")}>+</button>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <aside className="lg:border-l-2 lg:border-dashed lg:border-tinta lg:pl-8">
       <p className="rotulo m-0 text-sol-escuro">
@@ -94,61 +126,14 @@ export function CanhotoCheckout({
         </a>
       </p>
 
-      <div className="mt-6 flex flex-col gap-3">
-        {tiers.map((t) => {
-          const esgotado = t.available != null && t.available <= 0;
-          const noMax = t.available != null && (qty[t.id] || 0) >= t.available;
-          return (
-            <div
-              key={t.id}
-              className={clsx(
-                "flex items-center gap-3 rounded-[10px] border-[1.5px] border-tinta p-4",
-                esgotado && "opacity-55"
-              )}
-            >
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-[15px] font-medium text-tinta">{t.name}</span>
-                  {esgotado && <Badge tom="tinta">Sold out</Badge>}
-                </div>
-                {t.desc && <p className="corpo-suave m-0 mt-0.5">{t.desc}</p>}
-                <p className="numero m-0 mt-1.5 text-[17px]">
-                  {fmtBRL(t.price)}{" "}
-                  <span className="rotulo font-medium text-tinta-60">
-                    (+ {fmtBRL(feeUnit(t.price, event.feePct))} taxa) · meia{" "}
-                    {fmtBRL(t.price / 2)}
-                  </span>
-                </p>
-              </div>
-              {!esgotado && (
-                <div className="flex flex-shrink-0 items-center gap-2">
-                  <button
-                    type="button"
-                    aria-label={`Tirar um ${t.name}`}
-                    disabled={(qty[t.id] || 0) === 0}
-                    onClick={() => dec(t.id)}
-                    className={clsx(stepBtn, "border-[1.5px] border-tinta text-tinta hover:bg-papel-2")}
-                  >
-                    −
-                  </button>
-                  <span className="numero w-5 text-center text-[15px]" aria-live="polite">
-                    {qty[t.id] || 0}
-                  </span>
-                  <button
-                    type="button"
-                    aria-label={`Adicionar um ${t.name}`}
-                    disabled={noMax}
-                    onClick={() => inc(t.id, t.available)}
-                    className={clsx(stepBtn, "bg-tinta text-papel hover:bg-sol-escuro")}
-                  >
-                    +
-                  </button>
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
+      <div className="mt-6 flex flex-col gap-3">{ingressos.map(linha)}</div>
+      {adicionais.length > 0 && (
+        <div className="mt-6">
+          <p className="rotulo text-tinta-60">Adicionais</p>
+          <p className="corpo-suave mt-1">Leve também (opcional):</p>
+          <div className="mt-3 flex flex-col gap-3">{adicionais.map(linha)}</div>
+        </div>
+      )}
 
       {/* total após o picote */}
       <div className="mt-6 border-t-[1.5px] border-dashed border-tinta pt-4">

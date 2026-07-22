@@ -13,6 +13,7 @@ const TierSchema = z.object({
   price: z.coerce.number().nonnegative(),
   capacity: z.coerce.number().int().positive().optional().or(z.literal("").transform(() => undefined)),
   isFree: z.coerce.boolean().optional(),
+  isAddon: z.coerce.boolean().optional(),
 });
 
 const EventSchema = z.object({
@@ -107,6 +108,7 @@ function tierRows(eventId: string, tiers: EventData["tiers"]) {
     price: t.isFree ? 0 : t.price,
     capacity: t.capacity ?? null,
     is_free: t.isFree ?? false,
+    is_addon: t.isAddon ?? false,
     sort_order: i,
   }));
 }

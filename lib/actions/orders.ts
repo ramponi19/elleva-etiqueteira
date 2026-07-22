@@ -45,28 +45,30 @@ function subtotalOf(items: Items) {
 // real do lote e o service_fee_pct do evento no banco. O price do cliente é
 // ignorado (só serve pra exibição). Tiers mock (id não-uuid) só passam quando
 // o modo mock é permitido (fora de produção).
+type PricedItem = Items[number] & { isAddon: boolean };
+
 async function priceItems(
   svc: Svc,
   items: Items
-): Promise<{ items: Items; fee: number } | { error: string }> {
-  const priced: Items = [];
+): Promise<{ items: PricedItem[]; fee: number } | { error: string }> {
+  const priced: PricedItem[] = [];
   let fee = 0;
   for (const it of items) {
     if (isUuid(it.tierId)) {
       const { data: tier } = await svc
         .from("ticket_tiers")
-        .select("price, events(service_fee_pct)")
+        .select("price, is_addon, events(service_fee_pct)")
         .eq("id", it.tierId)
         .single();
       if (!tier) return { error: `O lote "${it.tierName}" não está mais disponível.` };
       const price = Number(tier.price);
       const ev = tier.events as unknown as { service_fee_pct?: number } | null;
       const pct = Number(ev?.service_fee_pct ?? DEFAULT_FEE_PCT);
-      priced.push({ ...it, price });
+      priced.push({ ...it, price, isAddon: !!tier.is_addon });
       fee += feeUnit(price, pct) * it.qty;
     } else {
       if (!mockAllowed()) return { error: "Ingresso inválido." };
-      priced.push(it);
+      priced.push({ ...it, isAddon: false });
       fee += feeUnit(it.price, DEFAULT_FEE_PCT) * it.qty;
     }
   }
@@ -131,7 +133,7 @@ async function checkStock(svc: Svc, items: Items): Promise<string | null> {
 
 async function insertPendingOrder(
   svc: Svc,
-  data: { buyerName: string; buyerEmail: string; buyerCpf?: string; buyerWhatsapp?: string; method: "pix" | "card"; provider: string; items: Items; itemsFee: number; userId: string | null; discount?: number; couponCode?: string | null }
+  data: { buyerName: string; buyerEmail: string; buyerCpf?: string; buyerWhatsapp?: string; method: "pix" | "card"; provider: string; items: PricedItem[]; itemsFee: number; userId: string | null; discount?: number; couponCode?: string | null }
 ): Promise<{ error: string } | { orderId: string; total: number }> {
   const { subtotal, discount, fee, total } = finalTotals(data.items, data.discount ?? 0, data.itemsFee);
   const { data: order, error } = await svc
@@ -162,6 +164,7 @@ async function insertPendingOrder(
       event_title: it.eventTitle,
       unit_price: it.price,
       quantity: it.qty,
+      is_addon: it.isAddon,
     }))
   );
   if (itemsErr) {

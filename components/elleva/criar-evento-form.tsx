@@ -46,6 +46,7 @@ interface Tier {
   price: string;
   capacity: string;
   isFree: boolean;
+  isAddon: boolean;
 }
 
 interface FormState {
@@ -79,12 +80,13 @@ interface FormState {
   visibility: "public" | "private";
 }
 
-const emptyTier = (isFree: boolean): Tier => ({
+const emptyTier = (opts: { isFree?: boolean; isAddon?: boolean } = {}): Tier => ({
   name: "",
   description: "",
   price: "",
   capacity: "",
-  isFree,
+  isFree: opts.isFree ?? false,
+  isAddon: opts.isAddon ?? false,
 });
 
 const EMPTY: FormState = {
@@ -180,8 +182,8 @@ export function CriarEventoForm({
   }
 
   // ── ingressos ─────────────────────────────────────────────────────────
-  const addTier = (isFree: boolean) =>
-    setF((s) => ({ ...s, tiers: [...s.tiers, emptyTier(isFree)] }));
+  const addTier = (opts: { isFree?: boolean; isAddon?: boolean } = {}) =>
+    setF((s) => ({ ...s, tiers: [...s.tiers, emptyTier(opts)] }));
   const setTier = (i: number, k: keyof Tier, v: string | boolean) =>
     setF((s) => ({ ...s, tiers: s.tiers.map((t, idx) => (idx === i ? { ...t, [k]: v } : t)) }));
   const rmTier = (i: number) =>
@@ -246,6 +248,7 @@ export function CriarEventoForm({
         price: t.isFree ? 0 : t.price || 0,
         capacity: t.capacity || undefined,
         isFree: t.isFree,
+        isAddon: t.isAddon,
       })),
     };
     const res = isEdit ? await updateEvent(eventId!, payload) : await createEvent(payload);
@@ -475,13 +478,19 @@ export function CriarEventoForm({
           (padrão 10%, negociável) é paga pelo comprador, por fora.
         </p>
         <div className="mt-3 flex flex-wrap justify-center gap-3">
-          <Button variante="contorno" type="button" onClick={() => addTier(false)}>
+          <Button variante="contorno" type="button" onClick={() => addTier({})}>
             <Icon icon="lucide:plus" style={{ fontSize: 16 }} /> Ingresso pago
           </Button>
-          <Button variante="contorno" type="button" onClick={() => addTier(true)}>
+          <Button variante="contorno" type="button" onClick={() => addTier({ isFree: true })}>
             <Icon icon="lucide:plus" style={{ fontSize: 16 }} /> Ingresso gratuito
           </Button>
+          <Button variante="contorno" type="button" onClick={() => addTier({ isAddon: true })}>
+            <Icon icon="lucide:plus" style={{ fontSize: 16 }} /> Produto/adicional
+          </Button>
         </div>
+        <p className="corpo-suave mt-2 text-center text-[12.5px] text-tinta-45">
+          Produto/adicional (copo, camiseta, estacionamento) é vendido junto, mas não gera QR de entrada.
+        </p>
 
         {f.tiers.length > 0 && (
           <div className="mt-6 flex flex-col gap-3">
@@ -489,7 +498,7 @@ export function CriarEventoForm({
               <div key={i} className="rounded-[10px] border-[1.5px] border-tinta p-4">
                 <div className="mb-2 flex items-center justify-between">
                   <span className="rotulo text-tinta-60">
-                    {t.isFree ? "Ingresso gratuito" : "Ingresso pago"}
+                    {t.isAddon ? "Produto/adicional" : t.isFree ? "Ingresso gratuito" : "Ingresso pago"}
                   </span>
                   <button
                     type="button"

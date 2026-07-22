@@ -14,6 +14,7 @@ export interface Tier {
   price: number;
   available: number | null; // null = ilimitado
   sold: number;             // pra "m pessoas já garantiram" (§11)
+  isAddon: boolean;         // produto (copo/camiseta) — não gera QR
 }
 
 export interface EventItem {
@@ -159,14 +160,14 @@ export async function getEvent(
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("events")
-      .select("id, slug, title, description, category, icon, venue, city, starts_at, status, cover_url, serial, service_fee_pct, max_installments, tracking_meta_pixel, tracking_ga, theme, ticket_tiers(id, name, description, price, sort_order, capacity, sold)")
+      .select("id, slug, title, description, category, icon, venue, city, starts_at, status, cover_url, serial, service_fee_pct, max_installments, tracking_meta_pixel, tracking_ga, theme, ticket_tiers(id, name, description, price, sort_order, capacity, sold, is_addon)")
       .eq("slug", slug)
       .in("status", ["published", "sold_out"])
       .single();
     if (error || !data) return mockEventBySlug(slug);
 
     const row = data as EventDbRow & {
-      ticket_tiers: { id: string; name: string; description: string | null; price: number; sort_order: number; capacity: number | null; sold: number }[];
+      ticket_tiers: { id: string; name: string; description: string | null; price: number; sort_order: number; capacity: number | null; sold: number; is_addon?: boolean }[];
     };
     const tiers: Tier[] = [...row.ticket_tiers]
       .sort((a, b) => a.sort_order - b.sort_order)
@@ -177,6 +178,7 @@ export async function getEvent(
         price: Number(t.price),
         available: t.capacity == null ? null : Math.max(0, t.capacity - (t.sold ?? 0)),
         sold: t.sold ?? 0,
+        isAddon: !!t.is_addon,
       }));
     return { event: toEventItem(row), tiers };
   } catch {
@@ -222,9 +224,9 @@ export const MOCK_EVENTS: EventItem[] = [
 
 function mockTiers(priceFrom: number): Tier[] {
   return [
-    { id: "pista", name: "Pista", desc: "Acesso à área geral", price: priceFrom, available: null, sold: 0 },
-    { id: "vip", name: "VIP", desc: "Área elevada + open bar", price: priceFrom + 70, available: null, sold: 0 },
-    { id: "camarote", name: "Camarote", desc: "Vista privilegiada + lounge", price: priceFrom + 190, available: null, sold: 0 },
+    { id: "pista", name: "Pista", desc: "Acesso à área geral", price: priceFrom, available: null, sold: 0, isAddon: false },
+    { id: "vip", name: "VIP", desc: "Área elevada + open bar", price: priceFrom + 70, available: null, sold: 0, isAddon: false },
+    { id: "camarote", name: "Camarote", desc: "Vista privilegiada + lounge", price: priceFrom + 190, available: null, sold: 0, isAddon: false },
   ];
 }
 

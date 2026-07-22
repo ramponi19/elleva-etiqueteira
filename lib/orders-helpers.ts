@@ -42,7 +42,7 @@ export async function generateTickets(svc: Svc, orderId: string) {
 
   const { data: its } = await svc
     .from("order_items")
-    .select("event_id, event_title, tier_name, quantity")
+    .select("event_id, event_title, tier_name, quantity, is_addon")
     .eq("order_id", orderId);
 
   const rows: {
@@ -53,6 +53,7 @@ export async function generateTickets(svc: Svc, orderId: string) {
     tier_name: string;
   }[] = [];
   for (const it of its ?? []) {
+    if (it.is_addon) continue; // add-on/produto não gera ingresso com QR
     for (let i = 0; i < it.quantity; i++) {
       rows.push({
         order_id: orderId,

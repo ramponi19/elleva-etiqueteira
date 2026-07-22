@@ -23,7 +23,7 @@ export default async function EditarEvento({ params }: { params: Promise<{ id: s
   const { data: ev } = await supabase
     .from("events")
     .select(
-      "id, title, description, category, subcategory, venue, city, state, cep, address, address_number, address_complement, neighborhood, show_on_maps, starts_at, ends_at, cover_url, producer_name, producer_bio, visibility, absorb_fee, ticket_nomenclature, tracking_meta_pixel, tracking_ga, theme, status, ticket_tiers(name, description, price, capacity, is_free, sort_order)"
+      "id, title, description, category, subcategory, venue, city, state, cep, address, address_number, address_complement, neighborhood, show_on_maps, starts_at, ends_at, cover_url, producer_name, producer_bio, visibility, absorb_fee, ticket_nomenclature, tracking_meta_pixel, tracking_ga, theme, status, ticket_tiers(name, description, price, capacity, is_free, is_addon, sort_order)"
     )
     .eq("id", id)
     .single();
@@ -33,7 +33,7 @@ export default async function EditarEvento({ params }: { params: Promise<{ id: s
   const start = split(ev.starts_at);
   const end = split(ev.ends_at);
 
-  type TierRow = { name: string; description: string | null; price: number; capacity: number | null; is_free: boolean | null; sort_order: number };
+  type TierRow = { name: string; description: string | null; price: number; capacity: number | null; is_free: boolean | null; is_addon: boolean | null; sort_order: number };
   const tiers = ((ev.ticket_tiers ?? []) as TierRow[])
     .sort((a, b) => a.sort_order - b.sort_order)
     .map((t) => ({
@@ -42,6 +42,7 @@ export default async function EditarEvento({ params }: { params: Promise<{ id: s
       price: t.price != null ? String(t.price) : "",
       capacity: t.capacity ? String(t.capacity) : "",
       isFree: t.is_free ?? false,
+      isAddon: t.is_addon ?? false,
     }));
 
   const initial = {
@@ -63,7 +64,7 @@ export default async function EditarEvento({ params }: { params: Promise<{ id: s
     city: ev.city,
     state: ev.state ?? "",
     showOnMaps: ev.show_on_maps ?? true,
-    tiers: tiers.length ? tiers : [{ name: "Inteira", description: "", price: "", capacity: "", isFree: false }],
+    tiers: tiers.length ? tiers : [{ name: "Inteira", description: "", price: "", capacity: "", isFree: false, isAddon: false }],
     absorbFee: ev.absorb_fee ?? false,
     nomenclature: ev.ticket_nomenclature ?? "Ingresso",
     producerName: ev.producer_name ?? "",
