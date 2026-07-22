@@ -1,6 +1,6 @@
 import { randomBytes } from "crypto";
 import type { createServiceClient } from "@/lib/supabase/server";
-import { getResend, FROM_EMAIL } from "@/lib/resend";
+import { sendEmail, isMailerConfigured } from "@/lib/mailer";
 
 type Svc = Awaited<ReturnType<typeof createServiceClient>>;
 
@@ -111,10 +111,9 @@ export async function generateTickets(svc: Svc, orderId: string) {
 }
 
 /** E-mail de confirmação com o visual do ingresso (spec Fase C).
- *  Silencioso se Resend não estiver configurado. */
+ *  Silencioso se o SMTP não estiver configurado. */
 export async function sendConfirmationEmail(svc: Svc, orderId: string) {
-  const resend = getResend();
-  if (!resend) return;
+  if (!isMailerConfigured()) return;
 
   const { data: order } = await svc
     .from("orders")
@@ -175,8 +174,7 @@ export async function sendConfirmationEmail(svc: Svc, orderId: string) {
   </div>`;
 
   try {
-    await resend.emails.send({
-      from: FROM_EMAIL,
+    await sendEmail({
       to: order.buyer_email,
       subject: "Lugar garantido! Seu ingresso chegou — Elleva Tickets",
       html,
@@ -243,10 +241,9 @@ export async function cancelTickets(svc: Svc, orderId: string) {
   await releaseSeats(svc, orderId);
 }
 
-/** E-mail de reembolso (silencioso se Resend não configurado). */
+/** E-mail de reembolso (silencioso se o SMTP não configurado). */
 export async function sendRefundEmail(svc: Svc, orderId: string) {
-  const resend = getResend();
-  if (!resend) return;
+  if (!isMailerConfigured()) return;
   const { data: order } = await svc
     .from("orders")
     .select("buyer_name, buyer_email, total")
@@ -264,8 +261,7 @@ export async function sendRefundEmail(svc: Svc, orderId: string) {
     </div>
   </div>`;
   try {
-    await resend.emails.send({
-      from: FROM_EMAIL,
+    await sendEmail({
       to: order.buyer_email,
       subject: "Pedido reembolsado — Elleva Tickets",
       html,
@@ -275,8 +271,7 @@ export async function sendRefundEmail(svc: Svc, orderId: string) {
 
 /** E-mail de lembrete de evento. */
 export async function sendReminderEmail(to: string, name: string, eventTitle: string, when: string) {
-  const resend = getResend();
-  if (!resend) return;
+  if (!isMailerConfigured()) return;
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
   const html = `
   <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;background:#FAF5EC">
@@ -289,7 +284,7 @@ export async function sendReminderEmail(to: string, name: string, eventTitle: st
     <a href="${appUrl}/conta" style="display:inline-block;margin-top:20px;background:#E8481F;color:#141210;text-decoration:none;font-weight:600;padding:12px 24px;border-radius:9999px">Ver meus ingressos</a>
   </div>`;
   try {
-    await resend.emails.send({ from: FROM_EMAIL, to, subject: `Lembrete: ${eventTitle} — Elleva Tickets`, html });
+    await sendEmail({ to, subject: `Lembrete: ${eventTitle} — Elleva Tickets`, html });
   } catch { /* ignore */ }
 }
 
