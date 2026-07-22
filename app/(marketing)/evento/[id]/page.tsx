@@ -9,6 +9,7 @@ import { getEvent, getEventSlugs } from "@/lib/events";
 import { arteDaCategoria, duotoneDaCategoria, numeroSerie } from "@/lib/arte";
 import { cidadeDoEvento } from "@/lib/cidades";
 import { fmtBRL } from "@/lib/format";
+import { sanitizeRichText, toPlainText } from "@/lib/sanitize";
 import { getAuth } from "@/lib/auth";
 import { JsonLd } from "@/components/seo/json-ld";
 import { SITE_URL } from "@/lib/site";
@@ -83,7 +84,7 @@ export default async function EventPage({
     startDate: event.startsAtISO,
     eventStatus: "https://schema.org/EventScheduled",
     eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
-    description: event.desc || undefined,
+    description: toPlainText(event.desc) || undefined,
     image: [`${SITE_URL}/api/og/evento/${event.id}`],
     location: {
       "@type": "Place",
@@ -154,7 +155,7 @@ export default async function EventPage({
               </h1>
               {event.desc && (
                 <p className="corpo mt-4 max-w-[52ch]" style={{ color: "inherit" }}>
-                  {event.desc}
+                  {toPlainText(event.desc, 180)}
                 </p>
               )}
 
@@ -189,7 +190,14 @@ export default async function EventPage({
       <div className="mt-14 grid grid-cols-1 gap-10 lg:grid-cols-[1.35fr_1fr]">
         <section>
           <h2 className="display-2 text-[24px]">Sobre o evento</h2>
-          <p className="corpo mt-4 max-w-[62ch]">{event.desc}</p>
+          {event.desc ? (
+            <div
+              className="corpo mt-4 max-w-[62ch] [&_a]:text-sol-escuro [&_a]:underline [&_h3]:mt-4 [&_h3]:font-extrabold [&_li]:ml-5 [&_li]:list-disc [&_ol_li]:list-decimal [&_p]:mt-3"
+              dangerouslySetInnerHTML={{ __html: sanitizeRichText(event.desc) }}
+            />
+          ) : (
+            <p className="corpo mt-4 max-w-[62ch] text-tinta-60">Detalhes do evento em breve.</p>
+          )}
           <p className="corpo-suave mt-4 max-w-[62ch]">
             Abertura dos portões uma hora antes. Evento sujeito à classificação
             indicativa. Ingressos não reembolsáveis após a confirmação, conforme
