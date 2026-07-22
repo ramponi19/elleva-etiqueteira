@@ -6,7 +6,7 @@ import { Duotone } from "@/components/ui/duotone";
 import { CanhotoCheckout } from "@/components/elleva/canhoto-checkout";
 import { TickerEscassez } from "@/components/elleva/ticker-escassez";
 import { getEvent, getEventSlugs } from "@/lib/events";
-import { arteDaCategoria, duotoneDaCategoria, numeroSerie } from "@/lib/arte";
+import { arteDoEvento, duotoneDoEvento, numeroSerie } from "@/lib/arte";
 import { cidadeDoEvento } from "@/lib/cidades";
 import { fmtBRL } from "@/lib/format";
 import { sanitizeRichText, toPlainText } from "@/lib/sanitize";
@@ -65,7 +65,7 @@ export default async function EventPage({
   const [data, { user }] = await Promise.all([getEvent(id), getAuth()]);
   if (!data) notFound();
   const { event, tiers } = data;
-  const arte = arteDaCategoria(event.catLabel);
+  const arte = arteDoEvento(event.theme, event.catLabel);
   const serie = numeroSerie(event.serial);
   const cidade = cidadeDoEvento(event);
 
@@ -134,7 +134,7 @@ export default async function EventPage({
                 <Duotone
                   src={event.cover}
                   alt=""
-                  tone={duotoneDaCategoria(event.catLabel)}
+                  tone={duotoneDoEvento(event.theme, event.catLabel)}
                   className="h-full w-full"
                   priority
                   sizes="(max-width: 1024px) 100vw, 640px"

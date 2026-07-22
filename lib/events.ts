@@ -44,6 +44,8 @@ export interface EventItem {
   /** IDs de rastreamento por evento (Meta Pixel / GA) */
   trackingMetaPixel?: string | null;
   trackingGa?: string | null;
+  /** tema da página (sobrepõe a cor da categoria); null = automático */
+  theme?: string | null;
 }
 
 // ---------- Formatação de data (America/Sao_Paulo) ----------
@@ -86,6 +88,7 @@ type EventDbRow = {
   max_installments?: number;
   tracking_meta_pixel?: string | null;
   tracking_ga?: string | null;
+  theme?: string | null;
 };
 
 // Serial derivado do uuid enquanto a migration 0018 (coluna events.serial)
@@ -119,6 +122,7 @@ function toEventItem(row: EventDbRow): EventItem {
     maxInstallments: Number(row.max_installments ?? 12),
     trackingMetaPixel: row.tracking_meta_pixel ?? null,
     trackingGa: row.tracking_ga ?? null,
+    theme: row.theme ?? null,
   };
 }
 
@@ -155,7 +159,7 @@ export async function getEvent(
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("events")
-      .select("id, slug, title, description, category, icon, venue, city, starts_at, status, cover_url, serial, service_fee_pct, max_installments, tracking_meta_pixel, tracking_ga, ticket_tiers(id, name, description, price, sort_order, capacity, sold)")
+      .select("id, slug, title, description, category, icon, venue, city, starts_at, status, cover_url, serial, service_fee_pct, max_installments, tracking_meta_pixel, tracking_ga, theme, ticket_tiers(id, name, description, price, sort_order, capacity, sold)")
       .eq("slug", slug)
       .in("status", ["published", "sold_out"])
       .single();

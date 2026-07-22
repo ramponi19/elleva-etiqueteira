@@ -6,6 +6,7 @@ import { clsx } from "clsx";
 import Icon from "@/components/shared/icon";
 import { Button } from "@/components/ui/button";
 import { createEvent, updateEvent } from "@/lib/actions/events";
+import { TEMAS } from "@/lib/arte";
 import { createClient } from "@/lib/supabase/client";
 
 // ── estilos base compartilhados ────────────────────────────────────────────
@@ -73,6 +74,7 @@ interface FormState {
   producerBio: string;
   trackingMetaPixel: string;
   trackingGa: string;
+  theme: string;
   accepted: boolean;
   visibility: "public" | "private";
 }
@@ -111,6 +113,7 @@ const EMPTY: FormState = {
   producerBio: "",
   trackingMetaPixel: "",
   trackingGa: "",
+  theme: "",
   accepted: false,
   visibility: "public",
 };
@@ -232,6 +235,7 @@ export function CriarEventoForm({
       producerBio: f.producerBio || undefined,
       trackingMetaPixel: f.trackingMetaPixel || undefined,
       trackingGa: f.trackingGa || undefined,
+      theme: f.theme || undefined,
       visibility: f.visibility,
       absorbFee: f.absorbFee,
       nomenclature: f.nomenclature || undefined,
@@ -339,6 +343,25 @@ export function CriarEventoForm({
               placeholder="Ex.: Sertanejo, Stand-up..."
             />
           </div>
+        </div>
+
+        <p className="rotulo mt-6 text-tinta-60">Tema da página</p>
+        <p className="corpo-suave mt-1">A cor que pinta a página do evento (o pôster). Automático segue a categoria.</p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {TEMAS.map((t) => (
+            <button
+              key={t.value || "auto"}
+              type="button"
+              onClick={() => set("theme", t.value)}
+              className={clsx(
+                "flex items-center gap-2 rounded-[var(--radius-pill)] border-[1.5px] px-3 py-2 text-[13px] font-medium transition-colors",
+                f.theme === t.value ? "border-sol bg-papel-2 text-tinta" : "border-tinta text-tinta hover:bg-papel-2"
+              )}
+            >
+              <span className="h-4 w-4 rounded-full border-[1.5px] border-tinta" style={{ background: t.swatch }} />
+              {t.label}
+            </button>
+          ))}
         </div>
       </section>
 

@@ -41,6 +41,7 @@ const EventSchema = z.object({
   nomenclature: optStr,
   trackingMetaPixel: optStr,
   trackingGa: optStr,
+  theme: optStr,
   icon: z.string().optional(),
   coverUrl: z.string().url().optional().or(z.literal("").transform(() => undefined)),
   status: z.enum(["draft", "published"]).default("published"),
@@ -92,6 +93,7 @@ function eventColumns(v: EventData) {
     ticket_nomenclature: v.nomenclature || "Ingresso",
     tracking_meta_pixel: v.trackingMetaPixel ?? null,
     tracking_ga: v.trackingGa ?? null,
+    theme: v.theme || null,
     status: v.status,
   };
 }
