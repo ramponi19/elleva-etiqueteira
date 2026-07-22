@@ -22,7 +22,7 @@ export default async function ContaOverview() {
   const [{ data: tickets }, { data: pend }] = await Promise.all([
     supabase
       .from("tickets")
-      .select("id, code, event_title, tier_name, seat_label, status, created_at")
+      .select("id, code, event_title, tier_name, seat_label, status, created_at, events(certificate_enabled)")
       .order("created_at", { ascending: false }),
     supabase
       .from("orders")
@@ -38,6 +38,7 @@ export default async function ContaOverview() {
       event_title: t.event_title,
       tier_name: t.seat_label ? `${t.tier_name} · ${t.seat_label}` : t.tier_name,
       status: t.status,
+      certEligible: t.status === "used" && !!(t.events as { certificate_enabled?: boolean } | null)?.certificate_enabled,
       qr: await QRCode.toDataURL(t.code, {
         margin: 1,
         width: 220,

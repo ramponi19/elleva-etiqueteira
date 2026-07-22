@@ -85,6 +85,11 @@ interface FormState {
   trackingMetaPixel: string;
   trackingGa: string;
   theme: string;
+  certificateEnabled: boolean;
+  certificateTitle: string;
+  certificateBody: string;
+  certificateHours: string;
+  certificateSigner: string;
   accepted: boolean;
   visibility: "public" | "private";
 }
@@ -127,6 +132,11 @@ const EMPTY: FormState = {
   trackingMetaPixel: "",
   trackingGa: "",
   theme: "",
+  certificateEnabled: false,
+  certificateTitle: "",
+  certificateBody: "",
+  certificateHours: "",
+  certificateSigner: "",
   accepted: false,
   visibility: "public",
 };
@@ -286,6 +296,11 @@ export function CriarEventoForm({
             cols: Number(s.cols) || 1,
           }))
         : undefined,
+      certificateEnabled: f.certificateEnabled,
+      certificateTitle: f.certificateEnabled ? f.certificateTitle || undefined : undefined,
+      certificateBody: f.certificateEnabled ? f.certificateBody || undefined : undefined,
+      certificateHours: f.certificateEnabled ? f.certificateHours || undefined : undefined,
+      certificateSigner: f.certificateEnabled ? f.certificateSigner || undefined : undefined,
     };
     const res = isEdit ? await updateEvent(eventId!, payload) : await createEvent(payload);
     setSaving(false);
@@ -713,9 +728,59 @@ export function CriarEventoForm({
         </div>
       </section>
 
-      {/* 8. Responsabilidades */}
+      {/* 8. Certificado de participação (opcional) */}
       <section className={card}>
-        <SectionHead n={8} title="Responsabilidades" />
+        <SectionHead
+          n={8}
+          title="Certificado de participação"
+          sub="Ideal para palestras, cursos e congressos. O participante baixa o certificado depois do evento — só quem fez check-in."
+        />
+        <label className="flex cursor-pointer items-start gap-2.5 text-[14px] text-tinta">
+          <input
+            type="checkbox"
+            className="mt-0.5 h-4 w-4 accent-[var(--color-sol)]"
+            checked={f.certificateEnabled}
+            onChange={(e) => set("certificateEnabled", e.target.checked)}
+          />
+          <span><strong>Emitir certificado</strong> para este evento.</span>
+        </label>
+
+        {f.certificateEnabled && (
+          <div className="mt-4 flex flex-col gap-4">
+            <div>
+              <label className={labelCls}>Título</label>
+              <input className={input} maxLength={80} placeholder="Certificado de Participação" value={f.certificateTitle} onChange={(e) => set("certificateTitle", e.target.value)} />
+            </div>
+            <div>
+              <label className={labelCls}>Texto do certificado</label>
+              <textarea
+                className={clsx(input, "min-h-[90px] resize-y")}
+                maxLength={600}
+                placeholder="Certificamos que {nome} participou do evento {evento}, realizado em {data}, na cidade de {cidade}."
+                value={f.certificateBody}
+                onChange={(e) => set("certificateBody", e.target.value)}
+              />
+              <span className="corpo-suave mt-1 block">
+                Use as variáveis <code>{"{nome}"}</code>, <code>{"{evento}"}</code>, <code>{"{data}"}</code>, <code>{"{cidade}"}</code>, <code>{"{horas}"}</code> — o sistema preenche cada uma automaticamente. Em branco, usamos um texto padrão.
+              </span>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label className={labelCls}>Carga horária (opcional)</label>
+                <input className={input} maxLength={40} placeholder="Ex.: 8 horas" value={f.certificateHours} onChange={(e) => set("certificateHours", e.target.value)} />
+              </div>
+              <div>
+                <label className={labelCls}>Assinado por (opcional)</label>
+                <input className={input} maxLength={80} placeholder="Ex.: Maria Silva — Coordenadora" value={f.certificateSigner} onChange={(e) => set("certificateSigner", e.target.value)} />
+              </div>
+            </div>
+          </div>
+        )}
+      </section>
+
+      {/* 9. Responsabilidades */}
+      <section className={card}>
+        <SectionHead n={9} title="Responsabilidades" />
         <label className="flex cursor-pointer items-start gap-3 text-[14px] leading-relaxed text-tinta">
           <input
             type="checkbox"

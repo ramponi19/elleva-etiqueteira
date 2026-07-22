@@ -23,7 +23,7 @@ export default async function EditarEvento({ params }: { params: Promise<{ id: s
   const { data: ev } = await supabase
     .from("events")
     .select(
-      "id, title, description, category, subcategory, venue, city, state, cep, address, address_number, address_complement, neighborhood, show_on_maps, starts_at, ends_at, cover_url, producer_name, producer_bio, visibility, absorb_fee, ticket_nomenclature, tracking_meta_pixel, tracking_ga, theme, has_seating, status, ticket_tiers(id, name, description, price, capacity, is_free, is_addon, sort_order), seats(tier_id, sector, row_label, seat_num, pos_row)"
+      "id, title, description, category, subcategory, venue, city, state, cep, address, address_number, address_complement, neighborhood, show_on_maps, starts_at, ends_at, cover_url, producer_name, producer_bio, visibility, absorb_fee, ticket_nomenclature, tracking_meta_pixel, tracking_ga, theme, has_seating, certificate_enabled, certificate_title, certificate_body, certificate_hours, certificate_signer, status, ticket_tiers(id, name, description, price, capacity, is_free, is_addon, sort_order), seats(tier_id, sector, row_label, seat_num, pos_row)"
     )
     .eq("id", id)
     .single();
@@ -87,6 +87,11 @@ export default async function EditarEvento({ params }: { params: Promise<{ id: s
     tiers: tiers.length ? tiers : [{ name: "Inteira", description: "", price: "", capacity: "", isFree: false, isAddon: false }],
     hasSeating: ev.has_seating ?? false,
     sectors,
+    certificateEnabled: ev.certificate_enabled ?? false,
+    certificateTitle: ev.certificate_title ?? "",
+    certificateBody: ev.certificate_body ?? "",
+    certificateHours: ev.certificate_hours ?? "",
+    certificateSigner: ev.certificate_signer ?? "",
     absorbFee: ev.absorb_fee ?? false,
     nomenclature: ev.ticket_nomenclature ?? "Ingresso",
     producerName: ev.producer_name ?? "",

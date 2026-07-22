@@ -53,6 +53,11 @@ const EventSchema = z.object({
   theme: optStr,
   hasSeating: z.coerce.boolean().optional(),
   sectors: z.array(SectorSchema).optional(),
+  certificateEnabled: z.coerce.boolean().optional(),
+  certificateTitle: optStr,
+  certificateBody: optStr,
+  certificateHours: optStr,
+  certificateSigner: optStr,
   icon: z.string().optional(),
   coverUrl: z.string().url().optional().or(z.literal("").transform(() => undefined)),
   status: z.enum(["draft", "published"]).default("published"),
@@ -106,6 +111,11 @@ function eventColumns(v: EventData) {
     tracking_ga: v.trackingGa ?? null,
     theme: v.theme || null,
     has_seating: v.hasSeating ?? false,
+    certificate_enabled: v.certificateEnabled ?? false,
+    certificate_title: v.certificateTitle ?? null,
+    certificate_body: v.certificateBody ?? null,
+    certificate_hours: v.certificateHours ?? null,
+    certificate_signer: v.certificateSigner ?? null,
     status: v.status,
   };
 }

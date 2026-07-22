@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { IngressoCard } from "@/components/elleva/ingresso-card";
 import { fmtBRL } from "@/lib/format";
 import { transferTicket } from "@/lib/actions/tickets";
+import { issueCertificate } from "@/lib/actions/certificates";
 
 export interface TicketView {
   id: string;
@@ -15,6 +16,7 @@ export interface TicketView {
   tier_name: string;
   status: string;
   qr: string;
+  certEligible?: boolean; // evento emite certificado (botão aparece nos utilizados)
 }
 
 export interface PendingOrder {
@@ -69,6 +71,15 @@ export function IngressosTabs({ tickets, pendentes = [] }: { tickets: TicketView
     startTransition(async () => {
       const r = await transferTicket(id, email);
       setMsg(r.ok ? `Ingresso transferido para ${email}.` : r.error ?? "Erro ao transferir.");
+    });
+  }
+
+  function baixarCertificado(id: string) {
+    setMsg(null);
+    startTransition(async () => {
+      const r = await issueCertificate(id);
+      if (r.ok) window.open(`/certificado/${r.code}`, "_blank", "noopener");
+      else setMsg(r.error ?? "Não foi possível gerar o certificado.");
     });
   }
 
@@ -142,6 +153,16 @@ export function IngressosTabs({ tickets, pendentes = [] }: { tickets: TicketView
                   className="inline-flex items-center justify-center gap-1.5 rounded-[10px] border-[1.5px] border-tinta px-3 py-2 text-[13px] font-medium text-tinta transition-colors hover:bg-papel-2 disabled:opacity-50"
                 >
                   <Icon icon="lucide:send" style={{ fontSize: 15 }} /> Transferir ingresso
+                </button>
+              )}
+              {tab === "used" && t.certEligible && (
+                <button
+                  type="button"
+                  onClick={() => baixarCertificado(t.id)}
+                  disabled={pending}
+                  className="inline-flex items-center justify-center gap-1.5 rounded-[10px] border-[1.5px] border-tinta px-3 py-2 text-[13px] font-medium text-tinta transition-colors hover:bg-papel-2 disabled:opacity-50"
+                >
+                  <Icon icon="lucide:award" style={{ fontSize: 15 }} /> Baixar certificado
                 </button>
               )}
             </div>
