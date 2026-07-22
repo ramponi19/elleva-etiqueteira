@@ -27,15 +27,16 @@ export async function createClient() {
 }
 
 export async function createServiceClient() {
-  const cookieStore = await cookies();
-
+  // NUNCA passar os cookies da requisição aqui: o @supabase/ssr anexa o JWT
+  // da sessão no Authorization e o PostgREST passa a executar como o USUÁRIO
+  // (RLS aplicado) em vez de service_role. Sem cookies = service de verdade.
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
     {
       cookies: {
         getAll() {
-          return cookieStore.getAll();
+          return [];
         },
         setAll() {},
       },
