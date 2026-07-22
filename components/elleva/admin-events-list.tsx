@@ -6,7 +6,7 @@ import { clsx } from "clsx";
 import { Badge } from "@/components/ui/badge";
 import FeaturedToggle from "@/components/app/featured-toggle";
 import { deleteEvent } from "@/lib/actions/events";
-import { setEventFeePct } from "@/lib/actions/admin";
+import { setEventFeePct, setEventMaxInstallments } from "@/lib/actions/admin";
 
 export interface AdminEvent {
   id: string;
@@ -17,6 +17,7 @@ export interface AdminEvent {
   status: string;
   is_featured: boolean;
   service_fee_pct: number;
+  max_installments: number;
 }
 
 type TabKey = "ativos" | "pendentes" | "encerrados" | "cancelados";
@@ -90,6 +91,23 @@ export function AdminEventsList({ events }: { events: AdminEvent[] }) {
     });
   }
 
+  // nº máximo de parcelas no cartão (padrão 12) — só admin
+  function editParcelas(e: AdminEvent) {
+    const raw = prompt(`Máximo de parcelas no cartão de "${e.title}" (1 a 12):`, String(e.max_installments));
+    if (raw == null) return;
+    const n = parseInt(raw, 10);
+    if (!Number.isInteger(n) || n < 1 || n > 12) {
+      setError("Parcelas inválidas (1–12).");
+      return;
+    }
+    setError(null);
+    startTransition(async () => {
+      const res = await setEventMaxInstallments(e.id, n);
+      if (res.ok) setItems((s) => s.map((ev) => (ev.id === e.id ? { ...ev, max_installments: n } : ev)));
+      else setError(res.error ?? "Erro ao salvar as parcelas.");
+    });
+  }
+
   const card = "rounded-[var(--radius-card)] border-[1.5px] border-tinta bg-white";
 
   return (
@@ -143,6 +161,15 @@ export function AdminEventsList({ events }: { events: AdminEvent[] }) {
                 className="rounded-full border-[1.5px] border-tinta px-3 py-1.5 text-[12px] font-medium tabular-nums text-tinta transition-colors hover:bg-papel-2 disabled:opacity-50"
               >
                 taxa {e.service_fee_pct}%
+              </button>
+              <button
+                type="button"
+                onClick={() => editParcelas(e)}
+                disabled={pending}
+                title="Máximo de parcelas no cartão — clique pra ajustar"
+                className="rounded-full border-[1.5px] border-tinta px-3 py-1.5 text-[12px] font-medium tabular-nums text-tinta transition-colors hover:bg-papel-2 disabled:opacity-50"
+              >
+                até {e.max_installments}x
               </button>
               <FeaturedToggle id={e.id} initial={e.is_featured} />
               <Link

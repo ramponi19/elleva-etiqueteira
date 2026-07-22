@@ -50,6 +50,7 @@ export function CanhotoCheckout({
       0
     )
   );
+  const maxParcelas = event.maxInstallments ?? 12;
 
   function proceed() {
     addItems(
@@ -155,6 +156,11 @@ export function CanhotoCheckout({
           <span className="rotulo text-tinta-60">Total com taxas</span>
           <span className="numero text-[26px]">{fmtBRL(total)}</span>
         </div>
+        {total > 0 && maxParcelas > 1 && (
+          <p className="corpo-suave m-0 mt-1 text-right">
+            ou até <strong className="text-tinta">{maxParcelas}x de {fmtBRL(total / maxParcelas)}</strong> no cartão
+          </p>
+        )}
         <Button
           type="button"
           onClick={prosseguir}

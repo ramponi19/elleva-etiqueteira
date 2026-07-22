@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Icon from "@/components/shared/icon";
 import { createCardOrder } from "@/lib/actions/orders";
+import { fmtBRL } from "@/lib/format";
 import type { CartItem } from "@/lib/cart";
 
 const PUBLIC_KEY = process.env.NEXT_PUBLIC_MP_PUBLIC_KEY;
@@ -22,11 +23,15 @@ export default function CardForm({
   buyer,
   items,
   couponCode,
+  total = 0,
+  maxInstallments = 12,
   onSuccess,
 }: {
   buyer: { name: string; email: string; cpf: string };
   items: CartItem[];
   couponCode?: string;
+  total?: number;
+  maxInstallments?: number;
   onSuccess: () => void;
 }) {
   const mpRef = useRef<MpInstance | null>(null);
@@ -132,7 +137,13 @@ export default function CardForm({
         <input style={input} placeholder="CVV" inputMode="numeric" value={cvv} onChange={(e) => setCvv(e.target.value)} />
       </div>
       <select style={input} value={installments} onChange={(e) => setInstallments(Number(e.target.value))}>
-        {[1, 2, 3, 4, 6, 12].map((n) => <option key={n} value={n}>{n}x</option>)}
+        {[1, 2, 3, 4, 6, 12]
+          .filter((n) => n <= maxInstallments)
+          .map((n) => (
+            <option key={n} value={n}>
+              {n === 1 ? `À vista — ${fmtBRL(total)}` : `${n}x de ${fmtBRL(total / n)}`}
+            </option>
+          ))}
       </select>
 
       {error && <p style={{ fontSize: 13, color: "#d64545" }}>{error}</p>}

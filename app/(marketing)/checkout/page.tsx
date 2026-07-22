@@ -360,6 +360,7 @@ export default function CheckoutPage() {
                 buyer={{ name, email, cpf }}
                 items={items}
                 couponCode={coupon || undefined}
+                total={totalAdj}
                 onSuccess={confirmar}
               />
             </div>

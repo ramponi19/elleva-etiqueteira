@@ -116,6 +116,27 @@ export async function setEventFeePct(
   return { ok: true };
 }
 
+export async function setEventMaxInstallments(
+  eventId: string,
+  n: number
+): Promise<{ ok: boolean; error?: string }> {
+  const { role } = await getAuth();
+  if (role !== "admin") return { ok: false, error: "Sem permissão." };
+  if (!Number.isInteger(n) || n < 1 || n > 12) {
+    return { ok: false, error: "Parcelas inválidas (1–12)." };
+  }
+
+  const svc = await createServiceClient();
+  const { error } = await svc
+    .from("events")
+    .update({ max_installments: n })
+    .eq("id", eventId);
+  if (error) return { ok: false, error: error.message };
+
+  revalidatePath("/admin/eventos");
+  return { ok: true };
+}
+
 export async function setCouponActive(code: string, active: boolean) {
   const { role } = await getAuth();
   if (role !== "admin") return { ok: false };

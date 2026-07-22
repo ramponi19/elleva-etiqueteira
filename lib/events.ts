@@ -39,6 +39,8 @@ export interface EventItem {
   startsAtISO: string;
   /** taxa de serviço (%) paga pelo comprador — events.service_fee_pct */
   feePct: number;
+  /** nº máximo de parcelas no cartão — events.max_installments (padrão 12) */
+  maxInstallments?: number;
 }
 
 // ---------- Formatação de data (America/Sao_Paulo) ----------
@@ -78,6 +80,7 @@ type EventDbRow = {
   ticket_tiers?: { price: number }[];
   serial?: number;
   service_fee_pct?: number;
+  max_installments?: number;
 };
 
 // Serial derivado do uuid enquanto a migration 0018 (coluna events.serial)
@@ -108,6 +111,7 @@ function toEventItem(row: EventDbRow): EventItem {
     serial: row.serial ?? serialFallback(row.id),
     startsAtISO: row.starts_at,
     feePct: Number(row.service_fee_pct ?? 10),
+    maxInstallments: Number(row.max_installments ?? 12),
   };
 }
 
@@ -144,7 +148,7 @@ export async function getEvent(
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("events")
-      .select("id, slug, title, description, category, icon, venue, city, starts_at, status, cover_url, serial, service_fee_pct, ticket_tiers(id, name, description, price, sort_order, capacity, sold)")
+      .select("id, slug, title, description, category, icon, venue, city, starts_at, status, cover_url, serial, service_fee_pct, max_installments, ticket_tiers(id, name, description, price, sort_order, capacity, sold)")
       .eq("slug", slug)
       .in("status", ["published", "sold_out"])
       .single();
