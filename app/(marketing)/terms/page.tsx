@@ -7,7 +7,7 @@ const SECOES = [
   { t: "2. Compra de ingressos", d: "Os ingressos são vendidos pelos produtores dos eventos. A confirmação da compra é enviada por e-mail e fica disponível na sua conta. Preços e taxas são exibidos antes da finalização do pagamento." },
   { t: "3. Cancelamento e reembolso", d: "As condições de cancelamento e reembolso seguem a legislação vigente e a política de cada evento. Salvo indicação em contrário, ingressos podem não ser reembolsáveis após a confirmação." },
   { t: "4. Responsabilidades", d: "O produtor é responsável pela realização do evento. A Elleva Tickets atua como intermediadora da venda e do pagamento." },
-  { t: "5. Contato", d: "Dúvidas sobre estes termos: contato@elleva.com.br." },
+  { t: "5. Contato", d: "Dúvidas sobre estes termos: contato@ellevaeventos.com.br." },
 ];
 
 export default function TermsPage() {

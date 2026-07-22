@@ -121,7 +121,7 @@ export default async function ProdutorVendas() {
                   <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] text-tinta-60">
                     <span>{l.vendidos} vendido(s)</span>
                     <span>Check-in: <strong className="text-tinta">{l.usados}/{l.emitidos}</strong> ({pct}%)</span>
-                    <Badge tom={l.status === "published" ? "sol" : l.status === "sold_out" ? "cartaz" : "papel"}>{l.status}</Badge>
+                    <Badge tom={l.status === "published" ? "sol" : l.status === "sold_out" ? "cartaz" : "papel"}>{({ published: "Publicado", sold_out: "Esgotado", draft: "Rascunho", cancelled: "Cancelado" } as Record<string, string>)[l.status] ?? l.status}</Badge>
                   </div>
                 </div>
               );

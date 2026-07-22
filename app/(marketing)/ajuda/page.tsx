@@ -6,7 +6,7 @@ const FAQ = [
   { t: "Como recebo meus ingressos?", d: "Após a confirmação do pagamento, seus ingressos ficam em Meus ingressos, com o QR code para apresentar na entrada do evento. Também enviamos por e-mail." },
   { t: "Como faço para criar um evento?", d: "No menu, clique em Criar evento. Sua conta é habilitada como produtora automaticamente e você poderá cadastrar o evento e os lotes de ingressos." },
   { t: "Cancelamento e reembolso", d: "As condições seguem a legislação vigente e a política de cada evento. Consulte a página do evento para detalhes." },
-  { t: "Falar com a gente", d: "Precisa de ajuda com um pedido? Escreva para contato@elleva.com.br que retornamos o mais rápido possível." },
+  { t: "Falar com a gente", d: "Precisa de ajuda com um pedido? Escreva para contato@ellevaeventos.com.br que retornamos o mais rápido possível." },
 ];
 
 export default function AjudaPage() {

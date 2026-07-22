@@ -22,7 +22,7 @@ const COLUNAS: { titulo: string; links: { label: string; href: string }[] }[] = 
   {
     titulo: "Contato",
     links: [
-      { label: "contato@elleva.com.br", href: "mailto:contato@elleva.com.br" },
+      { label: "contato@ellevaeventos.com.br", href: "mailto:contato@ellevaeventos.com.br" },
       { label: "Instagram", href: "https://instagram.com" },
       { label: "WhatsApp", href: "https://wa.me/" },
     ],

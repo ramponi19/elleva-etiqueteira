@@ -124,7 +124,7 @@ export function ContaPerfilForm({
 
   function excluir() {
     if (!confirm("Tem certeza que deseja excluir sua conta? Esta ação é permanente.")) return;
-    window.location.href = `mailto:contato@elleva.com.br?subject=${encodeURIComponent(
+    window.location.href = `mailto:contato@ellevaeventos.com.br?subject=${encodeURIComponent(
       "Exclusão de conta"
     )}&body=${encodeURIComponent(`Solicito a exclusão da minha conta (${initialEmail}).`)}`;
   }

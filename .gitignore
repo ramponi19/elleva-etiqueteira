@@ -43,3 +43,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# relatorios locais de QA (prints com dados de teste — repo publico)
+/relatorios-locais/

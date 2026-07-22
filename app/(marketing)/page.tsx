@@ -17,7 +17,7 @@ const JSONLD_SITE = {
       "@type": "Organization",
       name: "Elleva Tickets",
       url: SITE_URL,
-      email: "contato@elleva.com.br",
+      email: "contato@ellevaeventos.com.br",
     },
     {
       "@type": "WebSite",
