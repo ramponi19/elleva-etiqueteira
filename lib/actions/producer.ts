@@ -31,3 +31,35 @@ export async function becomeProducerAndGo(formData: FormData) {
   const dest = allowed ? to : "/produtor";
   redirect(dest);
 }
+
+/** Salva a conta de repasse (chave Pix) do produtor. */
+export async function savePayoutAccount(input: {
+  pixType: string;
+  pixKey: string;
+  holder: string;
+  doc: string;
+}): Promise<{ ok: boolean; error?: string }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "Sem sessão." };
+
+  const pixKey = input.pixKey.trim();
+  if (!pixKey) return { ok: false, error: "Informe a chave Pix." };
+  if (!input.holder.trim()) return { ok: false, error: "Informe o titular da conta." };
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({
+      payout_pix_type: input.pixType || null,
+      payout_pix_key: pixKey,
+      payout_holder: input.holder.trim(),
+      payout_doc: input.doc.trim() || null,
+    })
+    .eq("id", user.id);
+  if (error) return { ok: false, error: error.message };
+
+  revalidatePath("/produtor/financeiro");
+  return { ok: true };
+}
