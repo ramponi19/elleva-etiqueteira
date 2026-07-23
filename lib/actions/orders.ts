@@ -365,7 +365,13 @@ export async function createCardOrder(input: z.input<typeof CardSchema>): Promis
     return { ok: false, error: "Pagamento recusado pelo emissor do cartão." };
   } catch (e) {
     await svc.from("orders").update({ status: "cancelled" }).eq("id", prep.orderId);
-    return { ok: false, error: e instanceof Error ? e.message : "Falha ao processar o cartão" };
+    // O SDK do Mercado Pago lança ApiError (não Error nativo) — extrai o motivo real
+    // pra registrar no log e dar um retorno menos opaco ao comprador.
+    const err = e as { message?: string; error?: string; status?: number; cause?: Array<{ code?: string; description?: string }> };
+    const first = Array.isArray(err?.cause) ? err.cause[0] : undefined;
+    const detail = first?.description || first?.code || err?.error || (e instanceof Error ? e.message : "");
+    console.error("[createCardOrder] Mercado Pago falhou:", JSON.stringify({ detail, status: err?.status, cause: err?.cause }));
+    return { ok: false, error: detail ? `Não foi possível cobrar o cartão (${detail}).` : "Falha ao processar o cartão." };
   }
 }
 
