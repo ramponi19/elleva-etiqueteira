@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Icon from "@/components/shared/icon";
 import { createCardOrder } from "@/lib/actions/orders";
+import { isValidCPF } from "@/lib/cpf";
 import { fmtBRL } from "@/lib/format";
 import type { CartItem } from "@/lib/cart";
 
@@ -78,6 +79,10 @@ export default function CardForm({
       setError("Preencha nome e e-mail.");
       return;
     }
+    if (!isValidCPF(buyer.cpf)) {
+      setError("Esse CPF não bateu. Confere os números?");
+      return;
+    }
     const mp = mpRef.current;
     if (!mp) {
       setError("Carregando pagamento, tente novamente em instantes.");
@@ -97,7 +102,7 @@ export default function CardForm({
         cardExpirationYear: yy.length === 2 ? `20${yy}` : yy,
         securityCode: cvv,
         identificationType: "CPF",
-        identificationNumber: buyer.cpf.replace(/\D/g, "") || "00000000000",
+        identificationNumber: buyer.cpf.replace(/\D/g, ""),
       });
       const bin = number.replace(/\D/g, "").slice(0, 6);
       const pm = await mp.getPaymentMethods({ bin });

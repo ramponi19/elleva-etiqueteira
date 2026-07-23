@@ -6,6 +6,7 @@ import { clsx } from "clsx";
 import Icon from "@/components/shared/icon";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
+import { isValidCPF } from "@/lib/cpf";
 
 export interface PerfilData {
   fullName: string;
@@ -98,6 +99,7 @@ export function ContaPerfilForm({
 
   async function saveBuyer() {
     setErr(null);
+    if (b.cpf.trim() && !isValidCPF(b.cpf)) return flash(setErr, "Esse CPF não bateu. Confere os números?");
     setSaving(true);
     const { error } = await supabase
       .from("profiles")

@@ -7,6 +7,7 @@ import { useCart } from "@/lib/cart";
 import { fmtBRL } from "@/lib/format";
 import { feeOf, round2 } from "@/lib/fees";
 import { createOrder, getOrderStatus, previewCoupon } from "@/lib/actions/orders";
+import { isValidCPF } from "@/lib/cpf";
 import CardForm from "@/components/marketing/card-form";
 import { Barras } from "@/components/ui/barras";
 import { Button } from "@/components/ui/button";
@@ -120,6 +121,10 @@ export default function CheckoutPage() {
     setError(null);
     if (!name.trim() || !email.trim()) {
       setError("Faltou nome ou e-mail. Preenche pra gente emitir o ingresso.");
+      return;
+    }
+    if (!isValidCPF(cpf)) {
+      setError("Esse CPF não bateu. Confere os números?");
       return;
     }
     setLoading(true);
@@ -311,7 +316,7 @@ export default function CheckoutPage() {
               <input id="ck-zap" className={inputCls} inputMode="tel" placeholder="(19) 99999-9999" value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} />
             </div>
             <div className="sm:col-span-2">
-              <label className={labelCls} htmlFor="ck-cpf">CPF (pra meia-entrada)</label>
+              <label className={labelCls} htmlFor="ck-cpf">CPF (conferido na entrada)</label>
               <input id="ck-cpf" className={inputCls} inputMode="numeric" placeholder="000.000.000-00" value={cpf} onChange={(e) => setCpf(e.target.value)} />
             </div>
           </div>

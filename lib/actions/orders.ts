@@ -5,6 +5,7 @@ import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { getPaymentProvider } from "@/lib/payments";
 import { markOrderPaid, claimSeats } from "@/lib/orders-helpers";
 import { feeUnit, round2, DEFAULT_FEE_PCT } from "@/lib/fees";
+import { isValidCPF } from "@/lib/cpf";
 
 const isUuid = (s: string) =>
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
@@ -30,7 +31,7 @@ const ItemSchema = z.object({
 const BaseSchema = z.object({
   buyerName: z.string().min(1, "Informe seu nome"),
   buyerEmail: z.string().email("E-mail inválido"),
-  buyerCpf: z.string().optional(),
+  buyerCpf: z.string().refine(isValidCPF, { message: "Esse CPF não bateu. Confere os números?" }),
   buyerWhatsapp: z.string().optional(),
   couponCode: z.string().optional(),
   items: z.array(ItemSchema).min(1, "Carrinho vazio"),
