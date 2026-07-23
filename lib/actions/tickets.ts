@@ -6,8 +6,9 @@ import { getAuth } from "@/lib/auth";
 import { createServiceClient } from "@/lib/supabase/server";
 import { onlyDigits } from "@/lib/cpf";
 
-/** Operador que está validando na portaria (pra auditoria). */
-export interface Operador { name?: string; doc?: string }
+/** Operador que está validando na portaria (pra auditoria).
+ *  Se vier `pin`, o servidor resolve o nome/CPF do cadastro (à prova de fraude). */
+export interface Operador { name?: string; doc?: string; pin?: string }
 
 export type ValidateResult =
   | {
@@ -126,10 +127,23 @@ export async function validateByToken(token: string, rawCode: string, operator?:
 
   const { data: ev } = await svc
     .from("events")
-    .select("id")
+    .select("id, producer_id")
     .eq("checkin_token", token)
     .single();
   if (!ev) return { ok: false, reason: "unauthorized", message: "Link de check-in inválido ou revogado." };
+
+  // operador por PIN: resolve nome/CPF do cadastro (não confia no cliente)
+  if (operator?.pin) {
+    const { data: op } = await svc
+      .from("gate_operators")
+      .select("name, doc")
+      .eq("producer_id", ev.producer_id)
+      .eq("pin", operator.pin.trim())
+      .eq("active", true)
+      .maybeSingle();
+    if (!op) return { ok: false, reason: "forbidden", message: "PIN de operador inválido ou revogado." };
+    operator = { name: op.name as string, doc: op.doc as string };
+  }
 
   const { data: ticket } = await svc
     .from("tickets")

@@ -6,6 +6,7 @@ import { clsx } from "clsx";
 import Icon from "@/components/shared/icon";
 import { Button } from "@/components/ui/button";
 import { validateTicket, validateByToken, type ValidateResult, type Operador } from "@/lib/actions/tickets";
+import { gateRequiresPin, resolveGateOperator } from "@/lib/actions/operators";
 import { isValidCPF, formatCPF } from "@/lib/cpf";
 
 const CameraScanner = dynamic(() => import("@/components/app/camera-scanner"), { ssr: false });
@@ -23,9 +24,12 @@ export function TicketValidatorElleva({ token }: { token?: string } = {}) {
 
   const [operator, setOperator] = useState<Operador | null>(null);
   const [opForm, setOpForm] = useState({ name: "", doc: "" });
+  const [pin, setPin] = useState("");
   const [opErr, setOpErr] = useState<string | null>(null);
+  const [requiresPin, setRequiresPin] = useState<boolean | null>(null);
+  const [checking, setChecking] = useState(false);
 
-  // modo portaria (token): carrega o operador salvo no dispositivo
+  // modo portaria (token): carrega o operador salvo + descobre se exige PIN
   useEffect(() => {
     if (!token) return;
     try {
@@ -36,7 +40,26 @@ export function TicketValidatorElleva({ token }: { token?: string } = {}) {
     } catch {
       /* ignore */
     }
+    gateRequiresPin(token).then((v) => setRequiresPin(v)).catch(() => setRequiresPin(false));
   }, [token]);
+
+  async function entrarComPin(e: React.FormEvent) {
+    e.preventDefault();
+    setOpErr(null);
+    const clean = pin.trim();
+    if (clean.length < 4) return setOpErr("Digite o PIN (4 dígitos).");
+    setChecking(true);
+    const op = await resolveGateOperator(token!, clean);
+    setChecking(false);
+    if (!op) return setOpErr("PIN inválido ou revogado.");
+    const full: Operador = { name: op.name, doc: op.doc, pin: clean };
+    setOperator(full);
+    try {
+      localStorage.setItem(OP_KEY, JSON.stringify(full));
+    } catch {
+      /* ignore */
+    }
+  }
 
   function salvarOperador(e: React.FormEvent) {
     e.preventDefault();
@@ -56,6 +79,8 @@ export function TicketValidatorElleva({ token }: { token?: string } = {}) {
     setOperator(null);
     setResult(null);
     setOpForm({ name: "", doc: "" });
+    setPin("");
+    setOpErr(null);
     try {
       localStorage.removeItem(OP_KEY);
     } catch {
@@ -81,6 +106,35 @@ export function TicketValidatorElleva({ token }: { token?: string } = {}) {
 
   // Portaria sem operador identificado → pede identificação primeiro
   if (token && !operator) {
+    if (requiresPin === null) {
+      return <div className="max-w-[460px]"><p className="corpo-suave">Carregando…</p></div>;
+    }
+    if (requiresPin) {
+      // produtor cadastrou operadores → entra por PIN (identidade travada)
+      return (
+        <div className="max-w-[460px]">
+          <p className="rotulo text-sol-escuro">PIN do operador</p>
+          <p className="corpo-suave mb-3 mt-1">
+            Digite seu PIN (os 4 primeiros dígitos do seu CPF) para liberar entradas.
+          </p>
+          <form onSubmit={entrarComPin} className="flex gap-2">
+            <input
+              className={inputTexto}
+              inputMode="numeric"
+              maxLength={6}
+              placeholder="PIN"
+              value={pin}
+              onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}
+            />
+            <Button type="submit" variante="tinta" disabled={checking}>
+              {checking ? "..." : "Entrar"}
+            </Button>
+          </form>
+          {opErr && <p className="mt-2 text-[13px] text-sol-escuro">{opErr}</p>}
+        </div>
+      );
+    }
+    // sem operadores cadastrados → auto-identificação (nome + CPF)
     return (
       <div className="max-w-[460px]">
         <p className="rotulo text-sol-escuro">Quem está validando?</p>

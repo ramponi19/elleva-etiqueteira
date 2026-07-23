@@ -3,6 +3,7 @@ import { getAuth } from "@/lib/auth";
 import { createServiceClient } from "@/lib/supabase/server";
 import { TicketValidatorElleva } from "@/components/elleva/ticket-validator";
 import { CheckinLinks } from "@/components/elleva/checkin-links";
+import { OperadoresPortaria, type OperadorView } from "@/components/elleva/operadores-portaria";
 
 export const metadata: Metadata = { title: "Validar ingresso · Produtor" };
 
@@ -19,6 +20,20 @@ export default async function ProdutorValidar() {
     list = (data ?? []).map((e) => ({ id: e.id, title: e.title, token: e.checkin_token as string }));
   } catch {
     list = [];
+  }
+
+  // operadores de portaria do produtor
+  let operators: OperadorView[] = [];
+  try {
+    const svc = await createServiceClient();
+    const { data } = await svc
+      .from("gate_operators")
+      .select("id, name, doc, pin, active")
+      .eq("producer_id", user!.id)
+      .order("created_at", { ascending: true });
+    operators = (data ?? []) as OperadorView[];
+  } catch {
+    operators = [];
   }
 
   return (
@@ -41,6 +56,14 @@ export default async function ProdutorValidar() {
           </p>
           <CheckinLinks events={list} />
         </div>
+      </div>
+
+      <div className="mt-12 border-t-[1.5px] border-dashed border-tinta pt-8">
+        <h2 className="mb-1 text-[18px] font-extrabold text-tinta">Operadores de portaria</h2>
+        <p className="corpo-suave mb-4">
+          Quem valida se identifica por PIN — toda entrada liberada fica registrada com o nome de quem validou.
+        </p>
+        <OperadoresPortaria initial={operators} />
       </div>
     </div>
   );
