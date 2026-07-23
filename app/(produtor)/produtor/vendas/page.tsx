@@ -2,11 +2,9 @@ import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { getAuth } from "@/lib/auth";
 import { fmtBRL } from "@/lib/format";
-import { lastNDays } from "@/lib/sales";
-import Icon from "@/components/shared/icon";
 import { Badge } from "@/components/ui/badge";
 import { EmBreve } from "@/components/elleva/em-breve";
-import { SalesBars } from "@/components/elleva/sales-bars";
+import { VendasResumo, type VendaRow } from "@/components/elleva/vendas-resumo";
 
 export const metadata: Metadata = { title: "Vendas · Produtor" };
 
@@ -15,7 +13,7 @@ type ItemRow = {
   event_title: string;
   quantity: number;
   unit_price: number;
-  orders: { status: string; created_at: string } | { status: string; created_at: string }[];
+  orders: { id: string; status: string; created_at: string } | { id: string; status: string; created_at: string }[];
 };
 const ord = (r: ItemRow) => (Array.isArray(r.orders) ? r.orders[0] : r.orders);
 
@@ -38,7 +36,7 @@ export default async function ProdutorVendas() {
     const [{ data: it }, { data: tk }] = await Promise.all([
       supabase
         .from("order_items")
-        .select("event_id, event_title, quantity, unit_price, orders!inner(status, created_at)")
+        .select("event_id, event_title, quantity, unit_price, orders!inner(id, status, created_at)")
         .in("event_id", ids)
         .eq("orders.status", "paid"),
       supabase.from("tickets").select("event_id, status").in("event_id", ids),
@@ -47,17 +45,12 @@ export default async function ProdutorVendas() {
     tickets = tk ?? [];
   }
 
-  const receita = items.reduce((a, i) => a + Number(i.unit_price) * i.quantity, 0);
-  const vendidos = items.reduce((a, i) => a + i.quantity, 0);
-  const pedidos = new Set(items.map((i) => ord(i)?.created_at)).size;
-  const ticketMedio = pedidos ? receita / pedidos : 0;
-  const serie = lastNDays(
-    items.map((i) => ({
-      date: ord(i)?.created_at ?? new Date().toISOString(),
-      amount: Number(i.unit_price) * i.quantity,
-    })),
-    14
-  );
+  const paidRows: VendaRow[] = items.map((i) => ({
+    date: ord(i)?.created_at ?? "",
+    amount: Number(i.unit_price) * i.quantity,
+    qty: i.quantity,
+    orderId: ord(i)?.id ?? "",
+  }));
 
   type Agg = { title: string; receita: number; vendidos: number; emitidos: number; usados: number; status: string };
   const byEvent = new Map<string, Agg>();
@@ -73,12 +66,6 @@ export default async function ProdutorVendas() {
   const linhas = [...byEvent.values()].sort((a, b) => b.receita - a.receita);
 
   const card = "rounded-[var(--radius-card)] border-[1.5px] border-tinta bg-white";
-  const stats = [
-    { label: "Receita (pagos)", value: fmtBRL(receita), icon: "lucide:wallet" },
-    { label: "Ingressos vendidos", value: String(vendidos), icon: "lucide:ticket" },
-    { label: "Pedidos pagos", value: String(pedidos), icon: "lucide:shopping-bag" },
-    { label: "Ticket médio", value: fmtBRL(ticketMedio), icon: "lucide:trending-up" },
-  ];
 
   return (
     <div className="p-6 sm:p-8">
@@ -89,24 +76,7 @@ export default async function ProdutorVendas() {
         <EmBreve icon="lucide:bar-chart-3" nota="Crie um evento para começar a vender e acompanhar aqui." />
       ) : (
         <>
-          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-            {stats.map((s) => (
-              <div key={s.label} className={`${card} p-5`}>
-                <span className="flex h-10 w-10 items-center justify-center rounded-[10px] border-[1.5px] border-tinta text-sol">
-                  <Icon icon={s.icon} style={{ fontSize: 20 }} />
-                </span>
-                <p className="corpo-suave mt-3">{s.label}</p>
-                <p className="numero mt-0.5 text-[24px] text-tinta">{s.value}</p>
-              </div>
-            ))}
-          </div>
-
-          <div className={`${card} mt-6 p-6`}>
-            <h2 className="rotulo text-tinta-60">Receita — últimos 14 dias</h2>
-            <div className="mt-4">
-              <SalesBars data={serie} />
-            </div>
-          </div>
+          <VendasResumo rows={paidRows} />
 
           <h2 className="mb-3 mt-8 text-[18px] font-extrabold text-tinta">Por evento</h2>
           <div className={`${card} overflow-hidden`}>

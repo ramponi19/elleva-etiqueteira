@@ -4,6 +4,7 @@ import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { clsx } from "clsx";
 import { Badge } from "@/components/ui/badge";
+import { ConfirmDialog, PromptDialog } from "@/components/ui/modal";
 import FeaturedToggle from "@/components/app/featured-toggle";
 import { deleteEvent } from "@/lib/actions/events";
 import { setEventFeePct, setEventMaxInstallments } from "@/lib/actions/admin";
@@ -49,6 +50,9 @@ export function AdminEventsList({ events }: { events: AdminEvent[] }) {
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [now] = useState(() => Date.now());
+  const [deleteTarget, setDeleteTarget] = useState<AdminEvent | null>(null);
+  const [feeTarget, setFeeTarget] = useState<AdminEvent | null>(null);
+  const [parcelasTarget, setParcelasTarget] = useState<AdminEvent | null>(null);
 
   const grouped = useMemo(() => {
     const g: Record<TabKey, AdminEvent[]> = { ativos: [], pendentes: [], encerrados: [], cancelados: [] };
@@ -58,52 +62,42 @@ export function AdminEventsList({ events }: { events: AdminEvent[] }) {
 
   const lista = grouped[tab];
 
-  function remove(id: string, title: string) {
-    if (!confirm(`Excluir "${title}"? Esta ação é permanente.`)) return;
+  function doRemove() {
+    const t = deleteTarget;
+    if (!t) return;
     setError(null);
     startTransition(async () => {
-      const res = await deleteEvent(id);
-      if (res.ok) setItems((s) => s.filter((e) => e.id !== id));
+      const res = await deleteEvent(t.id);
+      setDeleteTarget(null);
+      if (res.ok) setItems((s) => s.filter((e) => e.id !== t.id));
       else setError(res.error ?? "Erro ao excluir.");
     });
   }
 
   // taxa de serviço negociada por evento (padrão 10%) — só admin
-  function editFee(e: AdminEvent) {
-    const raw = prompt(
-      `Taxa de serviço (%) de "${e.title}" — paga pelo comprador:`,
-      String(e.service_fee_pct)
-    );
-    if (raw == null) return;
+  function doFee(raw: string) {
+    const t = feeTarget;
+    if (!t) return;
     const pct = Number(raw.replace(",", "."));
-    if (!Number.isFinite(pct) || pct < 0 || pct > 100) {
-      setError("Percentual inválido (0–100).");
-      return;
-    }
     setError(null);
     startTransition(async () => {
-      const res = await setEventFeePct(e.id, pct);
-      if (res.ok) {
-        setItems((s) =>
-          s.map((ev) => (ev.id === e.id ? { ...ev, service_fee_pct: pct } : ev))
-        );
-      } else setError(res.error ?? "Erro ao salvar a taxa.");
+      const res = await setEventFeePct(t.id, pct);
+      setFeeTarget(null);
+      if (res.ok) setItems((s) => s.map((ev) => (ev.id === t.id ? { ...ev, service_fee_pct: pct } : ev)));
+      else setError(res.error ?? "Erro ao salvar a taxa.");
     });
   }
 
   // nº máximo de parcelas no cartão (padrão 12) — só admin
-  function editParcelas(e: AdminEvent) {
-    const raw = prompt(`Máximo de parcelas no cartão de "${e.title}" (1 a 12):`, String(e.max_installments));
-    if (raw == null) return;
+  function doParcelas(raw: string) {
+    const t = parcelasTarget;
+    if (!t) return;
     const n = parseInt(raw, 10);
-    if (!Number.isInteger(n) || n < 1 || n > 12) {
-      setError("Parcelas inválidas (1–12).");
-      return;
-    }
     setError(null);
     startTransition(async () => {
-      const res = await setEventMaxInstallments(e.id, n);
-      if (res.ok) setItems((s) => s.map((ev) => (ev.id === e.id ? { ...ev, max_installments: n } : ev)));
+      const res = await setEventMaxInstallments(t.id, n);
+      setParcelasTarget(null);
+      if (res.ok) setItems((s) => s.map((ev) => (ev.id === t.id ? { ...ev, max_installments: n } : ev)));
       else setError(res.error ?? "Erro ao salvar as parcelas.");
     });
   }
@@ -155,35 +149,35 @@ export function AdminEventsList({ events }: { events: AdminEvent[] }) {
               <Badge tom={STATUS_TOM[e.status] ?? "papel"}>{e.status}</Badge>
               <button
                 type="button"
-                onClick={() => editFee(e)}
+                onClick={() => setFeeTarget(e)}
                 disabled={pending}
                 title="Taxa de serviço paga pelo comprador — clique pra negociar"
-                className="rounded-full border-[1.5px] border-tinta px-3 py-1.5 text-[12px] font-medium tabular-nums text-tinta transition-colors hover:bg-papel-2 disabled:opacity-50"
+                className="inline-flex min-h-[38px] items-center rounded-full border-[1.5px] border-tinta px-3 py-2 text-[12px] font-medium tabular-nums text-tinta transition-colors hover:bg-papel-2 disabled:opacity-50"
               >
                 taxa {e.service_fee_pct}%
               </button>
               <button
                 type="button"
-                onClick={() => editParcelas(e)}
+                onClick={() => setParcelasTarget(e)}
                 disabled={pending}
                 title="Máximo de parcelas no cartão — clique pra ajustar"
-                className="rounded-full border-[1.5px] border-tinta px-3 py-1.5 text-[12px] font-medium tabular-nums text-tinta transition-colors hover:bg-papel-2 disabled:opacity-50"
+                className="inline-flex min-h-[38px] items-center rounded-full border-[1.5px] border-tinta px-3 py-2 text-[12px] font-medium tabular-nums text-tinta transition-colors hover:bg-papel-2 disabled:opacity-50"
               >
                 até {e.max_installments}x
               </button>
               <FeaturedToggle id={e.id} initial={e.is_featured} />
               <Link
                 href={`/produtor/eventos/${e.id}`}
-                className="rounded-full border-[1.5px] border-tinta px-3 py-1.5 text-[12px] font-medium text-tinta transition-colors hover:bg-papel-2"
+                className="inline-flex min-h-[38px] items-center rounded-full border-[1.5px] border-tinta px-3 py-2 text-[12px] font-medium text-tinta transition-colors hover:bg-papel-2"
               >
                 Editar
               </Link>
               <button
                 type="button"
-                onClick={() => remove(e.id, e.title)}
+                onClick={() => setDeleteTarget(e)}
                 disabled={pending}
                 aria-label={`Excluir ${e.title}`}
-                className="rounded-full border-[1.5px] border-tinta px-3 py-1.5 text-[12px] font-medium text-sol-escuro transition-colors hover:bg-papel-2 disabled:opacity-50"
+                className="inline-flex min-h-[38px] items-center rounded-full border-[1.5px] border-tinta px-3 py-2 text-[12px] font-medium text-sol-escuro transition-colors hover:bg-papel-2 disabled:opacity-50"
               >
                 Excluir
               </button>
@@ -194,6 +188,47 @@ export function AdminEventsList({ events }: { events: AdminEvent[] }) {
           <p className="corpo-suave px-5 py-12 text-center">Nenhum evento nesta aba.</p>
         )}
       </div>
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={doRemove}
+        title="Excluir evento"
+        message={deleteTarget ? <>Excluir <strong>“{deleteTarget.title}”</strong>? Esta ação é permanente e não pode ser desfeita.</> : null}
+        confirmLabel="Excluir"
+        danger
+        pending={pending}
+      />
+      <PromptDialog
+        open={feeTarget !== null}
+        onClose={() => setFeeTarget(null)}
+        onSubmit={doFee}
+        title="Taxa de serviço"
+        message={feeTarget ? <>Percentual pago pelo comprador em <strong>{feeTarget.title}</strong> (0 a 100).</> : null}
+        label="Taxa (%)"
+        defaultValue={feeTarget ? String(feeTarget.service_fee_pct) : ""}
+        inputMode="numeric"
+        pending={pending}
+        validate={(v) => {
+          const pct = Number(v.replace(",", "."));
+          return Number.isFinite(pct) && pct >= 0 && pct <= 100 ? null : "Percentual inválido (0 a 100).";
+        }}
+      />
+      <PromptDialog
+        open={parcelasTarget !== null}
+        onClose={() => setParcelasTarget(null)}
+        onSubmit={doParcelas}
+        title="Máximo de parcelas"
+        message={parcelasTarget ? <>Parcelas no cartão para <strong>{parcelasTarget.title}</strong> (1 a 12).</> : null}
+        label="Parcelas"
+        defaultValue={parcelasTarget ? String(parcelasTarget.max_installments) : ""}
+        inputMode="numeric"
+        pending={pending}
+        validate={(v) => {
+          const n = parseInt(v, 10);
+          return Number.isInteger(n) && n >= 1 && n <= 12 ? null : "Parcelas inválidas (1 a 12).";
+        }}
+      />
     </div>
   );
 }

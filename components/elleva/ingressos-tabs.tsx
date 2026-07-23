@@ -4,6 +4,7 @@ import { useMemo, useState, useTransition } from "react";
 import { clsx } from "clsx";
 import Icon from "@/components/shared/icon";
 import { Button } from "@/components/ui/button";
+import { PromptDialog } from "@/components/ui/modal";
 import { IngressoCard } from "@/components/elleva/ingresso-card";
 import { fmtBRL } from "@/lib/format";
 import { transferTicket } from "@/lib/actions/tickets";
@@ -33,6 +34,7 @@ export function IngressosTabs({ tickets, pendentes = [] }: { tickets: TicketView
   const [tab, setTab] = useState<TabKey>("valid");
   const [pending, startTransition] = useTransition();
   const [msg, setMsg] = useState<string | null>(null);
+  const [transferId, setTransferId] = useState<string | null>(null);
 
   const grouped = useMemo(() => {
     const g: Record<"valid" | "used" | "cancelled", TicketView[]> = { valid: [], used: [], cancelled: [] };
@@ -62,14 +64,13 @@ export function IngressosTabs({ tickets, pendentes = [] }: { tickets: TicketView
     );
   }
 
-  function transferir(id: string) {
-    const email = prompt(
-      "Transferir este ingresso para qual e-mail?\n(a pessoa vê o ingresso ao entrar na conta Elleva com esse e-mail; o código é renovado)"
-    );
-    if (!email) return;
+  function transferir(email: string) {
+    const id = transferId;
+    if (!id) return;
     setMsg(null);
     startTransition(async () => {
       const r = await transferTicket(id, email);
+      setTransferId(null);
       setMsg(r.ok ? `Ingresso transferido para ${email}.` : r.error ?? "Erro ao transferir.");
     });
   }
@@ -148,7 +149,7 @@ export function IngressosTabs({ tickets, pendentes = [] }: { tickets: TicketView
               {tab === "valid" && (
                 <button
                   type="button"
-                  onClick={() => transferir(t.id)}
+                  onClick={() => setTransferId(t.id)}
                   disabled={pending}
                   className="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-[10px] border-[1.5px] border-tinta px-3 py-2.5 text-[13px] font-medium text-tinta transition-colors hover:bg-papel-2 disabled:opacity-50"
                 >
@@ -171,6 +172,20 @@ export function IngressosTabs({ tickets, pendentes = [] }: { tickets: TicketView
       ) : (
         <p className="corpo-suave py-12 text-center">Nenhum ingresso nesta aba.</p>
       )}
+
+      <PromptDialog
+        open={transferId !== null}
+        onClose={() => setTransferId(null)}
+        onSubmit={transferir}
+        title="Transferir ingresso"
+        message="A pessoa vê o ingresso ao entrar na conta Elleva com esse e-mail. O código é renovado — o seu deixa de valer."
+        label="E-mail de quem vai receber"
+        placeholder="pessoa@email.com"
+        inputMode="email"
+        confirmLabel="Transferir"
+        pending={pending}
+        validate={(v) => (/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v) ? null : "Digite um e-mail válido.")}
+      />
     </div>
   );
 }

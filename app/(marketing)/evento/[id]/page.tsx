@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Icon from "@/components/shared/icon";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { Badge } from "@/components/ui/badge";
@@ -212,6 +213,19 @@ export default async function EventPage({
           </p>
         </section>
         <section className="flex flex-col gap-6">
+          <div className="rounded-[var(--radius-card)] border-[1.5px] border-tinta p-5">
+            <h3 className="rotulo m-0 text-sol-escuro">Local</h3>
+            <p className="corpo m-0 mt-2 font-medium text-tinta">{event.venueCity}</p>
+            <p className="corpo-suave m-0 mt-1">{event.d} {event.mon} · {event.time}</p>
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.venueCity)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-3 inline-flex min-h-[44px] items-center gap-2 rounded-[var(--radius-pill)] border-[1.5px] border-tinta px-4 text-[14px] font-medium text-tinta transition-colors hover:bg-papel-2"
+            >
+              <Icon icon="lucide:map-pin" style={{ fontSize: 17, color: "var(--color-sol-escuro)" }} /> Como chegar
+            </a>
+          </div>
           <div className="rounded-[var(--radius-card)] border-[1.5px] border-tinta p-5">
             <h3 className="rotulo m-0 text-sol-escuro">Meia-entrada</h3>
             <p className="corpo-suave m-0 mt-2">

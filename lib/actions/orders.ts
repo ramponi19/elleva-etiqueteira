@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { getPaymentProvider } from "@/lib/payments";
+import { mpDeclineMessage } from "@/lib/payments/mp-messages";
 import { markOrderPaid, claimSeats } from "@/lib/orders-helpers";
 import { feeUnit, round2, DEFAULT_FEE_PCT } from "@/lib/fees";
 import { isValidCPF } from "@/lib/cpf";
@@ -108,7 +109,7 @@ async function couponDiscount(
   if (base <= 0) return { error: "Este cupom não vale para os itens do carrinho." };
 
   const raw = c.discount_type === "percent"
-    ? Math.round((base * Number(c.discount_value)) / 100)
+    ? Math.round(base * Number(c.discount_value)) / 100 // % exato em centavos (não arredonda pra real cheio)
     : Number(c.discount_value);
   const discount = Math.min(raw, base);
   return { discount, code: norm };
@@ -307,7 +308,7 @@ const CardSchema = BaseSchema.extend({
 });
 
 export type CardResult =
-  | { ok: true; orderId: string }
+  | { ok: true; orderId: string; pending?: boolean }
   | { ok: false; error: string };
 
 export async function createCardOrder(input: z.input<typeof CardSchema>): Promise<CardResult> {
@@ -357,12 +358,12 @@ export async function createCardOrder(input: z.input<typeof CardSchema>): Promis
       return { ok: true, orderId: prep.orderId };
     }
     if (res.status === "pending") {
-      // em análise — webhook confirma depois
-      return { ok: true, orderId: prep.orderId };
+      // em análise antifraude — webhook confirma (ou recusa) depois; NÃO é sucesso ainda
+      return { ok: true, orderId: prep.orderId, pending: true };
     }
     // rejeitado
     await svc.from("orders").update({ status: "cancelled" }).eq("id", prep.orderId);
-    return { ok: false, error: "Pagamento recusado pelo emissor do cartão." };
+    return { ok: false, error: mpDeclineMessage(res.detail) };
   } catch (e) {
     await svc.from("orders").update({ status: "cancelled" }).eq("id", prep.orderId);
     // O SDK do Mercado Pago lança ApiError (não Error nativo) — extrai o motivo real

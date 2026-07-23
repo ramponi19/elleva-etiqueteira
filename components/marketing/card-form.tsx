@@ -45,6 +45,7 @@ export default function CardForm({
   const [installments, setInstallments] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [analise, setAnalise] = useState(false);
 
   useEffect(() => {
     if (!PUBLIC_KEY) return;
@@ -125,6 +126,7 @@ export default function CardForm({
       });
       setLoading(false);
       if (!res.ok) { setError(res.error); return; }
+      if (res.pending) { setAnalise(true); return; } // em análise: NÃO é "garantido" ainda
       onSuccess();
     } catch (e) {
       setLoading(false);
@@ -134,6 +136,20 @@ export default function CardForm({
 
   const inputCls =
     "w-full rounded-[10px] border-[1.5px] border-tinta bg-white px-3.5 py-3 text-[16px] text-tinta outline-none placeholder:text-tinta-35 focus:border-sol";
+
+  if (analise) {
+    return (
+      <div className="mt-3.5 flex items-start gap-3 rounded-[var(--radius-card)] border-[1.5px] border-tinta bg-papel-2 p-5">
+        <Icon icon="solar:clock-circle-bold-duotone" style={{ color: "var(--color-sol-escuro)", fontSize: 34, flexShrink: 0 }} />
+        <div>
+          <p className="m-0 font-bold text-tinta">Pagamento em análise</p>
+          <p className="corpo-suave m-0 mt-1">
+            O banco está confirmando a compra. Assim que aprovar, seus ingressos vão para <strong>Meus ingressos</strong> e você recebe por e-mail. Não precisa pagar de novo.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="mt-3.5 flex flex-col gap-2.5">

@@ -77,7 +77,7 @@ export const mercadoPagoProvider: PaymentProvider = {
     const raw = payment.status;
     const status =
       raw === "approved" ? "approved" : raw === "in_process" || raw === "pending" ? "pending" : "rejected";
-    return { paymentId: String(payment.id), status };
+    return { paymentId: String(payment.id), status, detail: payment.status_detail ?? undefined };
   },
 
   async refund(paymentId: string): Promise<void> {

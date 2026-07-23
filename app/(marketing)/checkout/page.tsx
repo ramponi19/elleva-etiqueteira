@@ -43,6 +43,7 @@ export default function CheckoutPage() {
   const [copied, setCopied] = useState(false);
   const [remaining, setRemaining] = useState(0);
   const [coupon, setCoupon] = useState("");
+  const [appliedCode, setAppliedCode] = useState("");
   const [discount, setDiscount] = useState(0);
   const [couponMsg, setCouponMsg] = useState<string | null>(null);
 
@@ -52,12 +53,23 @@ export default function CheckoutPage() {
     seatId: i.seatId, seatLabel: i.seatLabel,
   }));
 
+  // Se o carrinho muda, o cupom validado deixa de valer → limpa e força reaplicar.
+  const cartSig = items.map((i) => `${i.tierId}:${i.qty}:${i.seatId ?? ""}`).join("|");
+  useEffect(() => {
+    // reset ao mudar o carrinho é intencional
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setDiscount(0);
+    setAppliedCode("");
+    setCouponMsg(null);
+  }, [cartSig]);
+
   async function applyCoupon() {
     setCouponMsg(null);
     if (!coupon.trim()) return;
     const res = await previewCoupon(coupon, cartItems);
-    if (!res.ok) { setDiscount(0); setCouponMsg(res.error); return; }
+    if (!res.ok) { setDiscount(0); setAppliedCode(""); setCouponMsg(res.error); return; }
     setDiscount(res.discount);
+    setAppliedCode(coupon.trim());
     setCouponMsg(`Desconto de ${fmtBRL(res.discount)} aplicado!`);
   }
 
@@ -133,7 +145,7 @@ export default function CheckoutPage() {
       buyerEmail: email,
       buyerCpf: cpf,
       buyerWhatsapp: whatsapp,
-      couponCode: coupon || undefined,
+      couponCode: appliedCode || undefined,
       items: cartItems,
     });
     setLoading(false);
@@ -365,7 +377,7 @@ export default function CheckoutPage() {
               <CardForm
                 buyer={{ name, email, cpf }}
                 items={items}
-                couponCode={coupon || undefined}
+                couponCode={appliedCode || undefined}
                 total={totalAdj}
                 onSuccess={confirmar}
               />

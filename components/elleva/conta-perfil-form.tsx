@@ -6,7 +6,9 @@ import { clsx } from "clsx";
 import Icon from "@/components/shared/icon";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
-import { isValidCPF } from "@/lib/cpf";
+import { ConfirmDialog } from "@/components/ui/modal";
+import { isValidCPF, formatCPF } from "@/lib/cpf";
+import { maskPhone, maskCEP } from "@/lib/format";
 
 export interface PerfilData {
   fullName: string;
@@ -43,6 +45,7 @@ export function ContaPerfilForm({
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const [delOpen, setDelOpen] = useState(false);
 
   const set = <K extends keyof PerfilData>(k: K, v: PerfilData[K]) => setB((s) => ({ ...s, [k]: v }));
 
@@ -125,7 +128,7 @@ export function ContaPerfilForm({
   }
 
   function excluir() {
-    if (!confirm("Tem certeza que deseja excluir sua conta? Esta ação é permanente.")) return;
+    setDelOpen(false);
     window.location.href = `mailto:contato@ellevaeventos.com.br?subject=${encodeURIComponent(
       "Exclusão de conta"
     )}&body=${encodeURIComponent(`Solicito a exclusão da minha conta (${initialEmail}).`)}`;
@@ -222,11 +225,21 @@ export function ContaPerfilForm({
 
         <div className="mt-8">
           <p className="rotulo text-tinta-60">Gerenciamento de conta</p>
-          <button type="button" onClick={excluir} className="mt-1 text-[14px] font-medium text-sol-escuro underline underline-offset-2">
+          <button type="button" onClick={() => setDelOpen(true)} className="mt-1 inline-flex min-h-[44px] items-center text-[14px] font-medium text-sol-escuro underline underline-offset-2">
             Excluir a conta
           </button>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={delOpen}
+        onClose={() => setDelOpen(false)}
+        onConfirm={excluir}
+        title="Excluir a conta"
+        message="Vamos abrir seu e-mail com uma solicitação de exclusão para o nosso time. A conta não é apagada na hora — confirmamos e removemos seus dados conforme a LGPD."
+        confirmLabel="Solicitar exclusão"
+        danger
+      />
 
       {/* ── Dados de compra ──────────────────────────────── */}
       <div>
@@ -247,7 +260,7 @@ export function ContaPerfilForm({
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <label className={labelCls}>CPF</label>
-              <input className={input} disabled={!editing} value={b.cpf} onChange={(e) => set("cpf", e.target.value)} placeholder="___.___.___-__" />
+              <input className={input} inputMode="numeric" disabled={!editing} value={b.cpf} onChange={(e) => set("cpf", formatCPF(e.target.value))} placeholder="___.___.___-__" />
             </div>
             <div>
               <label className={labelCls}>Data de Nascimento</label>
@@ -257,7 +270,7 @@ export function ContaPerfilForm({
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <label className={labelCls}>Telefone</label>
-              <input className={input} disabled={!editing} value={b.phone} onChange={(e) => set("phone", e.target.value)} placeholder="(__) _____-____" />
+              <input className={input} inputMode="numeric" disabled={!editing} value={b.phone} onChange={(e) => set("phone", maskPhone(e.target.value))} placeholder="(__) _____-____" />
             </div>
             <div>
               <label className={labelCls}>CEP</label>
@@ -265,7 +278,8 @@ export function ContaPerfilForm({
                 className={input}
                 disabled={!editing}
                 value={b.cep}
-                onChange={(e) => set("cep", e.target.value)}
+                inputMode="numeric"
+                onChange={(e) => set("cep", maskCEP(e.target.value))}
                 onBlur={(e) => editing && lookupCep(e.target.value)}
                 placeholder="_____-___"
               />

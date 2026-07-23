@@ -40,6 +40,8 @@ export type PaymentStatus = "approved" | "pending" | "rejected";
 export interface CardChargeResult {
   paymentId: string;
   status: PaymentStatus;
+  /** motivo cru do gateway (ex.: status_detail do MP) — pra mapear msg ao comprador */
+  detail?: string;
 }
 
 // Status normalizado que o webhook precisa para decidir a ação.
