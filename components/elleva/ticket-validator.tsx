@@ -1,26 +1,74 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { clsx } from "clsx";
 import Icon from "@/components/shared/icon";
 import { Button } from "@/components/ui/button";
-import { validateTicket, validateByToken, type ValidateResult } from "@/lib/actions/tickets";
+import { validateTicket, validateByToken, type ValidateResult, type Operador } from "@/lib/actions/tickets";
+import { isValidCPF, formatCPF } from "@/lib/cpf";
 
 const CameraScanner = dynamic(() => import("@/components/app/camera-scanner"), { ssr: false });
 
+const OP_KEY = "elleva_gate_operator";
+
 // Validador de ingresso no design Cartaz de Show (papel/tinta).
-// Com `token`, valida via link de portaria (sem login); senão, via sessão.
+// Com `token`, valida via link de portaria (sem login) — e exige que o operador
+// se identifique (nome + CPF) antes, pra registrar quem liberou cada entrada.
 export function TicketValidatorElleva({ token }: { token?: string } = {}) {
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [result, setResult] = useState<ValidateResult | null>(null);
 
+  const [operator, setOperator] = useState<Operador | null>(null);
+  const [opForm, setOpForm] = useState({ name: "", doc: "" });
+  const [opErr, setOpErr] = useState<string | null>(null);
+
+  // modo portaria (token): carrega o operador salvo no dispositivo
+  useEffect(() => {
+    if (!token) return;
+    try {
+      const raw = localStorage.getItem(OP_KEY);
+      // hidratação do operador salvo no dispositivo: setState no mount é intencional
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      if (raw) setOperator(JSON.parse(raw));
+    } catch {
+      /* ignore */
+    }
+  }, [token]);
+
+  function salvarOperador(e: React.FormEvent) {
+    e.preventDefault();
+    setOpErr(null);
+    if (!opForm.name.trim()) return setOpErr("Informe seu nome.");
+    if (!isValidCPF(opForm.doc)) return setOpErr("Esse CPF não bateu. Confere os números?");
+    const op: Operador = { name: opForm.name.trim(), doc: opForm.doc };
+    setOperator(op);
+    try {
+      localStorage.setItem(OP_KEY, JSON.stringify(op));
+    } catch {
+      /* ignore */
+    }
+  }
+
+  function trocarOperador() {
+    setOperator(null);
+    setResult(null);
+    setOpForm({ name: "", doc: "" });
+    try {
+      localStorage.removeItem(OP_KEY);
+    } catch {
+      /* ignore */
+    }
+  }
+
   async function run(value: string) {
     if (!value.trim()) return;
     setLoading(true);
-    const res = token ? await validateByToken(token, value) : await validateTicket(value);
+    const res = token
+      ? await validateByToken(token, value, operator ?? undefined)
+      : await validateTicket(value);
     setLoading(false);
     setResult(res);
     if (res.ok) setCode("");
@@ -28,6 +76,37 @@ export function TicketValidatorElleva({ token }: { token?: string } = {}) {
 
   const input =
     "w-full rounded-[10px] border-[1.5px] border-tinta bg-white px-3.5 py-2.5 font-mono text-[15px] uppercase text-tinta outline-none placeholder:text-tinta-35 focus:border-sol";
+  const inputTexto =
+    "w-full rounded-[10px] border-[1.5px] border-tinta bg-white px-3.5 py-2.5 text-[15px] text-tinta outline-none placeholder:text-tinta-35 focus:border-sol";
+
+  // Portaria sem operador identificado → pede identificação primeiro
+  if (token && !operator) {
+    return (
+      <div className="max-w-[460px]">
+        <p className="rotulo text-sol-escuro">Quem está validando?</p>
+        <p className="corpo-suave mb-3 mt-1">
+          Identifique-se para liberar entradas. Fica registrado em cada check-in.
+        </p>
+        <form onSubmit={salvarOperador} className="flex flex-col gap-2">
+          <input
+            className={inputTexto}
+            placeholder="Seu nome"
+            value={opForm.name}
+            onChange={(e) => setOpForm((s) => ({ ...s, name: e.target.value }))}
+          />
+          <input
+            className={inputTexto}
+            inputMode="numeric"
+            placeholder="Seu CPF"
+            value={opForm.doc}
+            onChange={(e) => setOpForm((s) => ({ ...s, doc: formatCPF(e.target.value) }))}
+          />
+          {opErr && <p className="text-[13px] text-sol-escuro">{opErr}</p>}
+          <Button type="submit" variante="tinta" className="mt-1">Começar a validar</Button>
+        </form>
+      </div>
+    );
+  }
 
   const ok = result?.ok;
   // paleta: ok = palco (verde), usado = cartaz (âmbar), inválido = sol-escuro
@@ -41,6 +120,17 @@ export function TicketValidatorElleva({ token }: { token?: string } = {}) {
 
   return (
     <div className="max-w-[460px]">
+      {token && operator && (
+        <div className="mb-3 flex items-center justify-between rounded-[8px] border-[1.5px] border-tinta bg-papel-2 px-3 py-2">
+          <span className="text-[13px] text-tinta">
+            Validando como <strong>{operator.name}</strong>
+          </span>
+          <button type="button" onClick={trocarOperador} className="text-[12px] text-sol-escuro underline underline-offset-2">
+            trocar
+          </button>
+        </div>
+      )}
+
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -117,6 +207,9 @@ export function TicketValidatorElleva({ token }: { token?: string } = {}) {
                   <p className="corpo-suave m-0 mt-1">Confira com o documento na entrada.</p>
                 )}
                 <p className="m-0 mt-1 font-mono text-[12px] text-tinta-60">{result.code}</p>
+                {operator && (
+                  <p className="corpo-suave m-0 mt-1">Validado por {operator.name}</p>
+                )}
               </>
             ) : (
               <>

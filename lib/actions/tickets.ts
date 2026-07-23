@@ -4,6 +4,10 @@ import { randomBytes } from "crypto";
 import { revalidatePath } from "next/cache";
 import { getAuth } from "@/lib/auth";
 import { createServiceClient } from "@/lib/supabase/server";
+import { onlyDigits } from "@/lib/cpf";
+
+/** Operador que está validando na portaria (pra auditoria). */
+export interface Operador { name?: string; doc?: string }
 
 export type ValidateResult =
   | {
@@ -38,7 +42,7 @@ async function holderInfo(
   return { seat, holderName: o?.buyer_name ?? undefined, holderDoc: o?.buyer_cpf ?? undefined };
 }
 
-export async function validateTicket(rawCode: string): Promise<ValidateResult> {
+export async function validateTicket(rawCode: string, operator?: Operador): Promise<ValidateResult> {
   const code = rawCode.trim().toUpperCase();
   if (!code) return { ok: false, reason: "not_found", message: "Informe o código do ingresso." };
 
@@ -92,7 +96,7 @@ export async function validateTicket(rawCode: string): Promise<ValidateResult> {
   // Leituras simultâneas do mesmo código não afetam nenhuma linha → recusadas.
   const { data: claimed } = await svc
     .from("tickets")
-    .update({ status: "used", used_at: new Date().toISOString() })
+    .update({ status: "used", used_at: new Date().toISOString(), checked_in_by: operator?.name ?? null, checked_in_doc: operator?.doc ? onlyDigits(operator.doc) : null })
     .eq("id", ticket.id)
     .eq("status", "valid")
     .select("id");
@@ -108,7 +112,7 @@ export async function validateTicket(rawCode: string): Promise<ValidateResult> {
  * A autorização vem do token secreto do evento — quem tem o link valida
  * apenas ingressos daquele evento.
  */
-export async function validateByToken(token: string, rawCode: string): Promise<ValidateResult> {
+export async function validateByToken(token: string, rawCode: string, operator?: Operador): Promise<ValidateResult> {
   const code = rawCode.trim().toUpperCase();
   if (!token) return { ok: false, reason: "unauthorized", message: "Link de check-in inválido." };
   if (!code) return { ok: false, reason: "not_found", message: "Informe o código do ingresso." };
@@ -146,7 +150,7 @@ export async function validateByToken(token: string, rawCode: string): Promise<V
   // Leituras simultâneas do mesmo código não afetam nenhuma linha → recusadas.
   const { data: claimed } = await svc
     .from("tickets")
-    .update({ status: "used", used_at: new Date().toISOString() })
+    .update({ status: "used", used_at: new Date().toISOString(), checked_in_by: operator?.name ?? null, checked_in_doc: operator?.doc ? onlyDigits(operator.doc) : null })
     .eq("id", ticket.id)
     .eq("status", "valid")
     .select("id");
