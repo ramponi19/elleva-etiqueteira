@@ -59,7 +59,7 @@ export function ParticipantesList({
     );
   }, [participantes, evento, q]);
 
-  const input = "rounded-[10px] border-[1.5px] border-tinta bg-white px-3.5 py-2.5 text-[14px] text-tinta outline-none focus:border-sol";
+  const input = "rounded-[10px] border-[1.5px] border-tinta bg-white px-3.5 py-2.5 text-[16px] text-tinta outline-none focus:border-sol";
 
   return (
     <div>

@@ -131,7 +131,7 @@ export default function CardForm({
     }
   }
 
-  const input = { width: "100%", fontSize: 14, padding: "11px 14px", border: "1px solid var(--border)", borderRadius: "var(--r-md)", background: "var(--bg-elevated)", color: "var(--text-primary)" } as const;
+  const input = { width: "100%", fontSize: 16, padding: "11px 14px", border: "1px solid var(--border)", borderRadius: "var(--r-md)", background: "var(--bg-elevated)", color: "var(--text-primary)" } as const;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 14 }}>

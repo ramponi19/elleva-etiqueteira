@@ -109,7 +109,7 @@ export function DashShell({
             aria-label="Abrir menu"
             aria-expanded={open}
             onClick={() => setOpen(true)}
-            className="flex h-10 w-10 items-center justify-center rounded-[8px] border-[1.5px] border-tinta text-tinta"
+            className="flex h-11 w-11 items-center justify-center rounded-[8px] border-[1.5px] border-tinta text-tinta"
           >
             <Icon icon="lucide:menu" style={{ fontSize: 20 }} />
           </button>

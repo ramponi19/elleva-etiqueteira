@@ -150,7 +150,7 @@ export function IngressosTabs({ tickets, pendentes = [] }: { tickets: TicketView
                   type="button"
                   onClick={() => transferir(t.id)}
                   disabled={pending}
-                  className="inline-flex items-center justify-center gap-1.5 rounded-[10px] border-[1.5px] border-tinta px-3 py-2 text-[13px] font-medium text-tinta transition-colors hover:bg-papel-2 disabled:opacity-50"
+                  className="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-[10px] border-[1.5px] border-tinta px-3 py-2.5 text-[13px] font-medium text-tinta transition-colors hover:bg-papel-2 disabled:opacity-50"
                 >
                   <Icon icon="lucide:send" style={{ fontSize: 15 }} /> Transferir ingresso
                 </button>
@@ -160,7 +160,7 @@ export function IngressosTabs({ tickets, pendentes = [] }: { tickets: TicketView
                   type="button"
                   onClick={() => baixarCertificado(t.id)}
                   disabled={pending}
-                  className="inline-flex items-center justify-center gap-1.5 rounded-[10px] border-[1.5px] border-tinta px-3 py-2 text-[13px] font-medium text-tinta transition-colors hover:bg-papel-2 disabled:opacity-50"
+                  className="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-[10px] border-[1.5px] border-tinta px-3 py-2.5 text-[13px] font-medium text-tinta transition-colors hover:bg-papel-2 disabled:opacity-50"
                 >
                   <Icon icon="lucide:award" style={{ fontSize: 15 }} /> Baixar certificado
                 </button>

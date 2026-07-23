@@ -163,7 +163,7 @@ export default async function EventPage({
               )}
 
               <div
-                className="mt-6 flex items-center gap-4 border-t-[1.5px] pt-4"
+                className="mt-6 flex min-w-0 flex-wrap items-center gap-x-4 gap-y-2 border-t-[1.5px] pt-4"
                 style={{ borderColor: "currentcolor" }}
               >
                 <span className="numero text-[28px]">

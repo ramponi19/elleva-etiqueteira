@@ -129,7 +129,7 @@ export function SeatMap({
             <div className="flex flex-col gap-1">
               {setor.fileiras.map((fila) => (
                 <div key={fila.rowLabel} className="flex items-center gap-1">
-                  <span className="w-4 flex-shrink-0 text-right text-[10px] text-tinta-45">{fila.rowLabel}</span>
+                  <span className="w-4 flex-shrink-0 text-right text-[10px] text-tinta-60">{fila.rowLabel}</span>
                   <div className="flex gap-1">
                     {fila.assentos.map((s) => {
                       const ativo = !!sel[s.id] && !s.taken;

@@ -23,7 +23,7 @@ export interface PerfilData {
 }
 
 const input =
-  "w-full rounded-[10px] border-[1.5px] border-tinta bg-white px-3.5 py-2.5 text-[15px] text-tinta outline-none placeholder:text-tinta-35 focus:border-sol disabled:border-tinta/40 disabled:bg-papel-2 disabled:text-tinta-60";
+  "w-full rounded-[10px] border-[1.5px] border-tinta bg-white px-3.5 py-2.5 text-[16px] text-tinta outline-none placeholder:text-tinta-35 focus:border-sol disabled:border-tinta/40 disabled:bg-papel-2 disabled:text-tinta-60";
 const labelCls = "mb-1.5 block text-[13.5px] font-medium text-tinta";
 
 export function ContaPerfilForm({
@@ -135,7 +135,7 @@ export function ContaPerfilForm({
   const campos = [b.fullName, b.cpf, b.birthDate, b.phone, b.cep, b.address, b.city, b.state];
   const completion = Math.round((campos.filter((v) => v && v.trim()).length / campos.length) * 100);
 
-  const iconBtn = "text-sol-escuro hover:text-sol";
+  const iconBtn = "flex h-11 w-11 items-center justify-center rounded-[8px] text-sol-escuro hover:bg-papel-2 hover:text-sol";
 
   return (
     <div className="grid gap-8 lg:grid-cols-[300px_1fr]">

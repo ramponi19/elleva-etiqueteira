@@ -35,7 +35,7 @@ export function SalesBars({ data }: { data: Point[] }) {
       </svg>
       <div className="mt-1.5 flex">
         {data.map((d, i) => (
-          <span key={i} className="flex-1 text-center font-mono text-[9px] text-tinta-45">
+          <span key={i} className="flex-1 text-center font-mono text-[9px] text-tinta-60">
             {i % 2 === 0 ? d.label : ""}
           </span>
         ))}

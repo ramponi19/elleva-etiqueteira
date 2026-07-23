@@ -100,9 +100,9 @@ export function TicketValidatorElleva({ token }: { token?: string } = {}) {
   }
 
   const input =
-    "w-full rounded-[10px] border-[1.5px] border-tinta bg-white px-3.5 py-2.5 font-mono text-[15px] uppercase text-tinta outline-none placeholder:text-tinta-35 focus:border-sol";
+    "w-full rounded-[10px] border-[1.5px] border-tinta bg-white px-3.5 py-2.5 font-mono text-[16px] uppercase text-tinta outline-none placeholder:text-tinta-35 focus:border-sol";
   const inputTexto =
-    "w-full rounded-[10px] border-[1.5px] border-tinta bg-white px-3.5 py-2.5 text-[15px] text-tinta outline-none placeholder:text-tinta-35 focus:border-sol";
+    "w-full rounded-[10px] border-[1.5px] border-tinta bg-white px-3.5 py-2.5 text-[16px] text-tinta outline-none placeholder:text-tinta-35 focus:border-sol";
 
   // Portaria sem operador identificado → pede identificação primeiro
   if (token && !operator) {
@@ -121,7 +121,7 @@ export function TicketValidatorElleva({ token }: { token?: string } = {}) {
             <input
               className={inputTexto}
               inputMode="numeric"
-              maxLength={6}
+              maxLength={4}
               placeholder="PIN"
               value={pin}
               onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}

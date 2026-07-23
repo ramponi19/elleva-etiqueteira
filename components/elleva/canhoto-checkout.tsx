@@ -75,7 +75,7 @@ export function CanhotoCheckout({
   }
 
   const stepBtn =
-    "flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-[16px] leading-none transition-colors duration-[var(--dur-micro)] disabled:cursor-default disabled:opacity-35";
+    "flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-[18px] leading-none transition-colors duration-[var(--dur-micro)] disabled:cursor-default disabled:opacity-35";
 
   const ingressos = tiers.filter((t) => !t.isAddon);
   const adicionais = tiers.filter((t) => t.isAddon);

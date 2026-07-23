@@ -16,7 +16,7 @@ import { ConfirmacaoRasgo, type ItemConfirmado } from "@/components/elleva/confi
 type Pix = { qrBase64: string; copyPaste: string; orderId: string; expiresAt: string };
 
 const inputCls =
-  "w-full rounded-[10px] border-[1.5px] border-tinta bg-white px-3.5 py-3 text-[15px] text-tinta placeholder:text-tinta-35";
+  "w-full rounded-[10px] border-[1.5px] border-tinta bg-white px-3.5 py-3 text-[16px] text-tinta placeholder:text-tinta-35";
 const labelCls = "rotulo mb-1.5 block text-tinta-60";
 
 function Notch({ lado }: { lado: "esquerda" | "direita" }) {

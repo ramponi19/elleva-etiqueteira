@@ -15,7 +15,7 @@ export default function OrderCancelButton({
   const [error, setError] = useState<string | null>(null);
 
   if (status === "refunded" || status === "cancelled" || done) {
-    return <span className="rotulo text-tinta-45">—</span>;
+    return <span className="rotulo text-tinta-60">—</span>;
   }
 
   const label = status === "paid" ? "Reembolsar" : "Cancelar";

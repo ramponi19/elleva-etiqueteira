@@ -16,7 +16,7 @@ export default function SignupPage() {
           Entrar
         </Link>
       </p>
-      <p className="corpo-suave mt-3 text-center text-[12.5px] text-tinta-45">
+      <p className="corpo-suave mt-3 text-center text-[12.5px] text-tinta-60">
         Ao criar uma conta você concorda com os{" "}
         <Link href="/terms" className="underline underline-offset-2">Termos</Link> e a{" "}
         <Link href="/privacy" className="underline underline-offset-2">Privacidade</Link>.

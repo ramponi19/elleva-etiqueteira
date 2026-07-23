@@ -16,7 +16,7 @@ export interface OperadorView {
 }
 
 const input =
-  "w-full rounded-[10px] border-[1.5px] border-tinta bg-white px-3.5 py-2.5 text-[15px] text-tinta outline-none placeholder:text-tinta-35 focus:border-sol";
+  "w-full rounded-[10px] border-[1.5px] border-tinta bg-white px-3.5 py-2.5 text-[16px] text-tinta outline-none placeholder:text-tinta-35 focus:border-sol";
 
 export function OperadoresPortaria({ initial }: { initial: OperadorView[] }) {
   const router = useRouter();

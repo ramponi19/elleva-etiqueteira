@@ -19,7 +19,7 @@ export function CityPills({ cidades, className }: { cidades: CityPill[]; classNa
           href={c.href}
           aria-current={c.ativa ? "page" : undefined}
           className={clsx(
-            "rounded-[var(--radius-pill)] px-4 py-2 text-[14px] leading-none transition-colors duration-[var(--dur-micro)]",
+            "inline-flex min-h-[44px] items-center rounded-[var(--radius-pill)] px-4 py-2 text-[14px] leading-none transition-colors duration-[var(--dur-micro)]",
             c.ativa
               ? "bg-sol font-medium text-tinta"
               : "border border-[var(--cor-borda)] text-[var(--cor-texto)] hover:bg-[var(--cor-hover)]"

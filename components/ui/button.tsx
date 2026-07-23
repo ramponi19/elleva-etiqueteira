@@ -23,7 +23,7 @@ const estilos: Record<Variante, string> = {
 };
 
 const base =
-  "inline-flex items-center justify-center gap-2 rounded-[var(--radius-pill)] " +
+  "inline-flex min-h-[44px] items-center justify-center gap-2 rounded-[var(--radius-pill)] " +
   "px-[22px] py-3 text-[15px] font-medium leading-none whitespace-nowrap " +
   "cursor-pointer select-none transition-[background-color,opacity,transform] " +
   "duration-[var(--dur-micro)]";

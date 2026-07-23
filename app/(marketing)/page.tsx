@@ -63,12 +63,12 @@ export default async function HomePage() {
             name="q"
             placeholder="Buscar show, festa, teatro…"
             aria-label="Buscar evento"
-            className="w-full min-w-0 border-none bg-transparent px-3 py-2 text-[15px] text-tinta outline-none placeholder:text-tinta-35 focus-visible:outline-none"
+            className="w-full min-w-0 border-none bg-transparent px-3 py-2 text-[16px] text-tinta outline-none placeholder:text-tinta-35 focus-visible:outline-none"
           />
           <button
             type="submit"
             aria-label="Buscar"
-            className="flex h-10 w-10 flex-shrink-0 cursor-pointer items-center justify-center rounded-full bg-tinta text-papel transition-colors duration-[var(--dur-micro)] hover:bg-sol-escuro"
+            className="flex h-11 w-11 flex-shrink-0 cursor-pointer items-center justify-center rounded-full bg-tinta text-papel transition-colors duration-[var(--dur-micro)] hover:bg-sol-escuro"
           >
             <Icon icon="lucide:search" style={{ fontSize: 17 }} />
           </button>

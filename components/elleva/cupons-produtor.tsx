@@ -19,7 +19,7 @@ export interface CupomView {
   eventTitle: string;
 }
 
-const field = "rounded-[10px] border-[1.5px] border-tinta bg-white px-3 py-2.5 text-[14px] text-tinta outline-none focus:border-sol";
+const field = "rounded-[10px] border-[1.5px] border-tinta bg-white px-3 py-2.5 text-[16px] text-tinta outline-none focus:border-sol";
 
 export function CuponsProdutor({
   eventos,

@@ -12,7 +12,7 @@ import { createClient } from "@/lib/supabase/client";
 // ── estilos base compartilhados ────────────────────────────────────────────
 const card = "rounded-[var(--radius-card)] border-[1.5px] border-tinta bg-white p-6 sm:p-8";
 const input =
-  "w-full rounded-[10px] border-[1.5px] border-tinta bg-white px-3.5 py-2.5 text-[15px] text-tinta outline-none placeholder:text-tinta-35 focus:border-sol disabled:bg-papel-2 disabled:text-tinta-60";
+  "w-full rounded-[10px] border-[1.5px] border-tinta bg-white px-3.5 py-2.5 text-[16px] text-tinta outline-none placeholder:text-tinta-35 focus:border-sol disabled:bg-papel-2 disabled:text-tinta-60";
 const labelCls = "mb-1.5 block text-[13.5px] font-medium text-tinta";
 const hint = "corpo-suave mt-1 block text-right";
 
@@ -539,7 +539,7 @@ export function CriarEventoForm({
             <Icon icon="lucide:plus" style={{ fontSize: 16 }} /> Produto/adicional
           </Button>
         </div>
-        <p className="corpo-suave mt-2 text-center text-[12.5px] text-tinta-45">
+        <p className="corpo-suave mt-2 text-center text-[12.5px] text-tinta-60">
           Produto/adicional (copo, camiseta, estacionamento) é vendido junto, mas não gera QR de entrada.
         </p>
 
@@ -646,7 +646,7 @@ export function CriarEventoForm({
               <Button variante="contorno" type="button" onClick={addSector} className="self-start">
                 <Icon icon="lucide:plus" style={{ fontSize: 16 }} /> Adicionar setor
               </Button>
-              <p className="corpo-suave text-[12.5px] text-tinta-45">
+              <p className="corpo-suave text-[12.5px] text-tinta-60">
                 A capacidade passa a ser o total de assentos do mapa. Edite o mapa antes de começar a vender — depois da primeira venda ele fica travado.
               </p>
             </div>
@@ -875,7 +875,7 @@ function RichText({ value, onChange }: { value: string; onChange: (html: string)
         suppressContentEditableWarning
         onInput={() => onChange(ref.current?.innerHTML ?? "")}
         data-placeholder="Adicione aqui a descrição do seu evento..."
-        className="min-h-[180px] px-4 py-3 text-[15px] leading-relaxed text-tinta outline-none [&:empty::before]:text-tinta-35 [&:empty::before]:content-[attr(data-placeholder)]"
+        className="min-h-[180px] px-4 py-3 text-[16px] leading-relaxed text-tinta outline-none [&:empty::before]:text-tinta-35 [&:empty::before]:content-[attr(data-placeholder)]"
         dangerouslySetInnerHTML={{ __html: value }}
       />
     </div>
