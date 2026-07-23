@@ -1,6 +1,7 @@
 import { randomBytes } from "crypto";
 import QRCode from "qrcode";
 import type { createServiceClient } from "@/lib/supabase/server";
+import { getPaymentProvider } from "@/lib/payments";
 import { sendEmail, isMailerConfigured, type MailAttachment } from "@/lib/mailer";
 
 type Svc = Awaited<ReturnType<typeof createServiceClient>>;
@@ -51,26 +52,41 @@ export async function releaseSeats(svc: Svc, orderId: string) {
   await svc.from("seats").update({ status: "available", order_id: null, held_until: null }).eq("order_id", orderId);
 }
 
-/** Incrementa ticket_tiers.sold conforme os itens do pedido. */
-export async function bumpSold(svc: Svc, orderId: string) {
+/** Reserva ATÔMICA de estoque dos lotes do pedido (RPC com guarda de capacity).
+ *  Retorna `true` se ESGOTOU (algum lote estourou) — nesse caso já desfaz o que
+ *  reservou deste pedido, pra quem chamou tratar (estorno). */
+async function reserveStock(svc: Svc, orderId: string): Promise<boolean> {
   const { data: its } = await svc
     .from("order_items")
     .select("tier_id, quantity")
     .eq("order_id", orderId);
+  const feitos: { tierId: string; qty: number }[] = [];
   for (const it of its ?? []) {
     if (!it.tier_id) continue;
-    const { data: tier } = await svc
-      .from("ticket_tiers")
-      .select("sold")
-      .eq("id", it.tier_id)
-      .single();
-    if (tier) {
-      await svc
-        .from("ticket_tiers")
-        .update({ sold: (tier.sold ?? 0) + it.quantity })
-        .eq("id", it.tier_id);
+    const { data: ok } = await svc.rpc("reserve_tier_stock", { p_tier_id: it.tier_id, p_qty: it.quantity });
+    if (ok === false) {
+      // desfaz o que já reservou deste pedido (qty negativo libera)
+      for (const f of feitos) await svc.rpc("reserve_tier_stock", { p_tier_id: f.tierId, p_qty: -f.qty });
+      return true;
     }
+    feitos.push({ tierId: it.tier_id, qty: it.quantity });
   }
+  return false;
+}
+
+/** Estorna um pedido que estourou a capacidade no momento do pagamento (corrida
+ *  no último ingresso). Devolve o dinheiro e cancela — nunca oversell silencioso. */
+async function refundOversold(svc: Svc, orderId: string) {
+  const { data: o } = await svc.from("orders").select("payment_id").eq("id", orderId).single();
+  try {
+    if (o?.payment_id) await getPaymentProvider().refund(o.payment_id);
+  } catch {
+    /* estorno pode ser retentado pelo admin; segue cancelando */
+  }
+  await svc.from("orders").update({ status: "refunded" }).eq("id", orderId);
+  await cancelTickets(svc, orderId);
+  await releaseSeats(svc, orderId);
+  await sendRefundEmail(svc, orderId);
 }
 
 /** Gera 1 ingresso por unidade comprada (idempotente). */
@@ -233,17 +249,8 @@ export async function reverseSold(svc: Svc, orderId: string) {
   const eventIds = new Set<string>();
   for (const it of its ?? []) {
     if (!it.tier_id) continue;
-    const { data: tier } = await svc
-      .from("ticket_tiers")
-      .select("sold")
-      .eq("id", it.tier_id)
-      .single();
-    if (tier) {
-      await svc
-        .from("ticket_tiers")
-        .update({ sold: Math.max(0, (tier.sold ?? 0) - it.quantity) })
-        .eq("id", it.tier_id);
-    }
+    // libera de forma atômica (qty negativo)
+    await svc.rpc("reserve_tier_stock", { p_tier_id: it.tier_id, p_qty: -it.quantity });
     if (it.event_id) eventIds.add(it.event_id);
   }
   // libera eventos que estavam esgotados
@@ -306,38 +313,39 @@ export async function sendReminderEmail(to: string, name: string, eventTitle: st
   } catch { /* ignore */ }
 }
 
-/** Marca pedido como pago (idempotente): estoque + ingressos + e-mail. */
-export async function markOrderPaid(svc: Svc, orderId: string) {
-  const { data: order } = await svc
-    .from("orders")
-    .select("status, coupon_code")
-    .eq("id", orderId)
-    .single();
-  if (!order || order.status === "paid") return;
-
-  await svc
+/** Marca pedido como pago. ATÔMICO e idempotente: só o PRIMEIRO caller
+ *  (retorno síncrono OU webhook) vence a transição pending→paid, então
+ *  estoque/cupom/ingressos rodam exatamente uma vez. */
+export async function markOrderPaid(svc: Svc, orderId: string): Promise<{ ok: boolean }> {
+  // gate: só quem flipar pending→paid segue (where status='pending')
+  const { data: claimed } = await svc
     .from("orders")
     .update({ status: "paid", paid_at: new Date().toISOString() })
-    .eq("id", orderId);
-
-  // contabiliza uso do cupom (apenas em pagamento confirmado)
-  if (order.coupon_code) {
-    const { data: c } = await svc
-      .from("coupons")
-      .select("used_count")
-      .eq("code", order.coupon_code)
-      .single();
-    if (c) {
-      await svc
-        .from("coupons")
-        .update({ used_count: (c.used_count ?? 0) + 1 })
-        .eq("code", order.coupon_code);
-    }
+    .eq("id", orderId)
+    .eq("status", "pending")
+    .select("coupon_code");
+  if (!claimed || claimed.length === 0) {
+    // não fomos nós que flipamos — reporta o resultado final ao caller síncrono
+    const { data: cur } = await svc.from("orders").select("status").eq("id", orderId).single();
+    return { ok: cur?.status === "paid" };
   }
 
-  await bumpSold(svc, orderId);
+  const couponCode = claimed[0].coupon_code as string | null;
+
+  // estoque atômico com guarda de capacidade; se estourou (corrida no último
+  // ingresso), estorna em vez de vender além da lotação
+  const esgotou = await reserveStock(svc, orderId);
+  if (esgotou) {
+    await refundOversold(svc, orderId);
+    return { ok: false };
+  }
+
+  // uso de cupom de forma atômica (respeita max_uses)
+  if (couponCode) await svc.rpc("increment_coupon_use", { p_code: couponCode });
+
   await sellSeats(svc, orderId);
   await maybeMarkSoldOut(svc, orderId);
   await generateTickets(svc, orderId);
   await sendConfirmationEmail(svc, orderId);
+  return { ok: true };
 }

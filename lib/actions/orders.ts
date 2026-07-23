@@ -245,7 +245,8 @@ export async function createOrder(input: z.input<typeof BaseSchema>): Promise<Cr
     if ("error" in prep) return { ok: false, error: prep.error };
     const seatErr = await claimOrFail(svc, prep.orderId, priced.items);
     if (seatErr) return { ok: false, error: seatErr };
-    await markOrderPaid(svc, prep.orderId);
+    const mp = await markOrderPaid(svc, prep.orderId);
+    if (!mp.ok) return { ok: false, error: "Esse ingresso esgotou agora. Nada foi cobrado." };
     return { ok: true, orderId: prep.orderId, paid: true };
   }
 
@@ -264,7 +265,8 @@ export async function createOrder(input: z.input<typeof BaseSchema>): Promise<Cr
   if (seatErr) return { ok: false, error: seatErr };
 
   if (!configured) {
-    await markOrderPaid(svc, prep.orderId);
+    const mp = await markOrderPaid(svc, prep.orderId);
+    if (!mp.ok) return { ok: false, error: "Esse ingresso esgotou agora. Nada foi cobrado." };
     return { ok: true, orderId: prep.orderId, paid: true };
   }
 
@@ -354,7 +356,8 @@ export async function createCardOrder(input: z.input<typeof CardSchema>): Promis
     await svc.from("orders").update({ payment_id: res.paymentId }).eq("id", prep.orderId);
 
     if (res.status === "approved") {
-      await markOrderPaid(svc, prep.orderId);
+      const mp = await markOrderPaid(svc, prep.orderId);
+      if (!mp.ok) return { ok: false, error: "Esse ingresso esgotou agora — o valor foi estornado no seu cartão." };
       return { ok: true, orderId: prep.orderId };
     }
     if (res.status === "pending") {
