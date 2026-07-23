@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Icon from "@/components/shared/icon";
+import { Button } from "@/components/ui/button";
 import { createCardOrder } from "@/lib/actions/orders";
 import { isValidCPF } from "@/lib/cpf";
 import { fmtBRL } from "@/lib/format";
@@ -67,7 +68,7 @@ export default function CardForm({
 
   if (!PUBLIC_KEY) {
     return (
-      <p style={{ fontSize: 13, color: "#8894A8" }}>
+      <p className="text-[13px] text-tinta-60">
         Pagamento por cartão indisponível (configure NEXT_PUBLIC_MP_PUBLIC_KEY).
       </p>
     );
@@ -131,17 +132,18 @@ export default function CardForm({
     }
   }
 
-  const input = { width: "100%", fontSize: 16, padding: "11px 14px", border: "1px solid var(--border)", borderRadius: "var(--r-md)", background: "var(--bg-elevated)", color: "var(--text-primary)" } as const;
+  const inputCls =
+    "w-full rounded-[10px] border-[1.5px] border-tinta bg-white px-3.5 py-3 text-[16px] text-tinta outline-none placeholder:text-tinta-35 focus:border-sol";
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 14 }}>
-      <input style={input} placeholder="Número do cartão" inputMode="numeric" value={number} onChange={(e) => setNumber(e.target.value)} />
-      <input style={input} placeholder="Nome impresso no cartão" value={holder} onChange={(e) => setHolder(e.target.value)} />
-      <div style={{ display: "flex", gap: 10 }}>
-        <input style={input} placeholder="MM/AA" value={exp} onChange={(e) => setExp(e.target.value)} />
-        <input style={input} placeholder="CVV" inputMode="numeric" value={cvv} onChange={(e) => setCvv(e.target.value)} />
+    <div className="mt-3.5 flex flex-col gap-2.5">
+      <input className={inputCls} placeholder="Número do cartão" inputMode="numeric" value={number} onChange={(e) => setNumber(e.target.value)} />
+      <input className={inputCls} placeholder="Nome impresso no cartão" value={holder} onChange={(e) => setHolder(e.target.value)} />
+      <div className="flex gap-2.5">
+        <input className={inputCls} placeholder="MM/AA" value={exp} onChange={(e) => setExp(e.target.value)} />
+        <input className={inputCls} placeholder="CVV" inputMode="numeric" value={cvv} onChange={(e) => setCvv(e.target.value)} />
       </div>
-      <select style={input} value={installments} onChange={(e) => setInstallments(Number(e.target.value))}>
+      <select className={inputCls} value={installments} onChange={(e) => setInstallments(Number(e.target.value))}>
         {[1, 2, 3, 4, 6, 12]
           .filter((n) => n <= maxInstallments)
           .map((n) => (
@@ -151,13 +153,13 @@ export default function CardForm({
           ))}
       </select>
 
-      {error && <p style={{ fontSize: 13, color: "#d64545" }}>{error}</p>}
+      {error && <p className="text-[13px] text-sol-escuro">{error}</p>}
 
-      <button className="btn btn-gold btn-block" onClick={pay} disabled={loading || !ready}>
+      <Button variante="primario" onClick={pay} disabled={loading || !ready} className="w-full">
         {loading ? "Processando..." : ready ? "Pagar com cartão" : "Carregando..."}
-      </button>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, fontSize: 12, color: "var(--text-tertiary)" }}>
-        <Icon icon="solar:lock-keyhole-bold-duotone" style={{ color: "var(--text-gold)", fontSize: 16 }} /> Dados protegidos · tokenização Mercado Pago
+      </Button>
+      <div className="flex items-center justify-center gap-2 text-[12px] text-tinta-60">
+        <Icon icon="solar:lock-keyhole-bold-duotone" style={{ color: "var(--color-sol-escuro)", fontSize: 16 }} /> Dados protegidos · tokenização Mercado Pago
       </div>
     </div>
   );
