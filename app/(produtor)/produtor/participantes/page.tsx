@@ -13,6 +13,7 @@ type Row = {
   event_title: string;
   tier_name: string;
   used_at: string | null;
+  checked_in_by: string | null;
   orders: { buyer_name: string; buyer_email: string; buyer_whatsapp: string | null } | { buyer_name: string; buyer_email: string; buyer_whatsapp: string | null }[] | null;
 };
 const buyer = (r: Row) => (Array.isArray(r.orders) ? r.orders[0] : r.orders);
@@ -31,7 +32,7 @@ export default async function ProdutorParticipantes() {
   if (ids.length) {
     const { data } = await supabase
       .from("tickets")
-      .select("code, status, event_id, event_title, tier_name, used_at, orders(buyer_name, buyer_email, buyer_whatsapp)")
+      .select("code, status, event_id, event_title, tier_name, used_at, checked_in_by, orders(buyer_name, buyer_email, buyer_whatsapp)")
       .in("event_id", ids)
       .order("created_at", { ascending: false });
     rows = (data ?? []) as unknown as Row[];
@@ -46,6 +47,7 @@ export default async function ProdutorParticipantes() {
       eventTitle: r.event_title,
       tierName: r.tier_name,
       usedAt: r.used_at,
+      validadoPor: r.checked_in_by ?? "",
       buyerName: b?.buyer_name ?? "",
       buyerEmail: b?.buyer_email ?? "",
       buyerWhatsapp: b?.buyer_whatsapp ?? "",

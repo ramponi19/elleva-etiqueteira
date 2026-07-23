@@ -11,6 +11,7 @@ export interface Participante {
   eventTitle: string;
   tierName: string;
   usedAt: string | null;
+  validadoPor: string;
   buyerName: string;
   buyerEmail: string;
   buyerWhatsapp: string;
@@ -23,11 +24,11 @@ const STATUS: Record<string, { label: string; tom: "sol" | "papel" | "tinta" }> 
 };
 
 function baixarCsv(rows: Participante[]) {
-  const head = ["Nome", "E-mail", "WhatsApp", "Evento", "Ingresso", "Código", "Status", "Check-in em"];
+  const head = ["Nome", "E-mail", "WhatsApp", "Evento", "Ingresso", "Código", "Status", "Check-in em", "Validado por"];
   const esc = (v: string) => `"${(v ?? "").replace(/"/g, '""')}"`;
   const linhas = rows.map((r) =>
     [r.buyerName, r.buyerEmail, r.buyerWhatsapp, r.eventTitle, r.tierName, r.code,
-     STATUS[r.status]?.label ?? r.status, r.usedAt ? new Date(r.usedAt).toLocaleString("pt-BR") : ""]
+     STATUS[r.status]?.label ?? r.status, r.usedAt ? new Date(r.usedAt).toLocaleString("pt-BR") : "", r.validadoPor]
       .map(esc).join(",")
   );
   const csv = "﻿" + [head.map(esc).join(","), ...linhas].join("\r\n"); // BOM p/ Excel
@@ -98,7 +99,12 @@ export function ParticipantesList({
                   <td className="px-4 py-3 text-tinta-60">{p.eventTitle}</td>
                   <td className="px-4 py-3 text-tinta-60">{p.tierName}</td>
                   <td className="px-4 py-3 font-mono text-[12px] text-tinta-60">{p.code}</td>
-                  <td className="px-4 py-3"><Badge tom={s.tom}>{s.label}</Badge></td>
+                  <td className="px-4 py-3">
+                    <Badge tom={s.tom}>{s.label}</Badge>
+                    {p.status === "used" && p.validadoPor && (
+                      <p className="corpo-suave m-0 mt-1 text-[12px]">por {p.validadoPor}</p>
+                    )}
+                  </td>
                 </tr>
               );
             })}
