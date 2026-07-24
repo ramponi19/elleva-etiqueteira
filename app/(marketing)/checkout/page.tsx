@@ -379,6 +379,7 @@ export default function CheckoutPage() {
                 items={items}
                 couponCode={appliedCode || undefined}
                 total={totalAdj}
+                maxInstallments={items.reduce((m, i) => Math.min(m, i.maxInstallments ?? 12), 12)}
                 onSuccess={confirmar}
               />
             </div>

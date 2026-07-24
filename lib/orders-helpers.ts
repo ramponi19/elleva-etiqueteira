@@ -294,6 +294,51 @@ export async function sendRefundEmail(svc: Svc, orderId: string) {
   } catch { /* não quebra o fluxo */ }
 }
 
+/** E-mail avisando quem RECEBEU um ingresso transferido (com o QR do novo código). */
+export async function sendTransferEmail(svc: Svc, ticketId: string) {
+  if (!isMailerConfigured()) return;
+  const { data: t } = await svc
+    .from("tickets")
+    .select("code, event_title, tier_name, seat_label, transfer_email")
+    .eq("id", ticketId)
+    .single();
+  if (!t?.transfer_email) return;
+
+  const attachments: MailAttachment[] = [];
+  let qrImg = "";
+  try {
+    const buf = await QRCode.toBuffer(t.code, { margin: 1, width: 320, color: { dark: "#141210", light: "#ffffff" } });
+    const cid = `qr-${t.code}`;
+    attachments.push({ filename: `ingresso-${t.code}.png`, content: buf, cid, contentType: "image/png" });
+    qrImg = `<img src="cid:${cid}" alt="QR do ingresso" width="184" height="184" style="display:block;margin:0 auto;border:1px solid #eee" />`;
+  } catch {
+    /* sem QR: mostra só o código */
+  }
+
+  const html = `
+  <div style="font-family:Arial,Helvetica,sans-serif;max-width:480px;margin:0 auto;padding:32px 20px;background:#FAF5EC">
+    <p style="margin:0;color:#C93A15;font-size:11px;letter-spacing:3px;text-transform:uppercase;font-weight:bold">Você recebeu um ingresso</p>
+    <h1 style="margin:6px 0 0;color:#141210;font-size:28px;line-height:1;text-transform:uppercase;font-weight:900">É seu agora!</h1>
+    <p style="color:#141210;font-size:15px;margin:14px 0 0">Alguém transferiu um ingresso pra você na Elleva. Apresente o QR abaixo na entrada — ele fica também na sua conta ao entrar com este e-mail.</p>
+    <div style="border:2px solid #141210;border-radius:14px;background:#fff;overflow:hidden;margin-top:16px">
+      <div style="padding:18px;text-align:center">
+        <p style="margin:0 0 12px;color:#C93A15;font-size:10px;letter-spacing:3px;text-transform:uppercase;font-weight:bold">Elleva Tickets</p>
+        ${qrImg}
+        <p style="margin:14px 0 0;color:#141210;font-weight:bold;font-size:15px;text-transform:uppercase">${t.event_title}</p>
+        <p style="margin:3px 0 0;color:rgba(20,18,16,.6);font-size:13px">${t.tier_name}${t.seat_label ? ` · ${t.seat_label}` : ""}</p>
+        <p style="margin:10px 0 0;color:#141210;font-size:13px;font-weight:bold;letter-spacing:2px">${t.code}</p>
+      </div>
+    </div>
+    <a href="${APP_URL}/conta" style="display:inline-block;margin-top:22px;background:#E8481F;color:#141210;text-decoration:none;font-weight:bold;padding:13px 26px;border-radius:9999px;font-size:15px">Ver na minha conta</a>
+  </div>`;
+
+  try {
+    await sendEmail({ to: t.transfer_email, subject: "Você recebeu um ingresso — Elleva Tickets", html, attachments });
+  } catch {
+    /* e-mail não deve quebrar a transferência */
+  }
+}
+
 /** E-mail de lembrete de evento. */
 export async function sendReminderEmail(to: string, name: string, eventTitle: string, when: string) {
   if (!isMailerConfigured()) return;

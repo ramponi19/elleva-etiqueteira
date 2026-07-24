@@ -63,6 +63,7 @@ export function CanhotoCheckout({
         price: t.price,
         qty: qty[t.id],
         feePct: event.feePct,
+        maxInstallments: maxParcelas,
       }))
     );
     router.push("/checkout");

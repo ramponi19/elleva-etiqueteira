@@ -89,7 +89,16 @@ export const mercadoPagoProvider: PaymentProvider = {
   // Manifesto: id:<data.id>;request-id:<x-request-id>;ts:<ts>; → HMAC-SHA256(secret)
   verifyWebhookSignature(request: Request, dataId: string | null): boolean {
     const secret = process.env.MP_WEBHOOK_SECRET;
-    if (!secret) return true; // sem secret → não bloqueia (dev/teste)
+    if (!secret) {
+      // Sem secret não dá pra validar origem. Em produção isso é uma brecha —
+      // avisa alto no log. (Não bloqueamos aqui pra não derrubar a confirmação
+      // do Pix caso o secret ainda não tenha sido configurado; setar o
+      // MP_WEBHOOK_SECRET fecha a verificação automaticamente.)
+      if (process.env.NODE_ENV === "production") {
+        console.warn("[webhook] MP_WEBHOOK_SECRET ausente — webhook sem verificação de assinatura. Configure o secret.");
+      }
+      return true;
+    }
 
     const sigHeader = request.headers.get("x-signature");
     const requestId = request.headers.get("x-request-id");

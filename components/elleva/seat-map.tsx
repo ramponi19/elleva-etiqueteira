@@ -86,6 +86,7 @@ export function SeatMap({
           price: t?.price ?? 0,
           qty: 1,
           feePct: event.feePct,
+          maxInstallments: maxParcelas,
           seatId: s.id,
           seatLabel: s.label,
         };

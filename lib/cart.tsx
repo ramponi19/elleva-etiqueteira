@@ -18,6 +18,7 @@ export interface CartItem {
   price: number;      // preço unitário (BRL)
   qty: number;
   feePct: number;     // taxa de serviço (%) do evento — exibição; o servidor recalcula
+  maxInstallments?: number; // máx. de parcelas no cartão (limite do evento)
   seatId?: string;    // assento marcado (quando o evento usa mapa de assentos)
   seatLabel?: string; // rótulo do assento, ex. "A12"
 }

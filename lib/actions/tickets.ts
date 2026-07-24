@@ -4,6 +4,7 @@ import { randomBytes } from "crypto";
 import { revalidatePath } from "next/cache";
 import { getAuth } from "@/lib/auth";
 import { createServiceClient } from "@/lib/supabase/server";
+import { sendTransferEmail } from "@/lib/orders-helpers";
 import { onlyDigits } from "@/lib/cpf";
 
 /** Operador que está validando na portaria (pra auditoria).
@@ -196,15 +197,19 @@ export async function transferTicket(
 
   const { data: t } = await svc
     .from("tickets")
-    .select("id, status, transferred, order_id, orders(user_id)")
+    .select("id, status, transferred, transfer_email, order_id, orders(user_id)")
     .eq("id", ticketId)
     .single();
   if (!t) return { ok: false, error: "Ingresso não encontrado." };
   if (t.status !== "valid") return { ok: false, error: "Só ingressos válidos podem ser transferidos." };
 
+  // Quem pode transferir: o COMPRADOR de origem (mantém controle, corrige e-mail
+  // digitado errado) OU o DESTINATÁRIO atual (repassa adiante). Isso destrava o
+  // caso do e-mail errado, que antes prendia o ingresso pra sempre.
   const orderUser = (Array.isArray(t.orders) ? t.orders[0] : t.orders) as { user_id: string } | null;
-  const isOwner = !t.transferred && orderUser?.user_id === user.id;
-  if (!isOwner) return { ok: false, error: "Este ingresso não é seu para transferir." };
+  const isBuyer = orderUser?.user_id === user.id;
+  const isHolder = t.transferred && (t.transfer_email ?? "").toLowerCase() === (user.email ?? "").toLowerCase();
+  if (!isBuyer && !isHolder) return { ok: false, error: "Este ingresso não é seu para transferir." };
 
   const newCode = "ELV-" + randomBytes(5).toString("hex").toUpperCase();
   const { error } = await svc
@@ -213,6 +218,7 @@ export async function transferTicket(
     .eq("id", ticketId);
   if (error) return { ok: false, error: error.message };
 
+  await sendTransferEmail(svc, ticketId); // avisa quem recebeu (com o novo QR)
   revalidatePath("/conta");
   return { ok: true };
 }

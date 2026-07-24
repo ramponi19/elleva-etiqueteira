@@ -326,6 +326,16 @@ export async function createCardOrder(input: z.input<typeof CardSchema>): Promis
   const priced = await priceItems(svc, parsed.data.items);
   if ("error" in priced) return { ok: false, error: priced.error };
 
+  // parcelas não podem passar do limite do(s) evento(s) — servidor é a fonte da verdade
+  const evIds = [...new Set(priced.items.map((i) => i.eventId).filter(isUuid))];
+  if (evIds.length) {
+    const { data: evs } = await svc.from("events").select("max_installments").in("id", evIds);
+    const maxAllowed = (evs ?? []).reduce((m, e) => Math.min(m, Number(e.max_installments ?? 12)), 12);
+    if (parsed.data.installments > maxAllowed) {
+      return { ok: false, error: `Este evento aceita no máximo ${maxAllowed}x no cartão.` };
+    }
+  }
+
   const stockErr = await checkStock(svc, priced.items);
   if (stockErr) return { ok: false, error: stockErr };
 

@@ -12,11 +12,13 @@ function fmtWhen(iso: string) {
 }
 
 export async function GET(request: Request) {
-  // proteção: Vercel Cron envia Authorization: Bearer <CRON_SECRET>
+  // proteção: Vercel Cron envia Authorization: Bearer <CRON_SECRET>.
+  // Em produção é OBRIGATÓRIO (fail-closed): sem secret ou header errado, recusa.
   const secret = process.env.CRON_SECRET;
-  if (secret) {
-    const auth = request.headers.get("authorization");
-    if (auth !== `Bearer ${secret}`) {
+  const auth = request.headers.get("authorization");
+  const isProd = process.env.NODE_ENV === "production";
+  if (isProd || secret) {
+    if (!secret || auth !== `Bearer ${secret}`) {
       return NextResponse.json({ error: "unauthorized" }, { status: 401 });
     }
   }
