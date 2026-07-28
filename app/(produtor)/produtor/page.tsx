@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { getAuth } from "@/lib/auth";
 import { fmtBRL } from "@/lib/format";
 import Icon from "@/components/shared/icon";
@@ -34,13 +34,14 @@ export default async function ProdutorInicio() {
   if (role === "producer") q = q.eq("producer_id", user!.id);
   const { data: events } = await q;
 
-  const { data: items } = await supabase
-    .from("order_items")
-    .select("unit_price, quantity, orders!inner(status)")
-    .eq("orders.status", "paid");
-  const rows = (items ?? []) as { unit_price: number; quantity: number }[];
-  const revenue = rows.reduce((a, i) => a + Number(i.unit_price) * i.quantity, 0);
-  const sold = rows.reduce((a, i) => a + i.quantity, 0);
+  // Agregado em SQL e restrito aos eventos DESTE produtor. Antes a query pegava
+  // todos os order_items visíveis pela RLS — incluindo os ingressos que o próprio
+  // produtor COMPROU de outros eventos, que entravam como "receita" dele — e
+  // ainda truncava em max-rows (1000) sem erro.
+  const svc = await createServiceClient();
+  const { data: totais } = await svc.rpc("finance_event_totals", { p_producers: [user!.id] });
+  const revenue = ((totais ?? []) as { bruto: number }[]).reduce((a, r) => a + Number(r.bruto), 0);
+  const sold = ((totais ?? []) as { vendidos: number }[]).reduce((a, r) => a + Number(r.vendidos), 0);
 
   const first = (fullName ?? "").trim().split(/\s+/)[0] || "produtor";
   const lista = events ?? [];

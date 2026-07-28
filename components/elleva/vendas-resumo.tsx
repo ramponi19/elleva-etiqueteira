@@ -6,11 +6,12 @@ import { fmtBRL } from "@/lib/format";
 import { lastNDays } from "@/lib/sales";
 import { SalesBars } from "@/components/elleva/sales-bars";
 
+/** uma linha por DIA (agregado no banco) */
 export interface VendaRow {
   date: string;
   amount: number;
   qty: number;
-  orderId: string;
+  pedidos: number;
 }
 
 const PERIODOS = [
@@ -32,7 +33,7 @@ export function VendasResumo({ rows }: { rows: VendaRow[] }) {
     });
     const receita = noPeriodo.reduce((a, r) => a + r.amount, 0);
     const vendidos = noPeriodo.reduce((a, r) => a + r.qty, 0);
-    const pedidos = new Set(noPeriodo.map((r) => r.orderId)).size;
+    const pedidos = noPeriodo.reduce((a, r) => a + r.pedidos, 0);
     return {
       receita,
       vendidos,

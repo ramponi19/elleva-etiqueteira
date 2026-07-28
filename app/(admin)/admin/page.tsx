@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { fmtBRL } from "@/lib/format";
 import Icon from "@/components/shared/icon";
 import { Badge } from "@/components/ui/badge";
@@ -15,27 +15,32 @@ const ORDER_TOM: Record<string, "sol" | "papel" | "tinta" | "cartaz"> = {
 
 export default async function AdminOverview() {
   const supabase = await createClient();
+  // Receita/pedidos vêm de agregação em SQL: somar linha por linha aqui parava
+  // de crescer no pedido ~1000 (corte silencioso do PostgREST).
+  const svc = await createServiceClient();
 
   const [
     { count: eventsCount },
     { count: customersCount },
     { count: producersCount },
-    { data: paidOrders },
+    { data: totais },
     { data: recentOrders },
   ] = await Promise.all([
     supabase.from("events").select("*", { count: "exact", head: true }),
     supabase.from("profiles").select("*", { count: "exact", head: true }).eq("role", "customer"),
     supabase.from("profiles").select("*", { count: "exact", head: true }).eq("role", "producer"),
-    supabase.from("orders").select("total").eq("status", "paid"),
+    svc.rpc("admin_overview_totals"),
     supabase.from("orders").select("id, buyer_name, buyer_email, total, status, created_at").order("created_at", { ascending: false }).limit(8),
   ]);
 
-  const revenue = (paidOrders ?? []).reduce((a, o) => a + Number(o.total), 0);
+  const t = (Array.isArray(totais) ? totais[0] : totais) as { recebido: number; taxa: number; pedidos_pagos: number } | null;
+  const revenue = Number(t?.recebido ?? 0);
   const card = "rounded-[var(--radius-card)] border-[1.5px] border-tinta bg-white";
 
   const stats = [
-    { label: "Receita (pagos)", value: fmtBRL(revenue), icon: "lucide:wallet" },
-    { label: "Pedidos pagos", value: String(paidOrders?.length ?? 0), icon: "lucide:shopping-cart" },
+    { label: "Recebido (pagos)", value: fmtBRL(revenue), icon: "lucide:wallet" },
+    { label: "Taxa da Elleva", value: fmtBRL(Number(t?.taxa ?? 0)), icon: "lucide:trending-up" },
+    { label: "Pedidos pagos", value: String(Number(t?.pedidos_pagos ?? 0)), icon: "lucide:shopping-cart" },
     { label: "Eventos", value: String(eventsCount ?? 0), icon: "lucide:ticket" },
     { label: "Clientes", value: String(customersCount ?? 0), icon: "lucide:users" },
     { label: "Produtores", value: String(producersCount ?? 0), icon: "lucide:user-round" },

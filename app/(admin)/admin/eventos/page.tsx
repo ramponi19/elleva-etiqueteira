@@ -9,7 +9,8 @@ export default async function AdminEventos() {
   const { data: events } = await supabase
     .from("events")
     .select("id, title, category, city, starts_at, status, is_featured, service_fee_pct, max_installments")
-    .order("starts_at", { ascending: false });
+    .order("starts_at", { ascending: false })
+    .limit(500); // limite explicito (o corte do PostgREST era silencioso)
 
   const list: AdminEvent[] = (events ?? []).map((e) => ({
     id: e.id,

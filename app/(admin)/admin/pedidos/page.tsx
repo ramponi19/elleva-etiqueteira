@@ -18,14 +18,15 @@ export default async function AdminPedidos() {
   const { data: orders } = await supabase
     .from("orders")
     .select("id, buyer_name, buyer_email, total, status, payment_method, created_at")
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .limit(300); // limite explicito: sem isso o PostgREST cortava em 1000 sem avisar
 
   const card = "rounded-[var(--radius-card)] border-[1.5px] border-tinta bg-white";
 
   return (
     <div className="p-6 sm:p-8">
       <h1 className="display-2 text-tinta">Pedidos</h1>
-      <p className="corpo-suave mb-6 mt-1">{orders?.length ?? 0} pedido(s).</p>
+      <p className="corpo-suave mb-6 mt-1">{orders?.length ?? 0} pedido(s){(orders?.length ?? 0) >= 300 ? " — mostrando os 300 mais recentes" : ""}.</p>
       <div className={card}>
         {(orders ?? []).map((o, i) => (
           <div

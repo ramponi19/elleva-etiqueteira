@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/server";
 import { getAuth } from "@/lib/auth";
 import { fmtBRL } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
@@ -8,62 +8,51 @@ import { VendasResumo, type VendaRow } from "@/components/elleva/vendas-resumo";
 
 export const metadata: Metadata = { title: "Vendas · Produtor" };
 
-type ItemRow = {
-  event_id: string | null;
-  event_title: string;
-  quantity: number;
-  unit_price: number;
-  orders: { id: string; status: string; created_at: string } | { id: string; status: string; created_at: string }[];
-};
-const ord = (r: ItemRow) => (Array.isArray(r.orders) ? r.orders[0] : r.orders);
-
+// Tudo agregado em SQL (migrations 0043/0044): antes a página somava item por
+// item e ticket por ticket no app — o PostgREST corta em max-rows SEM erro, então
+// os números paravam de crescer. Também filtra pelos eventos DO PRODUTOR (antes a
+// query de tickets/itens pegava, via RLS, o que ele havia COMPRADO de terceiros).
 export default async function ProdutorVendas() {
-  const { user, role } = await getAuth();
-  const supabase = await createClient();
+  const { user } = await getAuth();
+  if (!user) return null;
+  const svc = await createServiceClient();
 
-  let evq = supabase
-    .from("events")
-    .select("id, title, starts_at, status")
-    .order("starts_at", { ascending: false });
-  if (role === "producer") evq = evq.eq("producer_id", user!.id);
-  const { data: events } = await evq;
-  const eventList = events ?? [];
-  const ids = eventList.map((e) => e.id);
+  const [{ data: diario }, { data: porEvento }, { data: checkin }, { data: eventos }] = await Promise.all([
+    svc.rpc("producer_sales_daily", { p_producer: user.id, p_days: 400 }),
+    svc.rpc("finance_event_totals", { p_producers: [user.id] }),
+    svc.rpc("producer_checkin_report", { p_producer: user.id }),
+    svc.from("events").select("id, title, status, starts_at").eq("producer_id", user.id).order("starts_at", { ascending: false }),
+  ]);
 
-  let items: ItemRow[] = [];
-  let tickets: { event_id: string | null; status: string }[] = [];
-  if (ids.length) {
-    const [{ data: it }, { data: tk }] = await Promise.all([
-      supabase
-        .from("order_items")
-        .select("event_id, event_title, quantity, unit_price, orders!inner(id, status, created_at)")
-        .in("event_id", ids)
-        .eq("orders.status", "paid"),
-      supabase.from("tickets").select("event_id, status").in("event_id", ids),
-    ]);
-    items = (it ?? []) as ItemRow[];
-    tickets = tk ?? [];
-  }
-
-  const paidRows: VendaRow[] = items.map((i) => ({
-    date: ord(i)?.created_at ?? "",
-    amount: Number(i.unit_price) * i.quantity,
-    qty: i.quantity,
-    orderId: ord(i)?.id ?? "",
+  const rows: VendaRow[] = ((diario ?? []) as { dia: string; receita: number; qtd: number; pedidos: number }[]).map((d) => ({
+    date: d.dia,
+    amount: Number(d.receita),
+    qty: Number(d.qtd),
+    pedidos: Number(d.pedidos),
   }));
 
-  type Agg = { title: string; receita: number; vendidos: number; emitidos: number; usados: number; status: string };
-  const byEvent = new Map<string, Agg>();
-  for (const e of eventList) byEvent.set(e.id, { title: e.title, receita: 0, vendidos: 0, emitidos: 0, usados: 0, status: e.status });
-  for (const i of items) {
-    const a = i.event_id ? byEvent.get(i.event_id) : null;
-    if (a) { a.receita += Number(i.unit_price) * i.quantity; a.vendidos += i.quantity; }
-  }
-  for (const t of tickets) {
-    const a = t.event_id ? byEvent.get(t.event_id) : null;
-    if (a && t.status !== "cancelled") { a.emitidos += 1; if (t.status === "used") a.usados += 1; }
-  }
-  const linhas = [...byEvent.values()].sort((a, b) => b.receita - a.receita);
+  const eventList = (eventos ?? []) as { id: string; title: string; status: string; starts_at: string }[];
+  const totais = (porEvento ?? []) as { event_id: string; title: string; bruto: number; vendidos: number }[];
+  const check = new Map(
+    ((checkin ?? []) as { event_id: string; emitidos: number; usados: number }[]).map((c) => [c.event_id, c])
+  );
+
+  const linhas = totais
+    .map((t) => {
+      const ev = eventList.find((e) => e.id === t.event_id);
+      const c = check.get(t.event_id);
+      return {
+        id: t.event_id,
+        title: t.title,
+        receita: Number(t.bruto),
+        vendidos: Number(t.vendidos),
+        emitidos: Number(c?.emitidos ?? 0),
+        usados: Number(c?.usados ?? 0),
+        status: ev?.status ?? "published",
+      };
+    })
+    .filter((l) => l.receita > 0 || l.vendidos > 0)
+    .sort((a, b) => b.receita - a.receita);
 
   const card = "rounded-[var(--radius-card)] border-[1.5px] border-tinta bg-white";
 
@@ -76,26 +65,32 @@ export default async function ProdutorVendas() {
         <EmBreve icon="lucide:bar-chart-3" nota="Crie um evento para começar a vender e acompanhar aqui." />
       ) : (
         <>
-          <VendasResumo rows={paidRows} />
+          <VendasResumo rows={rows} />
 
           <h2 className="mb-3 mt-8 text-[18px] font-extrabold text-tinta">Por evento</h2>
           <div className={`${card} overflow-hidden`}>
-            {linhas.map((l, i) => {
-              const pct = l.emitidos ? Math.round((l.usados / l.emitidos) * 100) : 0;
-              return (
-                <div key={l.title} className={`px-5 py-4 ${i ? "border-t-[1.5px] border-dashed border-tinta" : ""}`}>
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <p className="m-0 text-[15px] font-medium text-tinta">{l.title}</p>
-                    <span className="numero text-[16px] text-tinta">{fmtBRL(l.receita)}</span>
+            {linhas.length === 0 ? (
+              <p className="corpo-suave px-5 py-12 text-center">Nenhuma venda ainda.</p>
+            ) : (
+              linhas.map((l, i) => {
+                const pct = l.emitidos ? Math.round((l.usados / l.emitidos) * 100) : 0;
+                return (
+                  <div key={l.id} className={`px-5 py-4 ${i ? "border-t-[1.5px] border-dashed border-tinta" : ""}`}>
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <p className="m-0 text-[15px] font-medium text-tinta">{l.title}</p>
+                      <span className="numero text-[16px] text-tinta">{fmtBRL(l.receita)}</span>
+                    </div>
+                    <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] text-tinta-60">
+                      <span>{l.vendidos} vendido(s)</span>
+                      <span>Check-in: <strong className="text-tinta">{l.usados}/{l.emitidos}</strong> ({pct}%)</span>
+                      <Badge tom={l.status === "published" ? "sol" : l.status === "sold_out" ? "cartaz" : "papel"}>
+                        {({ published: "Publicado", sold_out: "Esgotado", draft: "Rascunho", cancelled: "Cancelado" } as Record<string, string>)[l.status] ?? l.status}
+                      </Badge>
+                    </div>
                   </div>
-                  <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] text-tinta-60">
-                    <span>{l.vendidos} vendido(s)</span>
-                    <span>Check-in: <strong className="text-tinta">{l.usados}/{l.emitidos}</strong> ({pct}%)</span>
-                    <Badge tom={l.status === "published" ? "sol" : l.status === "sold_out" ? "cartaz" : "papel"}>{({ published: "Publicado", sold_out: "Esgotado", draft: "Rascunho", cancelled: "Cancelado" } as Record<string, string>)[l.status] ?? l.status}</Badge>
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </div>
           <p className="corpo-suave mt-4">
             A receita é o valor dos ingressos (a taxa de serviço é paga pelo comprador, por cima). O repasse e o

@@ -10,14 +10,15 @@ export default async function AdminClientes() {
   const { data: users } = await supabase
     .from("profiles")
     .select("id, full_name, role, created_at")
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .limit(300); // limite explicito (o corte do PostgREST era silencioso)
 
   const card = "rounded-[var(--radius-card)] border-[1.5px] border-tinta bg-white";
 
   return (
     <div className="p-6 sm:p-8">
       <h1 className="display-2 text-tinta">Clientes &amp; usuários</h1>
-      <p className="corpo-suave mb-6 mt-1">{users?.length ?? 0} usuário(s).</p>
+      <p className="corpo-suave mb-6 mt-1">{users?.length ?? 0} usuário(s){(users?.length ?? 0) >= 300 ? " — mostrando os 300 mais recentes" : ""}.</p>
       <div className={card}>
         {(users ?? []).map((u, i) => (
           <div

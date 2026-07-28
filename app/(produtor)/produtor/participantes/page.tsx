@@ -28,14 +28,24 @@ export default async function ProdutorParticipantes() {
   const eventos = events ?? [];
   const ids = eventos.map((e) => e.id);
 
-  let rows: Row[] = [];
+  // PAGINADO: o PostgREST corta em max-rows (1000) sem erro — acima disso a
+  // lista e o CSV saíam incompletos, sem nenhum aviso.
+  const rows: Row[] = [];
+  const PAGE = 1000;
+  const MAX = 20000; // teto de segurança da tela
   if (ids.length) {
-    const { data } = await supabase
-      .from("tickets")
-      .select("code, status, event_id, event_title, tier_name, used_at, checked_in_by, orders(buyer_name, buyer_email, buyer_whatsapp)")
-      .in("event_id", ids)
-      .order("created_at", { ascending: false });
-    rows = (data ?? []) as unknown as Row[];
+    for (let from = 0; from < MAX; from += PAGE) {
+      const { data, error } = await supabase
+        .from("tickets")
+        .select("code, status, event_id, event_title, tier_name, used_at, checked_in_by, orders(buyer_name, buyer_email, buyer_whatsapp)")
+        .in("event_id", ids)
+        .order("created_at", { ascending: false })
+        .range(from, from + PAGE - 1);
+      if (error) break;
+      const lote = (data ?? []) as unknown as Row[];
+      rows.push(...lote);
+      if (lote.length < PAGE) break;
+    }
   }
 
   const participantes: Participante[] = rows.map((r) => {

@@ -38,25 +38,40 @@ export async function GET(request: Request) {
     .lte("starts_at", in48h);
 
   let sent = 0;
+  let failed = 0;
+  const PAGE = 1000;
   for (const ev of events ?? []) {
-    // compradores com pedido pago deste evento
-    const { data: items } = await svc
-      .from("order_items")
-      .select("orders!inner(buyer_email, buyer_name, status)")
-      .eq("event_id", ev.id)
-      .eq("orders.status", "paid");
-
+    // Compradores com pedido pago deste evento — PAGINADO: o PostgREST corta em
+    // max-rows sem erro, então acima de ~1000 itens parte do público não recebia.
     const seen = new Set<string>();
     const when = fmtWhen(ev.starts_at);
-    for (const it of items ?? []) {
-      const o = (Array.isArray(it.orders) ? it.orders[0] : it.orders) as { buyer_email: string; buyer_name: string } | undefined;
-      if (!o?.buyer_email || seen.has(o.buyer_email)) continue;
-      seen.add(o.buyer_email);
-      await sendReminderEmail(o.buyer_email, o.buyer_name ?? "", ev.title, when);
-      sent++;
+    for (let from = 0; ; from += PAGE) {
+      const { data: items, error } = await svc
+        .from("order_items")
+        .select("orders!inner(buyer_email, buyer_name, status)")
+        .eq("event_id", ev.id)
+        .eq("orders.status", "paid")
+        .range(from, from + PAGE - 1);
+      if (error) break;
+      const lote = items ?? [];
+      for (const it of lote) {
+        const o = (Array.isArray(it.orders) ? it.orders[0] : it.orders) as { buyer_email: string; buyer_name: string } | undefined;
+        if (!o?.buyer_email || seen.has(o.buyer_email)) continue;
+        seen.add(o.buyer_email);
+        // um destinatário que falha NÃO pode derrubar o restante da fila (antes
+        // a exceção estourava a rota, ninguém mais recebia e o evento ficava sem
+        // reminder_sent_at → na execução seguinte os primeiros recebiam de novo)
+        try {
+          await sendReminderEmail(o.buyer_email, o.buyer_name ?? "", ev.title, when);
+          sent++;
+        } catch {
+          failed++;
+        }
+      }
+      if (lote.length < PAGE) break;
     }
     await svc.from("events").update({ reminder_sent_at: new Date().toISOString() }).eq("id", ev.id);
   }
 
-  return NextResponse.json({ ok: true, events: events?.length ?? 0, emails: sent });
+  return NextResponse.json({ ok: true, events: events?.length ?? 0, emails: sent, falhas: failed });
 }
