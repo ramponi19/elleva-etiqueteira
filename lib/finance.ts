@@ -205,18 +205,27 @@ async function aggregate(
     if (a.kind === "credit") acc.creditos += amount; else acc.debitos += amount;
   }
 
-  // payouts
+  // payouts — separa o comprometido por tipo: antecipação consome o RETIDO
+  // primeiro (senão anteciparia "gastando" o saldo já liberado).
+  const committed = new Map<string, { normal: number; advance: number }>();
   let payq = svc.from("payouts").select("producer_id, amount, status, kind, fee_amount");
   if (producerIds) payq = payq.in("producer_id", producerIds);
   const { data: pays } = await payq;
   for (const p of pays ?? []) {
-    const acc = out.get(p.producer_id as string);
+    const pid = p.producer_id as string;
+    const acc = out.get(pid);
     if (!acc) continue;
     const amount = Number(p.amount);
+    const isAdvance = p.kind === "advance";
     if (p.status === "paid") {
       acc.repassado += amount;
-      if (p.kind === "advance") acc.taxaAntecipacao += Number(p.fee_amount ?? 0);
+      if (isAdvance) acc.taxaAntecipacao += Number(p.fee_amount ?? 0);
     } else if (p.status === "requested") acc.solicitado += amount;
+    if (p.status === "paid" || p.status === "requested") {
+      const c = committed.get(pid) ?? { normal: 0, advance: 0 };
+      if (isAdvance) c.advance += amount; else c.normal += amount;
+      committed.set(pid, c);
+    }
   }
 
   // fecha as contas (modelo de "pote"): ajustes entram como liberados
@@ -225,9 +234,12 @@ async function aggregate(
     const liquido = round2(acc.bruto - acc.cupom);
     const pot = round2(liquido + acc.creditos - acc.debitos);
     const releasedPot = round2(releasedVendas + acc.creditos - acc.debitos);
-    const committed = round2(acc.repassado + acc.solicitado);
-    const disponivel = round2(Math.max(0, releasedPot - committed));
-    const antecipavel = round2(Math.max(0, pot - committed - disponivel));
+    const retidoBruto = round2(Math.max(0, pot - releasedPot));
+    const c = committed.get(acc.producerId) ?? { normal: 0, advance: 0 };
+    // antecipação abate o retido; o que passar disso cai sobre o liberado
+    const sobraAntecip = round2(Math.max(0, c.advance - retidoBruto));
+    const disponivel = round2(Math.max(0, releasedPot - c.normal - sobraAntecip));
+    const antecipavel = round2(Math.max(0, retidoBruto - c.advance));
 
     acc.liquido = liquido;
     acc.bruto = round2(acc.bruto);
@@ -235,7 +247,7 @@ async function aggregate(
     acc.taxaElleva = round2(acc.taxaElleva);
     acc.creditos = round2(acc.creditos);
     acc.debitos = round2(acc.debitos);
-    acc.aLiberar = round2(Math.max(0, pot - releasedPot));
+    acc.aLiberar = retidoBruto;
     acc.disponivel = disponivel;
     acc.antecipavel = antecipavel;
     acc.solicitado = round2(acc.solicitado);
