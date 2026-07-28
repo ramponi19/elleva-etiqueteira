@@ -133,17 +133,32 @@ export async function validateByToken(token: string, rawCode: string, operator?:
     .single();
   if (!ev) return { ok: false, reason: "unauthorized", message: "Link de check-in inválido ou revogado." };
 
-  // operador por PIN: resolve nome/CPF do cadastro (não confia no cliente)
-  if (operator?.pin) {
+  // Auditoria à prova de fraude: se o produtor cadastrou operadores, o PIN é
+  // OBRIGATÓRIO e resolvido no servidor. Antes o servidor só validava o PIN
+  // "se ele viesse" — quem chamasse a action direto (ou limpasse o
+  // localStorage) validava ingressos com nome/CPF inventado, e a auditoria
+  // deixava de provar qualquer coisa.
+  const { count: operadoresAtivos } = await svc
+    .from("gate_operators")
+    .select("*", { count: "exact", head: true })
+    .eq("producer_id", ev.producer_id)
+    .eq("active", true);
+
+  if ((operadoresAtivos ?? 0) > 0) {
+    const pin = operator?.pin?.trim();
+    if (!pin) return { ok: false, reason: "forbidden", message: "Informe o PIN do operador para liberar entradas." };
     const { data: op } = await svc
       .from("gate_operators")
       .select("name, doc")
       .eq("producer_id", ev.producer_id)
-      .eq("pin", operator.pin.trim())
+      .eq("pin", pin)
       .eq("active", true)
       .maybeSingle();
     if (!op) return { ok: false, reason: "forbidden", message: "PIN de operador inválido ou revogado." };
     operator = { name: op.name as string, doc: op.doc as string };
+  } else if (operator?.pin) {
+    // sem operadores cadastrados, PIN não vale como identidade
+    operator = { name: operator.name, doc: operator.doc };
   }
 
   const { data: ticket } = await svc

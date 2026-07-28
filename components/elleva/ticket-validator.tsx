@@ -52,7 +52,8 @@ export function TicketValidatorElleva({ token }: { token?: string } = {}) {
     const op = await resolveGateOperator(token!, clean);
     setChecking(false);
     if (!op) return setOpErr("PIN inválido ou revogado.");
-    const full: Operador = { name: op.name, doc: op.doc, pin: clean };
+    // guarda só o nome + PIN no dispositivo; o CPF fica no servidor
+    const full: Operador = { name: op.name, pin: clean };
     setOperator(full);
     try {
       localStorage.setItem(OP_KEY, JSON.stringify(full));

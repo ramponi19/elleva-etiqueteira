@@ -1,8 +1,13 @@
 // ============================================================
 // Elleva Tickets — camada de dados de eventos
-// Lê do Supabase; cai para mock se faltar credencial ou der erro.
+// Lê do Supabase; cai para mock APENAS fora de produção.
 // ============================================================
 import { createClient } from "@/lib/supabase/server";
+
+// Fail-safe: em produção, banco vazio ou query com erro NÃO pode servir os
+// eventos de demonstração (apareciam na home, na agenda e no sitemap.xml).
+const mockEventsAllowed = () =>
+  process.env.NODE_ENV !== "production" || process.env.ALLOW_MOCK_EVENTS === "1";
 
 export type CategoryLabel =
   | "SHOW" | "FESTA" | "ESPORTE" | "TEATRO" | "CORPORATIVO" | "CURSO";
@@ -154,10 +159,10 @@ export async function getEvents(): Promise<EventItem[]> {
       .in("status", ["published", "sold_out"])
       .or("visibility.eq.public,visibility.is.null") // privado só pelo link direto
       .order("starts_at", { ascending: true });
-    if (error || !data?.length) return MOCK_EVENTS;
+    if (error || !data?.length) return mockEventsAllowed() ? MOCK_EVENTS : [];
     return (data as EventDbRow[]).map(toEventItem);
   } catch {
-    return MOCK_EVENTS;
+    return mockEventsAllowed() ? MOCK_EVENTS : [];
   }
 }
 
@@ -242,10 +247,10 @@ export async function getEventSlugs(): Promise<string[]> {
       .select("slug")
       .in("status", ["published", "sold_out"])
       .or("visibility.eq.public,visibility.is.null"); // privado fora do sitemap
-    if (error || !data?.length) return MOCK_EVENTS.map((e) => e.id);
+    if (error || !data?.length) return mockEventsAllowed() ? MOCK_EVENTS.map((e) => e.id) : [];
     return data.map((r) => r.slug as string);
   } catch {
-    return MOCK_EVENTS.map((e) => e.id);
+    return mockEventsAllowed() ? MOCK_EVENTS.map((e) => e.id) : [];
   }
 }
 

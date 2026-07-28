@@ -288,7 +288,14 @@ export function FinanceiroAdmin({
                   <span className="block truncate font-mono text-[11px] text-tinta-60">{p.pixKey || "sem chave Pix"}</span>
                 </span>
                 <span className="numero w-24 text-right text-[14px] text-tinta-60">{fmtBRL(p.liquido)}</span>
-                <span className="numero w-24 text-right text-[14px] font-semibold text-tinta">{fmtBRL(p.disponivel)}</span>
+                {p.saldoReal < -0.01 ? (
+                  <span className="w-24 text-right" title="Repassamos mais do que o saldo — a Elleva tem esse valor a receber deste produtor">
+                    <span className="numero block text-[14px] font-semibold text-sol-escuro">−{fmtBRL(Math.abs(p.saldoReal))}</span>
+                    <span className="block text-[10px] font-semibold uppercase text-sol-escuro">a receber</span>
+                  </span>
+                ) : (
+                  <span className="numero w-24 text-right text-[14px] font-semibold text-tinta">{fmtBRL(p.disponivel)}</span>
+                )}
                 <span className="numero w-24 text-right text-[14px] text-tinta-60">{fmtBRL(p.aLiberar)}</span>
                 <span className="numero w-24 text-right text-[14px] text-tinta-60">{fmtBRL(p.solicitado)}</span>
                 <span className="numero w-24 text-right text-[14px] text-tinta-60">{fmtBRL(p.repassado)}</span>
@@ -451,7 +458,7 @@ export function FinanceiroAdmin({
                     </button>
                   ) : !l.isPayout ? (
                     <button type="button" className={miniBtn} disabled={pending} onClick={() => setDelAjuste({ id: l.id, label: `${l.produtor} · ${l.tipo} ${fmtBRL(Math.abs(l.valor))}` })}>
-                      <Icon icon="lucide:trash-2" style={{ fontSize: 14 }} /> excluir
+                      <Icon icon="lucide:undo-2" style={{ fontSize: 14 }} /> estornar
                     </button>
                   ) : <span className="corpo-suave text-[12px]">—</span>}
                 </span>
@@ -517,10 +524,10 @@ export function FinanceiroAdmin({
       <ConfirmDialog
         open={!!delAjuste}
         onClose={() => setDelAjuste(null)}
-        onConfirm={() => delAjuste && run(() => deleteAdjustment(delAjuste.id), () => setDelAjuste(null), "Lançamento excluído.")}
-        title="Excluir lançamento"
-        message={<>{delAjuste?.label} — o saldo do produtor volta ao valor anterior.</>}
-        confirmLabel="Excluir"
+        onConfirm={() => delAjuste && run(() => deleteAdjustment(delAjuste.id), () => setDelAjuste(null), "Lançamento estornado (continua no extrato).")}
+        title="Estornar lançamento"
+        message={<>{delAjuste?.label} — sai do saldo do produtor, mas continua registrado no extrato para auditoria.</>}
+        confirmLabel="Estornar"
         danger
         pending={pending}
       />

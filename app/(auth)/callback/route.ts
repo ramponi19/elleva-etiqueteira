@@ -12,7 +12,10 @@ export async function GET(request: Request) {
     if (!error && data.user) {
       // Após confirmar/entrar, o usuário permanece na home (estilo Sympla),
       // salvo quando um destino explícito é passado em ?next=.
-      return NextResponse.redirect(`${origin}${next ?? "/"}`);
+      // ?next= só aceita caminho interno: "?next=@evil.com" viraria
+      // https://dominio@evil.com (host = evil.com) → open redirect/phishing.
+      const dest = next && next.startsWith("/") && !next.startsWith("//") ? next : "/";
+      return NextResponse.redirect(`${origin}${dest}`);
     }
   }
 

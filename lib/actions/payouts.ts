@@ -48,7 +48,13 @@ export async function requestPayout(): Promise<Res> {
     status: "requested",
     created_by: user.id,
   });
-  if (error) return { ok: false, error: error.message };
+  // índice único (0042) garante 1 solicitação aberta por tipo — mata a corrida
+  // de dois cliques simultâneos comprometendo o mesmo saldo
+  if (error) {
+    if (/duplicate|unique/i.test(error.message))
+      return { ok: false, error: "Você já tem uma solicitação de repasse em análise. Aguarde a Elleva processar." };
+    return { ok: false, error: error.message };
+  }
   refresh();
   return { ok: true, amount: fin.disponivel };
 }
@@ -81,7 +87,11 @@ export async function requestAdvance(valor?: number): Promise<Res> {
     created_by: user.id,
     note: `Antecipação (taxa ${fin.advanceFeePct}%)`,
   });
-  if (error) return { ok: false, error: error.message };
+  if (error) {
+    if (/duplicate|unique/i.test(error.message))
+      return { ok: false, error: "Você já tem uma antecipação em análise. Aguarde a Elleva processar." };
+    return { ok: false, error: error.message };
+  }
   refresh();
   return { ok: true, amount: net };
 }
@@ -95,11 +105,38 @@ export async function markPayoutPaid(
   payoutId: string,
   method: string,
   reference: string,
-  receiptPath?: string
+  receiptPath?: string,
+  forcar?: boolean
 ): Promise<Res> {
   const admin = await adminCtx();
   if (!admin) return { ok: false, error: "Sem permissão." };
   const svc = await createServiceClient();
+
+  // O valor foi congelado quando o produtor solicitou. Entre a solicitação e
+  // este clique pode ter entrado reembolso, cancelamento ou débito — então o
+  // saldo é RECONFERIDO agora. Sem isso, a Elleva pagava sobre saldo que já
+  // não existia (o cenário clássico: 40 reembolsos depois do pedido de saque).
+  const { data: alvo } = await svc
+    .from("payouts")
+    .select("producer_id, amount, kind, status")
+    .eq("id", payoutId)
+    .single();
+  if (!alvo) return { ok: false, error: "Solicitação não encontrada." };
+  if (alvo.status !== "requested") return { ok: false, error: "Essa solicitação já foi processada." };
+
+  if (!forcar) {
+    const fin = await computeProducerFinance(svc, alvo.producer_id as string);
+    const amount = Number(alvo.amount);
+    // cobertura = o que o produtor tem hoje + o que este payout já reservou
+    const cobertura = round2((alvo.kind === "advance" ? fin.antecipavel : fin.disponivel) + amount);
+    if (amount > cobertura + 0.01) {
+      return {
+        ok: false,
+        error: `Saldo insuficiente HOJE: a solicitação é de ${amount.toFixed(2).replace(".", ",")} mas o produtor só tem cobertura de ${cobertura.toFixed(2).replace(".", ",")} (houve reembolso, cancelamento ou débito depois do pedido). Confira antes de pagar.`,
+      };
+    }
+  }
+
   const { data, error } = await svc
     .from("payouts")
     .update({
@@ -108,7 +145,7 @@ export async function markPayoutPaid(
       method: method || "pix_manual",
       reference: reference || null,
       receipt_path: receiptPath || null,
-      created_by: admin.id,
+      processed_by: admin.id,
     })
     .eq("id", payoutId)
     .eq("status", "requested")
@@ -136,7 +173,7 @@ export async function rejectPayout(payoutId: string, reason: string): Promise<Re
   const svc = await createServiceClient();
   const { data, error } = await svc
     .from("payouts")
-    .update({ status: "rejected", rejected_reason: reason, created_by: admin.id })
+    .update({ status: "rejected", rejected_reason: reason, processed_by: admin.id })
     .eq("id", payoutId)
     .eq("status", "requested")
     .select("producer_id, amount");
@@ -200,12 +237,20 @@ export async function createAdjustment(
   return { ok: true, amount: v };
 }
 
-export async function deleteAdjustment(id: string): Promise<Res> {
+/** Estorna um lançamento (soft): sai do saldo mas FICA no extrato. Apagar de
+ *  verdade permitia remover um débito de chargeback sem deixar rastro. */
+export async function deleteAdjustment(id: string, motivo?: string): Promise<Res> {
   const admin = await adminCtx();
   if (!admin) return { ok: false, error: "Sem permissão." };
   const svc = await createServiceClient();
-  const { error } = await svc.from("finance_adjustments").delete().eq("id", id);
+  const { data, error } = await svc
+    .from("finance_adjustments")
+    .update({ reversed_at: new Date().toISOString(), reversed_by: admin.id, reversed_reason: motivo || "Estornado pelo admin" })
+    .eq("id", id)
+    .is("reversed_at", null)
+    .select("id");
   if (error) return { ok: false, error: error.message };
+  if (!data?.length) return { ok: false, error: "Esse lançamento já foi estornado." };
   refresh();
   return { ok: true };
 }
@@ -236,8 +281,10 @@ export async function getReceiptUrl(payoutId: string): Promise<Res> {
   if (!user) return { ok: false, error: "Sem sessão." };
   const svc = await createServiceClient();
   const { data: p } = await svc.from("payouts").select("producer_id, receipt_path").eq("id", payoutId).single();
-  if (!p?.receipt_path) return { ok: false, error: "Este repasse não tem comprovante anexado." };
-  if (role !== "admin" && p.producer_id !== user.id) return { ok: false, error: "Sem permissão." };
+  // autorização ANTES de revelar se existe comprovante (senão dá pra enumerar
+  // repasses de terceiros pela diferença das mensagens)
+  if (!p || (role !== "admin" && p.producer_id !== user.id)) return { ok: false, error: "Sem permissão." };
+  if (!p.receipt_path) return { ok: false, error: "Este repasse não tem comprovante anexado." };
   const { data, error } = await svc.storage.from("payout-receipts").createSignedUrl(p.receipt_path as string, 600);
   if (error || !data?.signedUrl) return { ok: false, error: "Não foi possível abrir o comprovante." };
   return { ok: true, url: data.signedUrl };

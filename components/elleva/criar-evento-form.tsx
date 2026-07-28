@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { clsx } from "clsx";
 import Icon from "@/components/shared/icon";
 import { Button } from "@/components/ui/button";
+import { Modal } from "@/components/ui/modal";
 import { createEvent, updateEvent } from "@/lib/actions/events";
 import { TEMAS } from "@/lib/arte";
 import { maskCEP } from "@/lib/format";
@@ -144,9 +145,12 @@ const EMPTY: FormState = {
 
 export function CriarEventoForm({
   eventId,
+  statusAtual,
   initial,
 }: {
   eventId?: string;
+  /** status atual do evento (edição) — pra o preview não despublicar */
+  statusAtual?: string;
   initial?: FormState;
 } = {}) {
   const router = useRouter();
@@ -155,6 +159,7 @@ export function CriarEventoForm({
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<{ msg: string; go: () => void } | null>(null);
 
   const set = <K extends keyof FormState>(k: K, v: FormState[K]) =>
     setF((s) => ({ ...s, [k]: v }));
@@ -209,7 +214,19 @@ export function CriarEventoForm({
   const setTier = (i: number, k: keyof Tier, v: string | boolean) =>
     setF((s) => ({ ...s, tiers: s.tiers.map((t, idx) => (idx === i ? { ...t, [k]: v } : t)) }));
   const rmTier = (i: number) =>
-    setF((s) => ({ ...s, tiers: s.tiers.filter((_, idx) => idx !== i) }));
+    setF((s) => {
+      const tiers = s.tiers.filter((_, idx) => idx !== i);
+      // Setores apontam pro lote por ÍNDICE — ao remover um lote é obrigatório
+      // remapear, senão o setor passa a apontar pro lote errado (ou pra nenhum,
+      // virando assento sem preço).
+      const primeiroIngresso = Math.max(0, tiers.findIndex((t) => !t.isAddon));
+      const sectors = s.sectors.map((sec) => ({
+        ...sec,
+        tierIndex:
+          sec.tierIndex === i ? primeiroIngresso : sec.tierIndex > i ? sec.tierIndex - 1 : sec.tierIndex,
+      }));
+      return { ...s, tiers, sectors };
+    });
 
   // ── assentos marcados ───────────────────────────────────────────────────
   const addSector = () =>
@@ -243,10 +260,15 @@ export function CriarEventoForm({
     if (!f.city.trim() || !f.state.trim()) return setError("Informe cidade e estado (o CEP preenche).");
     if (!f.tiers.length) return setError("Adicione ao menos um ingresso.");
     if (f.tiers.some((t) => !t.name.trim())) return setError("Dê um nome a cada ingresso.");
+    // lote pago sem preço saía publicado a R$ 0,00 e era vendido de graça
+    if (f.tiers.some((t) => !t.isFree && !(Number(String(t.price).replace(",", ".")) > 0)))
+      return setError("Informe o preço de cada ingresso pago (ou marque como gratuito).");
     if (f.hasSeating) {
       if (!f.sectors.length) return setError("Adicione ao menos um setor de assentos (ou desligue os assentos marcados).");
       if (f.sectors.some((s) => !Number(s.rows) || !Number(s.cols)))
         return setError("Cada setor precisa de nº de fileiras e assentos por fileira.");
+      if (f.sectors.some((s) => !f.tiers[s.tierIndex] || f.tiers[s.tierIndex].isAddon))
+        return setError("Cada setor precisa apontar para um ingresso válido. Confira os setores.");
     }
     if (status === "published" && !f.accepted)
       return setError("Aceite as responsabilidades para publicar.");
@@ -306,12 +328,20 @@ export function CriarEventoForm({
     const res = isEdit ? await updateEvent(eventId!, payload) : await createEvent(payload);
     setSaving(false);
     if (!res.ok) return setError(res.error ?? "Erro ao salvar.");
+    // aviso do servidor (ex.: lotes preservados por já haver vendas) — não é erro,
+    // mas o produtor PRECISA saber que o lote não mudou
+    if (res.notice) { setNotice({ msg: res.notice, go: () => then(res.slug) }); return; }
     then(res.slug);
   }
 
   const publicar = () => persist("published", () => { router.push("/produtor"); router.refresh(); });
   const rascunho = () => persist("draft", () => { router.push("/produtor"); router.refresh(); });
-  const preview = () => persist("draft", (slug) => router.push(slug ? `/evento/${slug}` : "/produtor"));
+  // Pré-visualizar NUNCA pode rebaixar o status: num evento já publicado isso
+  // tirava o evento do ar (links de campanha morriam) sem o produtor perceber.
+  const preview = () =>
+    persist(isEdit && statusAtual === "published" ? "published" : "draft", (slug) =>
+      router.push(slug ? `/evento/${slug}` : "/produtor")
+    );
 
   return (
     <div className="flex flex-col gap-6">
@@ -839,6 +869,17 @@ export function CriarEventoForm({
           </Button>
         </div>
       </div>
+
+      {notice && (
+        <Modal open onClose={() => { const g = notice.go; setNotice(null); g(); }} title="Evento salvo" maxWidth={460}>
+          <p className="corpo-suave m-0 mt-1">{notice.msg}</p>
+          <div className="mt-5 flex justify-end">
+            <Button variante="tinta" type="button" onClick={() => { const g = notice.go; setNotice(null); g(); }}>
+              Entendi
+            </Button>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }

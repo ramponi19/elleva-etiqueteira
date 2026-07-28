@@ -35,6 +35,7 @@ export interface EventoFin {
   liquido: number;
   taxa: number;      // receita da Elleva neste evento
   liberado: boolean;
+  cancelado: boolean; // evento cancelado: NUNCA libera saldo automaticamente
 }
 
 export interface AjusteFin {
@@ -62,17 +63,29 @@ export interface ProducerFinance {
   creditos: number;
   debitos: number;
 
-  aLiberar: number;     // retido (evento ainda não liberou)
-  disponivel: number;   // pode sacar já
+  aLiberar: number;     // retido que AINDA será pago (já desconta antecipações)
+  retidoBruto: number;  // retido total das vendas (antes de descontar antecipação)
+  jaAntecipado: number; // Σ antecipações comprometidas (solicitadas + pagas)
+  disponivel: number;   // pode sacar já (nunca negativo)
+  saldoReal: number;    // idem, SEM clamp: negativo = produtor deve à Elleva
   antecipavel: number;  // retido não comprometido (dá pra antecipar)
   solicitado: number;   // Σ payouts requested (bruto)
   repassado: number;    // Σ payouts paid (bruto)
   taxaAntecipacao: number; // Σ fee_amount de antecipações pagas (receita Elleva)
 }
 
-function isLiberado(startsAt: string | null, now: number): boolean {
+function isLiberado(startsAt: string | null, now: number, status?: string | null): boolean {
   if (!startsAt) return false;
+  // Evento CANCELADO não libera saldo: os compradores ainda têm reembolso a
+  // receber, então esse dinheiro não é do produtor.
+  if (status === "cancelled") return false;
   return new Date(startsAt).getTime() + SAFETY_DAYS * 86400000 < now;
+}
+
+/** Query que falha NÃO pode virar "saldo R$ 0,00" silencioso. */
+function must<T>(res: { data: T; error: { message: string } | null }, ctx: string): T {
+  if (res.error) throw new Error(`[finance] falha ao ler ${ctx}: ${res.error.message}`);
+  return res.data;
 }
 
 type ProfRow = {
@@ -95,15 +108,14 @@ async function aggregate(
   now: number
 ): Promise<Map<string, ProducerFinance>> {
   // eventos (com dono)
-  let evq = svc.from("events").select("id, title, starts_at, service_fee_pct, producer_id").not("producer_id", "is", null);
+  let evq = svc.from("events").select("id, title, starts_at, service_fee_pct, producer_id, status").not("producer_id", "is", null);
   if (producerIds) evq = evq.in("producer_id", producerIds);
-  const { data: evs } = await evq.order("starts_at", { ascending: false });
-  const eventos = evs ?? [];
+  const eventos = must(await evq.order("starts_at", { ascending: false }), "eventos") ?? [];
   const ids = producerIds ?? [...new Set(eventos.map((e) => e.producer_id as string))];
 
-  const { data: profs } = ids.length
-    ? await svc.from("profiles").select("id, full_name, payout_pix_key, payout_holder, advance_enabled, advance_fee_pct").in("id", ids)
-    : { data: [] as ProfRow[] };
+  const profs = ids.length
+    ? must(await svc.from("profiles").select("id, full_name, payout_pix_key, payout_holder, advance_enabled, advance_fee_pct").in("id", ids), "perfis")
+    : ([] as ProfRow[]);
   const profById = new Map((profs ?? []).map((p) => [p.id, p as ProfRow]));
 
   // resultado base por produtor
@@ -118,7 +130,7 @@ async function aggregate(
       advanceFeePct: Number(p?.advance_fee_pct ?? 5),
       eventos: [], ajustes: [],
       bruto: 0, cupom: 0, liquido: 0, taxaElleva: 0, creditos: 0, debitos: 0,
-      aLiberar: 0, disponivel: 0, antecipavel: 0, solicitado: 0, repassado: 0, taxaAntecipacao: 0,
+      aLiberar: 0, retidoBruto: 0, jaAntecipado: 0, disponivel: 0, saldoReal: 0, antecipavel: 0, solicitado: 0, repassado: 0, taxaAntecipacao: 0,
     });
   }
 
@@ -133,11 +145,11 @@ async function aggregate(
   };
   let items: ItemRow[] = [];
   if (eventIds.length) {
-    const { data } = await svc
+    const data = must(await svc
       .from("order_items")
       .select("event_id, unit_price, quantity, is_addon, orders!inner(id, status, discount, coupon_code)")
       .in("event_id", eventIds)
-      .eq("orders.status", "paid");
+      .eq("orders.status", "paid"), "itens pagos");
     items = (data ?? []) as unknown as ItemRow[];
   }
 
@@ -145,7 +157,7 @@ async function aggregate(
   const codes = [...new Set(items.map((i) => i.orders?.coupon_code).filter(Boolean))] as string[];
   const couponEvent = new Map<string, string>();
   if (codes.length) {
-    const { data: cps } = await svc.from("coupons").select("code, event_id").in("code", codes);
+    const cps = must(await svc.from("coupons").select("code, event_id").in("code", codes), "cupons");
     for (const c of cps ?? []) if (c.event_id) couponEvent.set(c.code, c.event_id);
   }
 
@@ -155,7 +167,8 @@ async function aggregate(
     evAgg.set(e.id, {
       eventId: e.id, title: e.title, startsAt: e.starts_at,
       vendidos: 0, bruto: 0, cupom: 0, liquido: 0, taxa: 0,
-      liberado: isLiberado(e.starts_at, now),
+      liberado: isLiberado(e.starts_at, now, e.status as string | null),
+      cancelado: e.status === "cancelled",
     });
   }
   const descontoAplicado = new Set<string>(); // 1x por pedido
@@ -194,9 +207,10 @@ async function aggregate(
   }
 
   // ajustes manuais
-  let adjq = svc.from("finance_adjustments").select("id, producer_id, kind, amount, reason, created_at");
+  // estornados (reversed_at) saem do saldo mas continuam no extrato
+  let adjq = svc.from("finance_adjustments").select("id, producer_id, kind, amount, reason, created_at").is("reversed_at", null);
   if (producerIds) adjq = adjq.in("producer_id", producerIds);
-  const { data: adjs } = await adjq.order("created_at", { ascending: false });
+  const adjs = must(await adjq.order("created_at", { ascending: false }), "lancamentos");
   for (const a of adjs ?? []) {
     const acc = out.get(a.producer_id as string);
     if (!acc) continue;
@@ -210,7 +224,7 @@ async function aggregate(
   const committed = new Map<string, { normal: number; advance: number }>();
   let payq = svc.from("payouts").select("producer_id, amount, status, kind, fee_amount");
   if (producerIds) payq = payq.in("producer_id", producerIds);
-  const { data: pays } = await payq;
+  const pays = must(await payq, "repasses");
   for (const p of pays ?? []) {
     const pid = p.producer_id as string;
     const acc = out.get(pid);
@@ -239,7 +253,14 @@ async function aggregate(
     // antecipação abate o retido; o que passar disso cai sobre o liberado
     const sobraAntecip = round2(Math.max(0, c.advance - retidoBruto));
     const disponivel = round2(Math.max(0, releasedPot - c.normal - sobraAntecip));
-    const antecipavel = round2(Math.max(0, retidoBruto - c.advance));
+    // Saldo REAL (pode ser negativo) — é o que a Elleva tem a receber do
+    // produtor quando um reembolso/débito entra depois de um repasse.
+    const saldoReal = round2(releasedPot - c.normal - sobraAntecip);
+    // Antecipável NUNCA pode passar do saldo total remanescente: débitos
+    // (chargeback/multa) não entram no "retido" (eles se cancelam no cálculo),
+    // então sem esse teto o produtor antecipava dinheiro já cobrado de volta.
+    const saldoTotalRemanescente = round2(pot - c.normal - c.advance);
+    const antecipavel = round2(Math.max(0, Math.min(retidoBruto - c.advance, saldoTotalRemanescente)));
 
     acc.liquido = liquido;
     acc.bruto = round2(acc.bruto);
@@ -247,8 +268,11 @@ async function aggregate(
     acc.taxaElleva = round2(acc.taxaElleva);
     acc.creditos = round2(acc.creditos);
     acc.debitos = round2(acc.debitos);
-    acc.aLiberar = retidoBruto;
+    acc.aLiberar = round2(Math.max(0, retidoBruto - c.advance)); // desconta o já antecipado
+    acc.retidoBruto = retidoBruto;
+    acc.jaAntecipado = round2(c.advance);
     acc.disponivel = disponivel;
+    acc.saldoReal = saldoReal;
     acc.antecipavel = antecipavel;
     acc.solicitado = round2(acc.solicitado);
     acc.repassado = round2(acc.repassado);
@@ -265,7 +289,7 @@ export async function computeProducerFinance(svc: Svc, producerId: string, now =
     map.get(producerId) ?? {
       producerId, nome: "Produtor", pixKey: null, advanceEnabled: false, advanceFeePct: 5,
       eventos: [], ajustes: [], bruto: 0, cupom: 0, liquido: 0, taxaElleva: 0, creditos: 0, debitos: 0,
-      aLiberar: 0, disponivel: 0, antecipavel: 0, solicitado: 0, repassado: 0, taxaAntecipacao: 0,
+      aLiberar: 0, retidoBruto: 0, jaAntecipado: 0, disponivel: 0, saldoReal: 0, antecipavel: 0, solicitado: 0, repassado: 0, taxaAntecipacao: 0,
     }
   );
 }

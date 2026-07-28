@@ -82,11 +82,14 @@ export async function gateRequiresPin(token: string): Promise<boolean> {
   }
 }
 
-/** Resolve o operador pelo PIN (portaria). Retorna nome/doc travados do cadastro. */
+/** Resolve o operador pelo PIN (portaria). Devolve SÓ o nome — o CPF nunca sai
+ *  do servidor (o PIN tem 10 mil combinações; devolver o documento permitiria
+ *  varrer os PINs e extrair nome+CPF de toda a equipe). O CPF é resolvido de
+ *  novo no servidor, pelo PIN, na hora de gravar a auditoria do check-in. */
 export async function resolveGateOperator(
   token: string,
   pin: string
-): Promise<{ name: string; doc: string } | null> {
+): Promise<{ name: string } | null> {
   const clean = (pin || "").trim();
   if (!token || !clean) return null;
   try {
@@ -95,12 +98,12 @@ export async function resolveGateOperator(
     if (!ev?.producer_id) return null;
     const { data: op } = await svc
       .from("gate_operators")
-      .select("name, doc")
+      .select("name")
       .eq("producer_id", ev.producer_id)
       .eq("pin", clean)
       .eq("active", true)
       .maybeSingle();
-    return op ? { name: op.name as string, doc: op.doc as string } : null;
+    return op ? { name: op.name as string } : null;
   } catch {
     return null;
   }

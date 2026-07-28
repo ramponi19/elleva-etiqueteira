@@ -64,7 +64,7 @@ const EventSchema = z.object({
   tiers: z.array(TierSchema).min(1, "Adicione ao menos um lote"),
 });
 
-export type EventFormState = { ok: boolean; error?: string; slug?: string };
+export type EventFormState = { ok: boolean; error?: string; slug?: string; notice?: string };
 
 function slugify(s: string) {
   return s
@@ -244,20 +244,37 @@ export async function updateEvent(id: string, input: EventInput): Promise<EventF
 
   const supabase = await createClient();
 
+  // posse explícita: sem isso a RLS barrava em silêncio (0 linhas, sem erro) e
+  // o produtor só via a falha depois, com mensagem crua do banco
+  if (auth.role === "producer") {
+    const { data: ev } = await supabase.from("events").select("producer_id").eq("id", id).single();
+    if (!ev || ev.producer_id !== auth.user.id) return { ok: false, error: "Evento não é seu." };
+  }
+
   const { error } = await supabase.from("events").update(eventColumns(v)).eq("id", id);
   if (error) return { ok: false, error: error.message };
 
-  // Se já há assentos vendidos/reservados, não mexe em lotes/mapa (evita
-  // corromper pedidos existentes — deletar lotes anularia seats.tier_id).
-  const { count: usados } = await supabase
-    .from("seats")
-    .select("*", { count: "exact", head: true })
-    .eq("event_id", id)
-    .in("status", ["sold", "held"]);
-  if ((usados ?? 0) > 0) {
-    revalidatePath("/produtor/eventos");
+  // Se o evento JÁ VENDEU, não mexe em lotes/mapa. Antes o guard olhava só
+  // `seats` vendidos/reservados — num evento sem assentos marcados (admissão
+  // geral) isso deixava passar: os lotes eram apagados e recriados, zerando
+  // `sold` (capacidade reabria) e anulando `order_items.tier_id` dos pedidos
+  // existentes. Agora qualquer venda paga tranca a estrutura de lotes.
+  const [{ count: usados }, { count: vendidos }] = await Promise.all([
+    supabase.from("seats").select("*", { count: "exact", head: true }).eq("event_id", id).in("status", ["sold", "held"]),
+    supabase
+      .from("order_items")
+      .select("*, orders!inner(status)", { count: "exact", head: true })
+      .eq("event_id", id)
+      .eq("orders.status", "paid"),
+  ]);
+  if ((usados ?? 0) > 0 || (vendidos ?? 0) > 0) {
+    revalidatePath("/produtor");
     revalidatePath("/agenda");
-    return { ok: true };
+    return {
+      ok: true,
+      notice:
+        "Dados do evento salvos. Os lotes NÃO foram alterados porque já existem ingressos vendidos — mexer neles corromperia os pedidos. Fale com a Elleva para ajustar lotes de um evento com vendas.",
+    };
   }
 
   // substitui os lotes (simples para MVP)
@@ -291,6 +308,18 @@ export async function deleteEvent(id: string): Promise<EventFormState> {
   if (auth.role === "producer") {
     const { data: ev } = await supabase.from("events").select("producer_id").eq("id", id).single();
     if (!ev || ev.producer_id !== auth.user.id) return { ok: false, error: "Evento não é seu." };
+  }
+
+  // NUNCA excluir evento que já vendeu: as FKs de order_items/tickets são
+  // `on delete set null`, então o DELETE passava e APAGAVA o histórico
+  // financeiro (GMV, taxa da Elleva, saldo do produtor) sem nenhum erro.
+  const { count: vendidos } = await supabase
+    .from("order_items")
+    .select("*, orders!inner(status)", { count: "exact", head: true })
+    .eq("event_id", id)
+    .eq("orders.status", "paid");
+  if ((vendidos ?? 0) > 0) {
+    return { ok: false, error: "Este evento já tem ingressos vendidos e não pode ser excluído — cancele o evento em vez de excluir." };
   }
 
   await supabase.from("ticket_tiers").delete().eq("event_id", id);

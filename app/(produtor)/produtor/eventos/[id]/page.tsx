@@ -107,7 +107,7 @@ export default async function EditarEvento({ params }: { params: Promise<{ id: s
     <div className="mx-auto max-w-[860px] px-5 py-10 sm:px-10">
       <h1 className="display-2 text-tinta">Editar evento</h1>
       <p className="corpo-suave mb-8 mt-1">{ev.title}</p>
-      <CriarEventoForm eventId={id} initial={initial} />
+      <CriarEventoForm eventId={id} statusAtual={ev.status as string} initial={initial} />
     </div>
   );
 }
