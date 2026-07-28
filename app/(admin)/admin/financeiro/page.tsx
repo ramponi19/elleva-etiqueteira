@@ -22,11 +22,13 @@ export default async function AdminFinanceiro() {
     svc
       .from("payouts")
       .select("id, producer_id, amount, fee_amount, net_amount, kind, status, reference, receipt_path, created_at, paid_at, rejected_reason")
-      .order("created_at", { ascending: false }),
+      .order("created_at", { ascending: false })
+      .limit(500), // extrato mostra os 500 mais recentes (evita corte silencioso do PostgREST)
     svc
       .from("finance_adjustments")
       .select("id, producer_id, kind, amount, reason, created_at")
-      .order("created_at", { ascending: false }),
+      .order("created_at", { ascending: false })
+      .limit(500), // extrato mostra os 500 mais recentes (evita corte silencioso do PostgREST)
   ]);
 
   const ids = [...new Set([...(pays ?? []).map((p) => p.producer_id as string), ...(adjs ?? []).map((a) => a.producer_id as string)])];

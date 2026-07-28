@@ -214,7 +214,9 @@ export function FinanceiroAdmin({
       <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {stat("lucide:clock", "Solicitações pendentes", fmtBRL(plat.pendentesTotal), "text-tinta-60", `${requests.length} na fila`)}
         {stat("lucide:check-check", "Já repassado", fmtBRL(plat.repassadoTotal), "text-palco")}
-        {stat("lucide:users", "Produtores com saldo", String(plat.produtores.filter((p) => p.disponivel > 0).length), "text-tinta-60", `de ${plat.produtores.length} com vendas`)}
+        {plat.deficitTotal > 0.01
+          ? stat("lucide:triangle-alert", "A receber de produtores", fmtBRL(plat.deficitTotal), "text-sol-escuro", "repasse acima do saldo (reembolso/débito depois)")
+          : stat("lucide:users", "Produtores com saldo", String(plat.produtores.filter((p) => p.disponivel > 0).length), "text-tinta-60", `de ${plat.produtores.length} com vendas`)}
         {stat("lucide:landmark", "Líquido dos produtores", fmtBRL(plat.liquidoTotal), "text-tinta-60", "total gerado (menos cupons)")}
       </div>
 
@@ -424,7 +426,7 @@ export function FinanceiroAdmin({
       <div className="mb-3 mt-8 flex flex-wrap items-end justify-between gap-3">
         <div>
           <h2 className="text-[18px] font-extrabold text-tinta">Extrato geral</h2>
-          <p className="corpo-suave m-0 mt-0.5 text-[12px]">Respeita o período selecionado acima.</p>
+          <p className="corpo-suave m-0 mt-0.5 text-[12px]">Respeita o período selecionado acima · mostra os 500 lançamentos mais recentes.</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <input className={`${inputCls} min-w-[200px]`} placeholder="Buscar no extrato" value={filtroLedger} onChange={(e) => setFiltroLedger(e.target.value)} />
