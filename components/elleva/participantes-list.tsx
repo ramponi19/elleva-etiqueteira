@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { clsx } from "clsx";
 import { Badge } from "@/components/ui/badge";
+import { downloadCsv } from "@/lib/csv";
 
 export interface Participante {
   code: string;
@@ -25,21 +26,19 @@ const STATUS: Record<string, { label: string; tom: "sol" | "papel" | "tinta" }> 
   cancelled: { label: "Cancelado", tom: "tinta" },
 };
 
+// usa o helper compartilhado (separador ";", que é o que o Excel pt-BR espera —
+// com vírgula o arquivo abria tudo numa coluna só)
 function baixarCsv(rows: Participante[]) {
-  const head = ["Nome", "E-mail", "WhatsApp", "Evento", "Ingresso", "Código", "Status", "Check-in em", "Validado por"];
-  const esc = (v: string) => `"${(v ?? "").replace(/"/g, '""')}"`;
-  const linhas = rows.map((r) =>
-    [r.buyerName, r.buyerEmail, r.buyerWhatsapp, r.eventTitle, r.tierName, r.code,
-     STATUS[r.status]?.label ?? r.status, r.usedAt ? new Date(r.usedAt).toLocaleString("pt-BR") : "", r.validadoPor]
-      .map(esc).join(",")
+  downloadCsv(
+    `participantes-${new Date().toISOString().slice(0, 10)}.csv`,
+    ["Nome", "E-mail", "WhatsApp", "Evento", "Ingresso", "Código", "Status", "Check-in em", "Validado por"],
+    rows.map((r) => [
+      r.buyerName, r.buyerEmail, r.buyerWhatsapp, r.eventTitle, r.tierName, r.code,
+      STATUS[r.status]?.label ?? r.status,
+      r.usedAt ? new Date(r.usedAt).toLocaleString("pt-BR") : "",
+      r.validadoPor,
+    ])
   );
-  const csv = "﻿" + [head.map(esc).join(","), ...linhas].join("\r\n"); // BOM p/ Excel
-  const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8;" }));
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `participantes-${new Date().toISOString().slice(0, 10)}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
 }
 
 export function ParticipantesList({

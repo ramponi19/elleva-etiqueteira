@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { clsx } from "clsx";
 import Icon from "@/components/shared/icon";
 import { Button } from "@/components/ui/button";
-import { Modal } from "@/components/ui/modal";
+import { Modal, PromptDialog } from "@/components/ui/modal";
 import { createEvent, updateEvent } from "@/lib/actions/events";
 import { TEMAS } from "@/lib/arte";
 import { maskCEP } from "@/lib/format";
@@ -384,7 +384,7 @@ export function CriarEventoForm({
             <input
               type="file"
               accept="image/jpeg,image/png,image/gif"
-              className="hidden"
+              className="sr-only"
               disabled={uploading}
               onChange={(e) => {
                 const file = e.target.files?.[0];
@@ -887,6 +887,8 @@ export function CriarEventoForm({
 // ── Editor rich-text simples (B/I/U, listas, link) ──────────────────────────
 function RichText({ value, onChange }: { value: string; onChange: (html: string) => void }) {
   const ref = useRef<HTMLDivElement>(null);
+  const selRef = useRef<Range | null>(null);
+  const [linkOpen, setLinkOpen] = useState(false);
   // Sincroniza o HTML no DOM só quando o editor NÃO está focado (carga inicial /
   // edição de evento). Enquanto digita, não re-injetamos innerHTML — senão o
   // cursor pula pro começo a cada tecla (texto "corre pra trás").
@@ -902,7 +904,7 @@ function RichText({ value, onChange }: { value: string; onChange: (html: string)
     onChange(ref.current?.innerHTML ?? "");
   };
   const btn =
-    "flex h-8 w-8 items-center justify-center rounded-[6px] text-tinta hover:bg-papel-2";
+    "flex h-10 w-10 items-center justify-center rounded-[6px] text-tinta hover:bg-papel-2";
   return (
     <div className="overflow-hidden rounded-[10px] border-[1.5px] border-tinta">
       <div className="flex flex-wrap items-center gap-1 border-b-[1.5px] border-tinta bg-papel-2 p-1.5">
@@ -917,8 +919,10 @@ function RichText({ value, onChange }: { value: string; onChange: (html: string)
           className={btn}
           onMouseDown={(e) => e.preventDefault()}
           onClick={() => {
-            const url = prompt("Endereço do link (https://...)");
-            if (url) cmd("createLink", url);
+            // guarda a seleção: abrir o modal tira o foco do editor e a seleção some
+            const sel = window.getSelection();
+            selRef.current = sel && sel.rangeCount ? sel.getRangeAt(0).cloneRange() : null;
+            setLinkOpen(true);
           }}
           aria-label="Link"
         >
@@ -932,7 +936,33 @@ function RichText({ value, onChange }: { value: string; onChange: (html: string)
         onInput={() => onChange(ref.current?.innerHTML ?? "")}
         data-placeholder="Adicione aqui a descrição do seu evento..."
         dir="ltr"
+        role="textbox"
+        aria-multiline="true"
+        aria-label="Descrição do evento"
         className="min-h-[180px] px-4 py-3 text-[16px] leading-relaxed text-tinta outline-none [&:empty::before]:text-tinta-35 [&:empty::before]:content-[attr(data-placeholder)]"
+      />
+
+      <PromptDialog
+        open={linkOpen}
+        onClose={() => setLinkOpen(false)}
+        onSubmit={(url) => {
+          setLinkOpen(false);
+          // devolve o foco e a seleção antes de aplicar o link
+          ref.current?.focus();
+          const sel = window.getSelection();
+          if (selRef.current && sel) {
+            sel.removeAllRanges();
+            sel.addRange(selRef.current);
+          }
+          const href = /^https?:\/\//i.test(url) ? url : `https://${url}`;
+          cmd("createLink", href);
+        }}
+        title="Inserir link"
+        message="Selecione o texto antes de clicar no link para aplicá-lo nele."
+        label="Endereço"
+        placeholder="https://..."
+        confirmLabel="Inserir"
+        validate={(v) => (v.trim().length > 3 ? null : "Informe o endereço do link.")}
       />
     </div>
   );

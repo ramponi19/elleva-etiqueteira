@@ -6,7 +6,8 @@ import { createClient, createServiceClient } from "@/lib/supabase/server";
 /** Emite (ou recupera) o certificado de um ingresso do próprio usuário.
  *  Só libera após o check-in (status 'used') e se o evento emite certificado. */
 export async function issueCertificate(
-  ticketId: string
+  ticketId: string,
+  participantName?: string
 ): Promise<{ ok: true; code: string } | { ok: false; error: string }> {
   // Posse verificada pela RLS: o usuário só enxerga os próprios ingressos.
   const supabase = await createClient();
@@ -28,19 +29,29 @@ export async function issueCertificate(
   if (!ev?.certificate_enabled)
     return { ok: false, error: "Este evento não emite certificado." };
 
+  const nome = (participantName ?? "").trim();
   const code = "CERT-" + randomBytes(6).toString("hex").toUpperCase();
   try {
     const svc = await createServiceClient();
-    // evita corrida: só grava se ainda estiver nulo
+    // Claim ATÔMICO: só grava se ainda estiver nulo. O check-then-update anterior
+    // deixava duas abas gerarem códigos diferentes — o último gravado invalidava
+    // o certificado já impresso.
+    const { data: claimed } = await svc
+      .from("tickets")
+      .update({ certificate_code: code, certificate_name: nome || null })
+      .eq("id", ticketId)
+      .is("certificate_code", null)
+      .select("certificate_code");
+    if (claimed?.length) return { ok: true, code };
+
+    // já existia: devolve o código vigente
     const { data: cur } = await svc
       .from("tickets")
       .select("certificate_code")
       .eq("id", ticketId)
       .single();
     if (cur?.certificate_code) return { ok: true, code: cur.certificate_code as string };
-    const { error } = await svc.from("tickets").update({ certificate_code: code }).eq("id", ticketId);
-    if (error) return { ok: false, error: "Não foi possível gerar o certificado." };
-    return { ok: true, code };
+    return { ok: false, error: "Não foi possível gerar o certificado." };
   } catch {
     return { ok: false, error: "Não foi possível gerar o certificado." };
   }

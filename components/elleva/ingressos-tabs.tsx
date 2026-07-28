@@ -35,6 +35,7 @@ export function IngressosTabs({ tickets, pendentes = [] }: { tickets: TicketView
   const [pending, startTransition] = useTransition();
   const [msg, setMsg] = useState<string | null>(null);
   const [transferId, setTransferId] = useState<string | null>(null);
+  const [certId, setCertId] = useState<string | null>(null);
 
   const grouped = useMemo(() => {
     const g: Record<"valid" | "used" | "cancelled", TicketView[]> = { valid: [], used: [], cancelled: [] };
@@ -75,10 +76,13 @@ export function IngressosTabs({ tickets, pendentes = [] }: { tickets: TicketView
     });
   }
 
-  function baixarCertificado(id: string) {
+  function baixarCertificado(nome: string) {
+    const id = certId;
+    if (!id) return;
     setMsg(null);
     startTransition(async () => {
-      const r = await issueCertificate(id);
+      const r = await issueCertificate(id, nome);
+      setCertId(null);
       if (r.ok) window.open(`/certificado/${r.code}`, "_blank", "noopener");
       else setMsg(r.error ?? "Não foi possível gerar o certificado.");
     });
@@ -159,7 +163,7 @@ export function IngressosTabs({ tickets, pendentes = [] }: { tickets: TicketView
               {tab === "used" && t.certEligible && (
                 <button
                   type="button"
-                  onClick={() => baixarCertificado(t.id)}
+                  onClick={() => setCertId(t.id)}
                   disabled={pending}
                   className="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-[10px] border-[1.5px] border-tinta px-3 py-2.5 text-[13px] font-medium text-tinta transition-colors hover:bg-papel-2 disabled:opacity-50"
                 >
@@ -185,6 +189,19 @@ export function IngressosTabs({ tickets, pendentes = [] }: { tickets: TicketView
         confirmLabel="Transferir"
         pending={pending}
         validate={(v) => (/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v) ? null : "Digite um e-mail válido.")}
+      />
+
+      <PromptDialog
+        open={certId !== null}
+        onClose={() => setCertId(null)}
+        onSubmit={baixarCertificado}
+        title="Emitir certificado"
+        message="Digite o nome de QUEM PARTICIPOU — é o nome que fica impresso no certificado e não muda depois."
+        label="Nome do participante"
+        placeholder="Nome completo"
+        confirmLabel="Emitir"
+        pending={pending}
+        validate={(v) => (v.trim().length >= 3 ? null : "Informe o nome completo do participante.")}
       />
     </div>
   );

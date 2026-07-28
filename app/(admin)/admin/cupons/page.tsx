@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { fmtBRL } from "@/lib/format";
-import { Badge } from "@/components/ui/badge";
 import CouponForm from "@/components/app/coupon-form";
+import { CouponToggle } from "@/components/app/coupon-toggle";
 
 export const metadata: Metadata = { title: "Cupons · Admin" };
 
@@ -38,7 +38,7 @@ export default async function AdminCupons() {
                 {c.used_count}{c.max_uses != null ? `/${c.max_uses}` : ""} usos
               </p>
             </div>
-            <Badge tom={c.active ? "sol" : "papel"}>{c.active ? "Ativo" : "Inativo"}</Badge>
+            <CouponToggle code={c.code as string} active={!!c.active} />
           </div>
         ))}
         {!coupons?.length && <p className="corpo-suave px-5 py-12 text-center">Nenhum cupom criado ainda.</p>}

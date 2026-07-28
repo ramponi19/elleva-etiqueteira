@@ -40,7 +40,7 @@ export async function getCertificate(code: string): Promise<CertificateView | nu
     const svc = await createServiceClient();
     const { data: ticket } = await svc
       .from("tickets")
-      .select("certificate_code, status, order_id, event_id")
+      .select("certificate_code, certificate_name, status, order_id, event_id")
       .eq("certificate_code", code)
       .single();
     if (!ticket || ticket.status !== "used") return null;
@@ -55,7 +55,10 @@ export async function getCertificate(code: string): Promise<CertificateView | nu
     ]);
     if (!ev || !ev.certificate_enabled) return null;
 
-    const participantName = order?.buyer_name?.trim() || "Participante";
+    // nome informado por quem emitiu (participante real); só cai no comprador
+    // se o certificado for antigo, de antes desse campo existir
+    const participantName =
+      (ticket.certificate_name as string | null)?.trim() || order?.buyer_name?.trim() || "Participante";
     const dateLabel = fmtDate(ev.starts_at as string);
     const city = (ev.city as string) ?? "";
     const hours = (ev.certificate_hours as string) || null;

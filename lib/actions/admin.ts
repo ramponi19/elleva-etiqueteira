@@ -35,6 +35,10 @@ export async function createCoupon(input: {
   const code = input.code.trim().toUpperCase();
   if (!code) return { ok: false, error: "Informe um código." };
   if (!(input.discountValue > 0)) return { ok: false, error: "Valor inválido." };
+  // sem esse teto, digitar "500" em vez de "50" criava um cupom que zera o
+  // subtotal (o ingresso saía de graça e a taxa continuava sendo cobrada)
+  if (input.discountType === "percent" && input.discountValue > 100)
+    return { ok: false, error: "Desconto percentual não pode passar de 100%." };
 
   const svc = await createServiceClient();
   const { error } = await svc.from("coupons").insert({
