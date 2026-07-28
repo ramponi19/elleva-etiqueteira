@@ -311,30 +311,31 @@ export function FinanceiroAdmin({
       </div>
 
       {/* POR EVENTO — quanto cada produtor gerou (resolve "quanto repasso pra cada um") */}
-      <div className="mb-3 mt-8 flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h2 className="text-[18px] font-extrabold text-tinta">Por evento</h2>
-          <p className="corpo-suave m-0 mt-0.5 text-[12px]">Quanto cada produtor gerou em cada evento — use os filtros pra saber exatamente quanto repassar.</p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          {PERIODOS.map((p) => (
-            <button key={p.d} type="button" onClick={() => setFDias(p.d)} aria-pressed={fDias === p.d} className={pillCls(fDias === p.d)}>
-              {p.label}
-            </button>
-          ))}
-          <select className={inputCls + " w-auto"} value={fEvento} onChange={(e) => setFEvento(e.target.value)}>
-            <option value="">Todos os eventos</option>
-            {eventosOpcoes.map(([id, t]) => <option key={id} value={id}>{t}</option>)}
-          </select>
-          <select className={inputCls + " w-auto"} value={fSituacao} onChange={(e) => setFSituacao(e.target.value as "todos" | "liberado" | "retido")}>
-            <option value="todos">Liberados e retidos</option>
-            <option value="liberado">Só liberados (a pagar)</option>
-            <option value="retido">Só retidos</option>
-          </select>
-          <Button variante="contorno" type="button" onClick={exportarEventos} disabled={!eventosFiltrados.length}>
-            <Icon icon="lucide:download" style={{ fontSize: 16 }} /> CSV
-          </Button>
-        </div>
+      <div className="mb-3 mt-8">
+        <h2 className="text-[18px] font-extrabold text-tinta">Por evento</h2>
+        <p className="corpo-suave m-0 mt-0.5 text-[12px]">Quanto cada produtor gerou em cada evento — use os filtros pra saber exatamente quanto repassar.</p>
+      </div>
+      {/* barra de filtros */}
+      <div className={`${card} mb-4 flex flex-wrap items-center gap-2 p-3`}>
+        <span className="rotulo mr-1 text-tinta-60">Período</span>
+        {PERIODOS.map((p) => (
+          <button key={p.d} type="button" onClick={() => setFDias(p.d)} aria-pressed={fDias === p.d} className={pillCls(fDias === p.d)}>
+            {p.label}
+          </button>
+        ))}
+        <span className="mx-1 hidden h-6 w-px bg-tinta/20 sm:block" />
+        <select className={inputCls + " w-auto min-w-[190px] flex-1"} value={fEvento} onChange={(e) => setFEvento(e.target.value)}>
+          <option value="">Todos os eventos</option>
+          {eventosOpcoes.map(([id, t]) => <option key={id} value={id}>{t}</option>)}
+        </select>
+        <select className={inputCls + " w-auto"} value={fSituacao} onChange={(e) => setFSituacao(e.target.value as "todos" | "liberado" | "retido")}>
+          <option value="todos">Liberados e retidos</option>
+          <option value="liberado">Só liberados (a pagar)</option>
+          <option value="retido">Só retidos</option>
+        </select>
+        <Button variante="contorno" type="button" onClick={exportarEventos} disabled={!eventosFiltrados.length}>
+          <Icon icon="lucide:download" style={{ fontSize: 16 }} /> CSV
+        </Button>
       </div>
 
       {/* resumo do recorte */}
