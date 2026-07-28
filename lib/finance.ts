@@ -65,6 +65,7 @@ export interface ProducerFinance {
 
   aLiberar: number;     // retido que AINDA será pago (já desconta antecipações)
   retidoBruto: number;  // retido total das vendas (antes de descontar antecipação)
+  bloqueado: number;    // retido de evento CANCELADO: não libera nem antecipa
   jaAntecipado: number; // Σ antecipações comprometidas (solicitadas + pagas)
   disponivel: number;   // pode sacar já (nunca negativo)
   saldoReal: number;    // idem, SEM clamp: negativo = produtor deve à Elleva
@@ -130,7 +131,7 @@ async function aggregate(
       advanceFeePct: Number(p?.advance_fee_pct ?? 5),
       eventos: [], ajustes: [],
       bruto: 0, cupom: 0, liquido: 0, taxaElleva: 0, creditos: 0, debitos: 0,
-      aLiberar: 0, retidoBruto: 0, jaAntecipado: 0, disponivel: 0, saldoReal: 0, antecipavel: 0, solicitado: 0, repassado: 0, taxaAntecipacao: 0,
+      aLiberar: 0, retidoBruto: 0, bloqueado: 0, jaAntecipado: 0, disponivel: 0, saldoReal: 0, antecipavel: 0, solicitado: 0, repassado: 0, taxaAntecipacao: 0,
     });
   }
 
@@ -204,6 +205,9 @@ async function aggregate(
     acc.bruto += a.bruto; acc.cupom += a.cupom; acc.taxaElleva += a.taxa;
     if (a.liberado) acc.disponivel += a.liquido; // usado como "releasedPot" temporário
     else acc.aLiberar += a.liquido;
+    // Evento cancelado: o dinheiro fica CONGELADO (os compradores têm reembolso
+    // a receber). Não libera e também não pode ser antecipado.
+    if (a.cancelado) acc.bloqueado += a.liquido;
   }
 
   // ajustes manuais
@@ -260,7 +264,10 @@ async function aggregate(
     // (chargeback/multa) não entram no "retido" (eles se cancelam no cálculo),
     // então sem esse teto o produtor antecipava dinheiro já cobrado de volta.
     const saldoTotalRemanescente = round2(pot - c.normal - c.advance);
-    const antecipavel = round2(Math.max(0, Math.min(retidoBruto - c.advance, saldoTotalRemanescente)));
+    // desconta também o retido de evento cancelado (congelado)
+    const antecipavel = round2(
+      Math.max(0, Math.min(retidoBruto - c.advance - acc.bloqueado, saldoTotalRemanescente))
+    );
 
     acc.liquido = liquido;
     acc.bruto = round2(acc.bruto);
@@ -270,6 +277,7 @@ async function aggregate(
     acc.debitos = round2(acc.debitos);
     acc.aLiberar = round2(Math.max(0, retidoBruto - c.advance)); // desconta o já antecipado
     acc.retidoBruto = retidoBruto;
+    acc.bloqueado = round2(acc.bloqueado);
     acc.jaAntecipado = round2(c.advance);
     acc.disponivel = disponivel;
     acc.saldoReal = saldoReal;
@@ -289,7 +297,7 @@ export async function computeProducerFinance(svc: Svc, producerId: string, now =
     map.get(producerId) ?? {
       producerId, nome: "Produtor", pixKey: null, advanceEnabled: false, advanceFeePct: 5,
       eventos: [], ajustes: [], bruto: 0, cupom: 0, liquido: 0, taxaElleva: 0, creditos: 0, debitos: 0,
-      aLiberar: 0, retidoBruto: 0, jaAntecipado: 0, disponivel: 0, saldoReal: 0, antecipavel: 0, solicitado: 0, repassado: 0, taxaAntecipacao: 0,
+      aLiberar: 0, retidoBruto: 0, bloqueado: 0, jaAntecipado: 0, disponivel: 0, saldoReal: 0, antecipavel: 0, solicitado: 0, repassado: 0, taxaAntecipacao: 0,
     }
   );
 }

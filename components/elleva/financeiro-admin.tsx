@@ -409,7 +409,11 @@ export function FinanceiroAdmin({
                 <span className="numero w-24 text-right text-[13px] text-tinta-60">{e.cupom > 0 ? `−${fmtBRL(e.cupom)}` : "—"}</span>
                 <span className="numero w-24 text-right text-[13.5px] font-semibold text-tinta">{fmtBRL(e.liquido)}</span>
                 <span className="numero w-24 text-right text-[13px] text-sol-escuro">{fmtBRL(e.taxa)}</span>
-                <span className="w-24 text-right"><Badge tom={e.liberado ? "sol" : "papel"}>{e.liberado ? "Liberado" : "Retido"}</Badge></span>
+                <span className="w-24 text-right">
+                  <Badge tom={e.cancelado ? "tinta" : e.liberado ? "sol" : "papel"}>
+                    {e.cancelado ? "Cancelado" : e.liberado ? "Liberado" : "Retido"}
+                  </Badge>
+                </span>
               </div>
             ))
           )}

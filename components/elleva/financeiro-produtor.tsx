@@ -127,11 +127,13 @@ export function FinanceiroProdutor({
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {stat("lucide:wallet", "Disponível para saque", fmtBRL(fin.disponivel), "text-sol", "de eventos já realizados")}
         {stat("lucide:hourglass", "A liberar", fmtBRL(fin.aLiberar), "text-tinta-60",
-          fin.jaAntecipado > 0
-            ? <>já antecipado: {fmtBRL(fin.jaAntecipado)}</>
-            : fin.advanceEnabled && fin.antecipavel > 0
-              ? <>pode antecipar {fmtBRL(fin.antecipavel)}</>
-              : <>libera ~2 dias após o evento</>)}
+          fin.bloqueado > 0
+            ? <span className="text-sol-escuro">{fmtBRL(fin.bloqueado)} retido por evento cancelado</span>
+            : fin.jaAntecipado > 0
+              ? <>já antecipado: {fmtBRL(fin.jaAntecipado)}</>
+              : fin.advanceEnabled && fin.antecipavel > 0
+                ? <>pode antecipar {fmtBRL(fin.antecipavel)}</>
+                : <>libera ~2 dias após o evento</>)}
         {stat("lucide:clock", "Em análise", fmtBRL(fin.solicitado), "text-tinta-60", "aguardando a Elleva")}
         {stat("lucide:check-check", "Já repassado", fmtBRL(fin.repassado), "text-palco")}
       </div>
@@ -213,7 +215,9 @@ export function FinanceiroProdutor({
                 <span>{e.vendidos} vendido(s) · bruto {fmtBRL(e.bruto)}</span>
                 {e.cupom > 0 && <span>cupom −{fmtBRL(e.cupom)}</span>}
                 <span>taxa Elleva {fmtBRL(e.taxa)}</span>
-                <Badge tom={e.liberado ? "sol" : "papel"}>{e.liberado ? "Liberado" : "A liberar"}</Badge>
+                <Badge tom={e.cancelado ? "tinta" : e.liberado ? "sol" : "papel"}>
+                  {e.cancelado ? "Evento cancelado" : e.liberado ? "Liberado" : "A liberar"}
+                </Badge>
               </div>
             </div>
           ))
