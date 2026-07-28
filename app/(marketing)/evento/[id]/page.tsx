@@ -167,9 +167,13 @@ export default async function EventPage({
               style={event.cover ? { color: "var(--color-papel)" } : undefined}
             >
               <div className="flex items-start justify-between gap-3">
-                <Badge tom={event.cover || !arte.clara ? "papel" : "tinta"}>
-                  {event.catLabel}
-                </Badge>
+                <span className="flex flex-wrap items-center gap-2">
+                  <Badge tom={event.cover || !arte.clara ? "papel" : "tinta"}>
+                    {event.catLabel}
+                  </Badge>
+                  {/* categoria livre do produtor (ex.: Sertanejo) — era coletada e nunca exibida */}
+                  {event.subcategoria && <span className="rotulo opacity-80">{event.subcategoria}</span>}
+                </span>
                 <span className="rotulo opacity-80">Nº {serie}</span>
               </div>
 

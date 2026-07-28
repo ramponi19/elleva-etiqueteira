@@ -56,6 +56,8 @@ export interface EventItem {
   hasSeating?: boolean;
   /** produtor absorve a taxa: o comprador NÃO paga taxa por cima */
   absorbFee?: boolean;
+  /** categoria livre do produtor (ex.: Sertanejo, Stand-up) */
+  subcategoria?: string | null;
   /** como o produtor chama o ingresso (Ingresso, Inscrição, Convite...) */
   nomenclatura?: string;
   /** endereço completo + preferência de exibir no mapa */
@@ -132,6 +134,7 @@ type EventDbRow = {
   theme?: string | null;
   has_seating?: boolean;
   absorb_fee?: boolean;
+  subcategory?: string | null;
   ticket_nomenclature?: string | null;
   show_on_maps?: boolean;
   address?: string | null;
@@ -179,6 +182,7 @@ function toEventItem(row: EventDbRow): EventItem {
     theme: row.theme ?? null,
     hasSeating: row.has_seating ?? false,
     absorbFee: row.absorb_fee ?? false,
+    subcategoria: row.subcategory ?? null,
     nomenclatura: row.ticket_nomenclature || "Ingresso",
     showOnMaps: row.show_on_maps ?? true,
     endereco: {
@@ -202,7 +206,7 @@ export async function getEvents(): Promise<EventItem[]> {
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("events")
-      .select("id, slug, title, description, category, icon, venue, city, starts_at, status, cover_url, is_featured, featured_order, serial, service_fee_pct, ticket_tiers(price)")
+      .select("id, slug, title, description, category, subcategory, icon, venue, city, starts_at, status, cover_url, is_featured, featured_order, serial, service_fee_pct, ticket_tiers(price)")
       .in("status", ["published", "sold_out"])
       .or("visibility.eq.public,visibility.is.null") // privado só pelo link direto
       .order("starts_at", { ascending: true });
@@ -229,7 +233,7 @@ export async function getEvent(
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("events")
-      .select("id, slug, title, description, category, icon, venue, city, state, starts_at, ends_at, status, cover_url, serial, service_fee_pct, absorb_fee, max_installments, tracking_meta_pixel, tracking_ga, theme, has_seating, ticket_nomenclature, show_on_maps, address, address_number, address_complement, neighborhood, cep, producer_name, producer_bio, ticket_tiers(id, name, description, price, sort_order, capacity, sold, is_addon)")
+      .select("id, slug, title, description, category, subcategory, icon, venue, city, state, starts_at, ends_at, status, cover_url, serial, service_fee_pct, absorb_fee, max_installments, tracking_meta_pixel, tracking_ga, theme, has_seating, ticket_nomenclature, show_on_maps, address, address_number, address_complement, neighborhood, cep, producer_name, producer_bio, ticket_tiers(id, name, description, price, sort_order, capacity, sold, is_addon)")
       .eq("slug", slug)
       .in("status", ["published", "sold_out"])
       .single();

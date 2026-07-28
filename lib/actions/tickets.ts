@@ -48,9 +48,16 @@ export async function validateTicket(rawCode: string, operator?: Operador): Prom
   const code = rawCode.trim().toUpperCase();
   if (!code) return { ok: false, reason: "not_found", message: "Informe o código do ingresso." };
 
-  const { user, role } = await getAuth();
+  const { user, role, fullName } = await getAuth();
   if (!user || (role !== "admin" && role !== "producer")) {
     return { ok: false, reason: "unauthorized", message: "Sem permissão para validar ingressos." };
+  }
+  // Validação feita de DENTRO do sistema (painel logado): quem validou é o
+  // próprio usuário autenticado. Antes nada era gravado e o "Validado por" da
+  // lista de participantes ficava vazio justamente nas validações internas —
+  // as únicas em que a identidade é 100% conhecida.
+  if (!operator?.name) {
+    operator = { ...operator, name: fullName?.trim() || user.email || "Painel Elleva" };
   }
 
   let svc;
