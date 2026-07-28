@@ -44,6 +44,16 @@ const inputCls = "w-full rounded-[10px] border-[1.5px] border-tinta bg-white px-
 const labelCls = "mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-tinta-60";
 const miniBtn = "inline-flex min-h-[36px] items-center gap-1.5 rounded-full border-[1.5px] border-tinta px-3 text-[12px] font-medium text-tinta hover:bg-papel-2 disabled:opacity-45 disabled:cursor-not-allowed";
 
+const PERIODOS = [
+  { d: 0, label: "Tudo" },
+  { d: 30, label: "30 dias" },
+  { d: 90, label: "90 dias" },
+  { d: 365, label: "12 meses" },
+];
+const pillCls = (ativo: boolean) =>
+  "inline-flex min-h-[38px] items-center rounded-[var(--radius-pill)] border-[1.5px] border-tinta px-3.5 text-[13px] font-medium transition-colors " +
+  (ativo ? "bg-sol text-tinta" : "text-tinta hover:bg-papel-2");
+
 export function FinanceiroAdmin({
   plat,
   requests,
@@ -59,6 +69,10 @@ export function FinanceiroAdmin({
   const [msg, setMsg] = useState<string | null>(null);
   const [busca, setBusca] = useState("");
   const [filtroLedger, setFiltroLedger] = useState("");
+  const [fEvento, setFEvento] = useState("");
+  const [fDias, setFDias] = useState(0);
+  const [fSituacao, setFSituacao] = useState<"todos" | "liberado" | "retido">("todos");
+  const [agora] = useState(() => Date.now());
 
   // modais
   const [pagar, setPagar] = useState<{ payoutId?: string; producerId?: string; label: string; valor: number } | null>(null);
@@ -94,8 +108,70 @@ export function FinanceiroAdmin({
 
   const ledgerFiltrado = useMemo(() => {
     const t = filtroLedger.trim().toLowerCase();
-    return t ? ledger.filter((l) => (l.produtor + l.tipo + l.status + l.referencia).toLowerCase().includes(t)) : ledger;
-  }, [ledger, filtroLedger]);
+    const desde = fDias ? agora - fDias * 86400000 : 0;
+    return ledger.filter(
+      (l) =>
+        (!t || (l.produtor + l.tipo + l.status + l.referencia).toLowerCase().includes(t)) &&
+        (!desde || (l.data ? new Date(l.data).getTime() >= desde : true))
+    );
+  }, [ledger, filtroLedger, fDias, agora]);
+
+  // ── Por evento: quanto CADA produtor gerou em CADA evento ──────────────
+  const eventosFlat = useMemo(
+    () =>
+      plat.produtores.flatMap((p) =>
+        p.eventos.map((e) => ({ ...e, produtor: p.nome, producerId: p.producerId, pixKey: p.pixKey }))
+      ),
+    [plat.produtores]
+  );
+  const eventosOpcoes = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const e of eventosFlat) m.set(e.eventId, e.title);
+    return [...m.entries()];
+  }, [eventosFlat]);
+
+  const eventosFiltrados = useMemo(() => {
+    const t = busca.trim().toLowerCase();
+    const desde = fDias ? agora - fDias * 86400000 : 0;
+    return eventosFlat
+      .filter(
+        (e) =>
+          (!fEvento || e.eventId === fEvento) &&
+          (!t || e.produtor.toLowerCase().includes(t) || e.title.toLowerCase().includes(t)) &&
+          (!desde || (e.startsAt ? new Date(e.startsAt).getTime() >= desde : true)) &&
+          (fSituacao === "todos" || (fSituacao === "liberado" ? e.liberado : !e.liberado))
+      )
+      .sort((a, b) => a.produtor.localeCompare(b.produtor) || (b.startsAt ?? "").localeCompare(a.startsAt ?? ""));
+  }, [eventosFlat, fEvento, busca, fDias, fSituacao, agora]);
+
+  // total a pagar por produtor no recorte (o "quanto repasso pra cada um")
+  const porProdutorNoRecorte = useMemo(() => {
+    const m = new Map<string, { nome: string; liquido: number; liberado: number; taxa: number }>();
+    for (const e of eventosFiltrados) {
+      const cur = m.get(e.producerId) ?? { nome: e.produtor, liquido: 0, liberado: 0, taxa: 0 };
+      cur.liquido += e.liquido;
+      cur.taxa += e.taxa;
+      if (e.liberado) cur.liberado += e.liquido;
+      m.set(e.producerId, cur);
+    }
+    return [...m.values()].sort((a, b) => b.liberado - a.liberado || b.liquido - a.liquido);
+  }, [eventosFiltrados]);
+
+  const somaRecorte = useMemo(
+    () => eventosFiltrados.reduce((a, e) => ({ liquido: a.liquido + e.liquido, taxa: a.taxa + e.taxa, vendidos: a.vendidos + e.vendidos }), { liquido: 0, taxa: 0, vendidos: 0 }),
+    [eventosFiltrados]
+  );
+
+  function exportarEventos() {
+    downloadCsv(
+      `financeiro-por-evento-${new Date().toISOString().slice(0, 10)}.csv`,
+      ["Produtor", "Chave Pix", "Evento", "Data", "Vendidos", "Bruto", "Cupom", "Liquido produtor", "Taxa Elleva", "Situacao"],
+      eventosFiltrados.map((e) => [
+        e.produtor, e.pixKey ?? "", e.title, csvDate(e.startsAt), e.vendidos,
+        csvNum(e.bruto), csvNum(e.cupom), csvNum(e.liquido), csvNum(e.taxa), e.liberado ? "Liberado" : "Retido",
+      ])
+    );
+  }
 
   function exportarLedger() {
     downloadCsv(
@@ -185,7 +261,7 @@ export function FinanceiroAdmin({
       <div className="mb-3 mt-8 flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-[18px] font-extrabold text-tinta">Saldo por produtor</h2>
         <div className="flex flex-wrap items-center gap-2">
-          <input className={`${inputCls} min-w-[200px]`} placeholder="Buscar produtor ou chave Pix" value={busca} onChange={(e) => setBusca(e.target.value)} />
+          <input className={`${inputCls} min-w-[220px]`} placeholder="Buscar produtor, Pix ou evento" value={busca} onChange={(e) => setBusca(e.target.value)} />
           <Button variante="contorno" type="button" onClick={exportarProdutores} disabled={!produtores.length}>
             <Icon icon="lucide:download" style={{ fontSize: 16 }} /> CSV
           </Button>
@@ -234,9 +310,110 @@ export function FinanceiroAdmin({
         </div>
       </div>
 
+      {/* POR EVENTO — quanto cada produtor gerou (resolve "quanto repasso pra cada um") */}
+      <div className="mb-3 mt-8 flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h2 className="text-[18px] font-extrabold text-tinta">Por evento</h2>
+          <p className="corpo-suave m-0 mt-0.5 text-[12px]">Quanto cada produtor gerou em cada evento — use os filtros pra saber exatamente quanto repassar.</p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          {PERIODOS.map((p) => (
+            <button key={p.d} type="button" onClick={() => setFDias(p.d)} aria-pressed={fDias === p.d} className={pillCls(fDias === p.d)}>
+              {p.label}
+            </button>
+          ))}
+          <select className={inputCls + " w-auto"} value={fEvento} onChange={(e) => setFEvento(e.target.value)}>
+            <option value="">Todos os eventos</option>
+            {eventosOpcoes.map(([id, t]) => <option key={id} value={id}>{t}</option>)}
+          </select>
+          <select className={inputCls + " w-auto"} value={fSituacao} onChange={(e) => setFSituacao(e.target.value as "todos" | "liberado" | "retido")}>
+            <option value="todos">Liberados e retidos</option>
+            <option value="liberado">Só liberados (a pagar)</option>
+            <option value="retido">Só retidos</option>
+          </select>
+          <Button variante="contorno" type="button" onClick={exportarEventos} disabled={!eventosFiltrados.length}>
+            <Icon icon="lucide:download" style={{ fontSize: 16 }} /> CSV
+          </Button>
+        </div>
+      </div>
+
+      {/* resumo do recorte */}
+      <div className="grid gap-4 sm:grid-cols-3">
+        <div className={`${card} p-4`}>
+          <p className="corpo-suave m-0 text-[12px]">Líquido dos produtores no recorte</p>
+          <p className="numero m-0 mt-0.5 text-[20px] text-tinta">{fmtBRL(somaRecorte.liquido)}</p>
+        </div>
+        <div className={`${card} p-4`}>
+          <p className="corpo-suave m-0 text-[12px]">Taxa da Elleva no recorte</p>
+          <p className="numero m-0 mt-0.5 text-[20px] text-sol-escuro">{fmtBRL(somaRecorte.taxa)}</p>
+        </div>
+        <div className={`${card} p-4`}>
+          <p className="corpo-suave m-0 text-[12px]">Ingressos vendidos no recorte</p>
+          <p className="numero m-0 mt-0.5 text-[20px] text-tinta">{somaRecorte.vendidos}</p>
+        </div>
+      </div>
+
+      {/* quanto pagar por produtor no recorte */}
+      {porProdutorNoRecorte.length > 0 && (
+        <div className={`${card} mt-4 p-5`}>
+          <p className="rotulo m-0 text-sol-escuro">Quanto repassar por produtor {fEvento ? "neste evento" : "no recorte"}</p>
+          <div className="mt-3 flex flex-col gap-2">
+            {porProdutorNoRecorte.map((p) => (
+              <div key={p.nome} className="flex flex-wrap items-center justify-between gap-2 border-b border-dashed border-tinta/30 pb-2 last:border-0 last:pb-0">
+                <span className="text-[14px] font-medium text-tinta">{p.nome}</span>
+                <span className="flex flex-wrap items-center gap-x-5 gap-y-1 text-[13px]">
+                  <span className="text-tinta-60">líquido {fmtBRL(p.liquido)}</span>
+                  <span className="text-tinta-60">taxa {fmtBRL(p.taxa)}</span>
+                  <span className="numero font-semibold text-palco">liberado {fmtBRL(p.liberado)}</span>
+                </span>
+              </div>
+            ))}
+          </div>
+          <p className="corpo-suave m-0 mt-3 text-[12px]">
+            “Liberado” é o que já pode ser pago (evento + 2 dias). O saldo real considera repasses já feitos e lançamentos — confira na tabela acima antes de pagar.
+          </p>
+        </div>
+      )}
+
+      <div className="mt-4 overflow-x-auto">
+        <div className={`${card} min-w-[900px]`}>
+          <div className="flex items-center gap-3 bg-papel-2 px-5 py-3 text-[11px] font-semibold uppercase tracking-wide text-tinta-60">
+            <span className="w-40">Produtor</span>
+            <span className="flex-1">Evento</span>
+            <span className="w-20">Data</span>
+            <span className="w-16 text-right">Vend.</span>
+            <span className="w-24 text-right">Bruto</span>
+            <span className="w-24 text-right">Cupom</span>
+            <span className="w-24 text-right">Líquido</span>
+            <span className="w-24 text-right">Taxa</span>
+            <span className="w-24 text-right">Situação</span>
+          </div>
+          {eventosFiltrados.length === 0 ? (
+            <p className="corpo-suave px-5 py-12 text-center">Nenhum evento com venda nesse recorte.</p>
+          ) : (
+            eventosFiltrados.map((e, i) => (
+              <div key={`${e.producerId}-${e.eventId}`} className={`flex items-center gap-3 px-5 py-3 ${i ? "border-t-[1.5px] border-dashed border-tinta" : ""}`}>
+                <span className="w-40 truncate text-[13px] text-tinta-60">{e.produtor}</span>
+                <span className="min-w-0 flex-1 truncate text-[13.5px] font-medium text-tinta">{e.title}</span>
+                <span className="w-20 text-[12.5px] text-tinta-60">{csvDate(e.startsAt)}</span>
+                <span className="numero w-16 text-right text-[13px] text-tinta-60">{e.vendidos}</span>
+                <span className="numero w-24 text-right text-[13px] text-tinta-60">{fmtBRL(e.bruto)}</span>
+                <span className="numero w-24 text-right text-[13px] text-tinta-60">{e.cupom > 0 ? `−${fmtBRL(e.cupom)}` : "—"}</span>
+                <span className="numero w-24 text-right text-[13.5px] font-semibold text-tinta">{fmtBRL(e.liquido)}</span>
+                <span className="numero w-24 text-right text-[13px] text-sol-escuro">{fmtBRL(e.taxa)}</span>
+                <span className="w-24 text-right"><Badge tom={e.liberado ? "sol" : "papel"}>{e.liberado ? "Liberado" : "Retido"}</Badge></span>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
       {/* EXTRATO GERAL */}
-      <div className="mb-3 mt-8 flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-[18px] font-extrabold text-tinta">Extrato geral</h2>
+      <div className="mb-3 mt-8 flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h2 className="text-[18px] font-extrabold text-tinta">Extrato geral</h2>
+          <p className="corpo-suave m-0 mt-0.5 text-[12px]">Respeita o período selecionado acima.</p>
+        </div>
         <div className="flex flex-wrap items-center gap-2">
           <input className={`${inputCls} min-w-[200px]`} placeholder="Buscar no extrato" value={filtroLedger} onChange={(e) => setFiltroLedger(e.target.value)} />
           <Button variante="contorno" type="button" onClick={exportarLedger} disabled={!ledgerFiltrado.length}>
