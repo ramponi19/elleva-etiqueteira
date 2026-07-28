@@ -3,7 +3,7 @@
 import { z } from "zod";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { getPaymentProvider } from "@/lib/payments";
-import { mpDeclineMessage } from "@/lib/payments/mp-messages";
+import { mpDeclineMessage, mpErrorMessage } from "@/lib/payments/mp-messages";
 import { markOrderPaid, claimSeats } from "@/lib/orders-helpers";
 import { feeUnit, round2, DEFAULT_FEE_PCT } from "@/lib/fees";
 import { isValidCPF } from "@/lib/cpf";
@@ -385,7 +385,8 @@ export async function createCardOrder(input: z.input<typeof CardSchema>): Promis
     const first = Array.isArray(err?.cause) ? err.cause[0] : undefined;
     const detail = first?.description || first?.code || err?.error || (e instanceof Error ? e.message : "");
     console.error("[createCardOrder] Mercado Pago falhou:", JSON.stringify({ detail, status: err?.status, cause: err?.cause }));
-    return { ok: false, error: detail ? `Não foi possível cobrar o cartão (${detail}).` : "Falha ao processar o cartão." };
+    // sempre pt-BR pro comprador; o texto cru (inglês) fica só no log acima
+    return { ok: false, error: mpErrorMessage(detail) };
   }
 }
 

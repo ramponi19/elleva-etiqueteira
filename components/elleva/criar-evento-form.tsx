@@ -1,12 +1,13 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { clsx } from "clsx";
 import Icon from "@/components/shared/icon";
 import { Button } from "@/components/ui/button";
 import { createEvent, updateEvent } from "@/lib/actions/events";
 import { TEMAS } from "@/lib/arte";
+import { maskCEP } from "@/lib/format";
 import { createClient } from "@/lib/supabase/client";
 
 // ── estilos base compartilhados ────────────────────────────────────────────
@@ -469,7 +470,12 @@ export function CriarEventoForm({
               <input
                 className={input}
                 value={f.cep}
-                onChange={(e) => set("cep", e.target.value)}
+                inputMode="numeric"
+                onChange={(e) => {
+                  const masked = maskCEP(e.target.value);
+                  set("cep", masked);
+                  if (masked.replace(/\D/g, "").length === 8) lookupCep(masked); // autofill ao completar
+                }}
                 onBlur={(e) => lookupCep(e.target.value)}
                 placeholder="_____-___"
               />
@@ -840,6 +846,15 @@ export function CriarEventoForm({
 // ── Editor rich-text simples (B/I/U, listas, link) ──────────────────────────
 function RichText({ value, onChange }: { value: string; onChange: (html: string) => void }) {
   const ref = useRef<HTMLDivElement>(null);
+  // Sincroniza o HTML no DOM só quando o editor NÃO está focado (carga inicial /
+  // edição de evento). Enquanto digita, não re-injetamos innerHTML — senão o
+  // cursor pula pro começo a cada tecla (texto "corre pra trás").
+  useEffect(() => {
+    const el = ref.current;
+    if (el && document.activeElement !== el && el.innerHTML !== (value ?? "")) {
+      el.innerHTML = value ?? "";
+    }
+  }, [value]);
   const cmd = (command: string, arg?: string) => {
     ref.current?.focus();
     document.execCommand(command, false, arg);
@@ -875,8 +890,8 @@ function RichText({ value, onChange }: { value: string; onChange: (html: string)
         suppressContentEditableWarning
         onInput={() => onChange(ref.current?.innerHTML ?? "")}
         data-placeholder="Adicione aqui a descrição do seu evento..."
+        dir="ltr"
         className="min-h-[180px] px-4 py-3 text-[16px] leading-relaxed text-tinta outline-none [&:empty::before]:text-tinta-35 [&:empty::before]:content-[attr(data-placeholder)]"
-        dangerouslySetInnerHTML={{ __html: value }}
       />
     </div>
   );
