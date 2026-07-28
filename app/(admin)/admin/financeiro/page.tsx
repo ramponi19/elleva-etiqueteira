@@ -14,33 +14,40 @@ const STATUS_LABEL: Record<string, string> = {
 export default async function AdminFinanceiro() {
   const svc = await createServiceClient();
   const plat = await computePlatformFinance(svc);
-  const nomeDe = new Map(plat.produtores.map((p) => [p.producerId, p.nome]));
 
+  // NÃO usar embed profiles(...) aqui: payouts e finance_adjustments têm DUAS
+  // FKs para profiles (producer_id e created_by) → o embed fica ambíguo e a
+  // consulta falha silenciosamente. Busca os perfis em separado.
   const [{ data: pays }, { data: adjs }] = await Promise.all([
     svc
       .from("payouts")
-      .select("id, producer_id, amount, fee_amount, net_amount, kind, status, reference, receipt_path, created_at, paid_at, rejected_reason, profiles(full_name, payout_pix_key, payout_holder)")
+      .select("id, producer_id, amount, fee_amount, net_amount, kind, status, reference, receipt_path, created_at, paid_at, rejected_reason")
       .order("created_at", { ascending: false }),
     svc
       .from("finance_adjustments")
-      .select("id, producer_id, kind, amount, reason, created_at, profiles(full_name, payout_holder)")
+      .select("id, producer_id, kind, amount, reason, created_at")
       .order("created_at", { ascending: false }),
   ]);
 
-  const prof = (row: { profiles?: unknown }) => {
-    const p = Array.isArray(row.profiles) ? row.profiles[0] : row.profiles;
-    return (p ?? null) as { full_name: string | null; payout_pix_key?: string | null; payout_holder: string | null } | null;
+  const ids = [...new Set([...(pays ?? []).map((p) => p.producer_id as string), ...(adjs ?? []).map((a) => a.producer_id as string)])];
+  const { data: profs } = ids.length
+    ? await svc.from("profiles").select("id, full_name, payout_holder, payout_pix_key").in("id", ids)
+    : { data: [] as { id: string; full_name: string | null; payout_holder: string | null; payout_pix_key: string | null }[] };
+  const profById = new Map((profs ?? []).map((p) => [p.id, p]));
+  const nomeDe = new Map(plat.produtores.map((p) => [p.producerId, p.nome]));
+
+  const nome = (pid: string) => {
+    const p = profById.get(pid);
+    return nomeDe.get(pid) || p?.full_name || p?.payout_holder || `Produtor ${pid.slice(0, 8)}`;
   };
-  const nome = (row: { producer_id: string; profiles?: unknown }) =>
-    nomeDe.get(row.producer_id) || prof(row)?.full_name || prof(row)?.payout_holder || `Produtor ${row.producer_id.slice(0, 8)}`;
 
   const requests: RequestRow[] = (pays ?? [])
     .filter((p) => p.status === "requested")
     .map((p) => ({
       id: p.id as string,
       producerId: p.producer_id as string,
-      producer: nome(p as { producer_id: string; profiles?: unknown }),
-      pixKey: prof(p as { profiles?: unknown })?.payout_pix_key ?? null,
+      producer: nome(p.producer_id as string),
+      pixKey: profById.get(p.producer_id as string)?.payout_pix_key ?? null,
       kind: String(p.kind ?? "normal"),
       amount: Number(p.amount),
       fee: Number(p.fee_amount ?? 0),
@@ -53,7 +60,7 @@ export default async function AdminFinanceiro() {
     ...(pays ?? []).map((p) => ({
       id: p.id as string,
       data: (p.paid_at ?? p.created_at) as string,
-      produtor: nome(p as { producer_id: string; profiles?: unknown }),
+      produtor: nome(p.producer_id as string),
       tipo: p.kind === "advance" ? "Antecipação" : "Repasse",
       status: STATUS_LABEL[String(p.status)] ?? String(p.status),
       valor: -Number(p.amount),
@@ -65,7 +72,7 @@ export default async function AdminFinanceiro() {
     ...(adjs ?? []).map((a) => ({
       id: a.id as string,
       data: a.created_at as string,
-      produtor: nome(a as { producer_id: string; profiles?: unknown }),
+      produtor: nome(a.producer_id as string),
       tipo: a.kind === "credit" ? "Crédito" : "Débito",
       status: "Lançamento",
       valor: a.kind === "credit" ? Number(a.amount) : -Number(a.amount),

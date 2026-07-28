@@ -159,7 +159,9 @@ export function FinanceiroProdutor({
               <Icon icon="lucide:zap" style={{ fontSize: 18, color: "var(--color-sol-escuro)" }} />
               Antecipar recebimento
             </p>
-            {fin.antecipavel > 0 ? (
+            {!temPix ? (
+              <p className="corpo-suave m-0 mt-0.5">Cadastre sua chave Pix abaixo para poder antecipar.</p>
+            ) : fin.antecipavel > 0 ? (
               <p className="corpo-suave m-0 mt-0.5">
                 Receba <strong className="text-tinta">{fmtBRL(netAntecip)}</strong> agora, sem esperar o evento —
                 antecipando {fmtBRL(fin.antecipavel)} com taxa de {fin.advanceFeePct}% ({fmtBRL(feeAntecip)}).
