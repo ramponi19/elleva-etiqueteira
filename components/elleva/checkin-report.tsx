@@ -8,10 +8,10 @@ import { EmBreve } from "@/components/elleva/em-breve";
 // via RLS, ingressos que o próprio produtor havia COMPRADO de outros eventos, e
 // (c) agrupava por título, fundindo duas edições com o mesmo nome.
 export async function CheckinReportElleva() {
-  const { user } = await getAuth();
+  const { user, role } = await getAuth();
   if (!user) return null;
   const svc = await createServiceClient();
-  const { data } = await svc.rpc("producer_checkin_report", { p_producer: user.id });
+  const { data } = await svc.rpc("producer_checkin_report", { p_producer: role === "admin" ? null : user.id });
   const rows = ((data ?? []) as { event_id: string; title: string; emitidos: number; usados: number }[])
     .map((r) => ({ id: r.event_id, title: r.title, total: Number(r.emitidos), used: Number(r.usados) }))
     .sort((a, b) => b.total - a.total);

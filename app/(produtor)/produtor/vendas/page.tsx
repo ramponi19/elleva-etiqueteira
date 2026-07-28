@@ -13,15 +13,16 @@ export const metadata: Metadata = { title: "Vendas · Produtor" };
 // os números paravam de crescer. Também filtra pelos eventos DO PRODUTOR (antes a
 // query de tickets/itens pegava, via RLS, o que ele havia COMPRADO de terceiros).
 export default async function ProdutorVendas() {
-  const { user } = await getAuth();
+  const { user, role } = await getAuth();
   if (!user) return null;
+  const escopo = role === "admin" ? null : user.id; // admin ve a plataforma toda
   const svc = await createServiceClient();
 
   const [{ data: diario }, { data: porEvento }, { data: checkin }, { data: eventos }] = await Promise.all([
-    svc.rpc("producer_sales_daily", { p_producer: user.id, p_days: 400 }),
-    svc.rpc("finance_event_totals", { p_producers: [user.id] }),
-    svc.rpc("producer_checkin_report", { p_producer: user.id }),
-    svc.from("events").select("id, title, status, starts_at").eq("producer_id", user.id).order("starts_at", { ascending: false }),
+    svc.rpc("producer_sales_daily", { p_producer: escopo, p_days: 400 }),
+    svc.rpc("finance_event_totals", { p_producers: escopo ? [escopo] : null }),
+    svc.rpc("producer_checkin_report", { p_producer: escopo }),
+    (escopo ? svc.from("events").select("id, title, status, starts_at").eq("producer_id", escopo) : svc.from("events").select("id, title, status, starts_at")).order("starts_at", { ascending: false }),
   ]);
 
   const rows: VendaRow[] = ((diario ?? []) as { dia: string; receita: number; qtd: number; pedidos: number }[]).map((d) => ({

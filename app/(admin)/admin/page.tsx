@@ -26,7 +26,7 @@ export default async function AdminOverview() {
     { data: totais },
     { data: recentOrders },
   ] = await Promise.all([
-    supabase.from("events").select("*", { count: "exact", head: true }),
+    supabase.from("events").select("id", { count: "exact", head: true }), // select("*") e bloqueado pelos grants por coluna -> count vinha nulo ("Eventos 0")
     supabase.from("profiles").select("*", { count: "exact", head: true }).eq("role", "customer"),
     supabase.from("profiles").select("*", { count: "exact", head: true }).eq("role", "producer"),
     svc.rpc("admin_overview_totals"),

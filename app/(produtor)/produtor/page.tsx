@@ -39,7 +39,7 @@ export default async function ProdutorInicio() {
   // produtor COMPROU de outros eventos, que entravam como "receita" dele — e
   // ainda truncava em max-rows (1000) sem erro.
   const svc = await createServiceClient();
-  const { data: totais } = await svc.rpc("finance_event_totals", { p_producers: [user!.id] });
+  const { data: totais } = await svc.rpc("finance_event_totals", { p_producers: role === "admin" ? null : [user!.id] });
   const revenue = ((totais ?? []) as { bruto: number }[]).reduce((a, r) => a + Number(r.bruto), 0);
   const sold = ((totais ?? []) as { vendidos: number }[]).reduce((a, r) => a + Number(r.vendidos), 0);
 
