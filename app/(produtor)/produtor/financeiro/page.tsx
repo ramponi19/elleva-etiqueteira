@@ -3,7 +3,6 @@ import { createServiceClient } from "@/lib/supabase/server";
 import { getAuth } from "@/lib/auth";
 import { computeProducerFinance } from "@/lib/finance";
 import { FinanceiroProdutor, type PayoutView } from "@/components/elleva/financeiro-produtor";
-import { EmBreve } from "@/components/elleva/em-breve";
 
 export const metadata: Metadata = { title: "Financeiro · Produtor" };
 
@@ -16,7 +15,7 @@ export default async function ProdutorFinanceiro() {
 
   const { data: payoutsData } = await svc
     .from("payouts")
-    .select("amount, status, method, reference, note, created_at, paid_at, rejected_reason")
+    .select("id, amount, net_amount, fee_amount, fee_pct, kind, status, method, reference, receipt_path, created_at, paid_at, rejected_reason")
     .eq("producer_id", user.id)
     .order("created_at", { ascending: false });
   const payouts = (payoutsData ?? []) as PayoutView[];
@@ -38,12 +37,7 @@ export default async function ProdutorFinanceiro() {
     <div className="p-6 sm:p-8">
       <h1 className="display-2 text-tinta">Financeiro</h1>
       <p className="corpo-suave mb-6 mt-1">Seu saldo, extrato por evento, repasses e conta de recebimento.</p>
-
-      {fin.eventos.length === 0 && payouts.length === 0 && !conta.pixKey ? (
-        <EmBreve icon="lucide:wallet" nota="Crie um evento e comece a vender — seu saldo e repasses aparecem aqui." />
-      ) : (
-        <FinanceiroProdutor fin={fin} payouts={payouts} conta={conta} temPix={!!conta.pixKey} />
-      )}
+      <FinanceiroProdutor fin={fin} payouts={payouts} conta={conta} />
     </div>
   );
 }

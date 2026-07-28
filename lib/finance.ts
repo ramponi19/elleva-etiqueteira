@@ -1,14 +1,22 @@
 // ============================================================
-// Núcleo financeiro — split contábil (produtor × Elleva) e saldo de repasse.
-// Fonte única de verdade, reusada pelo Financeiro do produtor e do admin.
+// Núcleo financeiro — split contábil (produtor × Elleva), saldo, antecipação
+// e lançamentos manuais. Fonte única de verdade do Financeiro (produtor e admin).
 // ============================================================
-// Modelo: a Elleva recebe tudo no gateway. NADA sai automático.
-// - Bruto do produtor = valor de face dos ingressos pagos (unit_price × qty).
+// Modelo: a Elleva recebe tudo no gateway. NADA sai automático — todo repasse
+// é concluído por um clique do admin (protege contra cancelamento de evento).
+//
+// - Bruto do produtor = face dos ingressos pagos (unit_price × qty).
 // - Taxa da Elleva = service_fee_pct sobre a face (paga pelo comprador, por cima).
-// - Cupom de PRODUTOR (coupons.event_id != null) sai do líquido do produtor;
+// - Cupom de PRODUTOR (coupons.event_id != null) sai do líquido dele;
 //   cupom global (event_id null) é bancado pela Elleva.
-// - Líquido do produtor = bruto − cupons de produtor.
-// - "Disponível" libera só depois do evento + margem de segurança (reembolso).
+// - Saldo "a liberar" → "disponível" após o evento + SAFETY_DAYS.
+// - ANTECIPAÇÃO: o produtor pode sacar o retido antes do evento pagando uma
+//   taxa % (definida pelo admin, por produtor). A taxa é receita da Elleva.
+// - AJUSTES manuais (crédito/débito) entram no saldo imediatamente — é a
+//   autonomia do admin pra chargeback, multa, acerto, bônus.
+//
+// Agregação em UMA passada (sem N+1): busca eventos/itens/payouts/ajustes de
+// todos os produtores pedidos e monta o resultado em memória.
 import type { createServiceClient } from "@/lib/supabase/server";
 import { feeUnit, round2 } from "@/lib/fees";
 
@@ -21,188 +29,266 @@ export interface EventoFin {
   eventId: string;
   title: string;
   startsAt: string | null;
-  vendidos: number;   // ingressos pagos (unidades, sem add-on)
-  bruto: number;      // face
-  cupom: number;      // desconto de cupom de produtor (sai do líquido)
-  liquido: number;    // bruto − cupom
-  taxa: number;       // receita da Elleva neste evento
-  liberado: boolean;  // evento já passou + margem
+  vendidos: number;
+  bruto: number;
+  cupom: number;
+  liquido: number;
+  taxa: number;      // receita da Elleva neste evento
+  liberado: boolean;
+}
+
+export interface AjusteFin {
+  id: string;
+  kind: "credit" | "debit";
+  amount: number;
+  reason: string;
+  createdAt: string;
 }
 
 export interface ProducerFinance {
+  producerId: string;
+  nome: string;
+  pixKey: string | null;
+  advanceEnabled: boolean;
+  advanceFeePct: number;
+
   eventos: EventoFin[];
-  bruto: number;
-  cupom: number;
-  liquido: number;      // total líquido do produtor (todos os eventos pagos)
-  taxaElleva: number;   // total de taxa gerado (receita Elleva)
-  liberado: number;     // líquido de eventos já liberados
-  aLiberar: number;     // líquido de eventos ainda retidos
-  repassado: number;    // Σ payouts pagos
-  solicitado: number;   // Σ payouts em aberto (requested)
-  disponivel: number;   // liberado − repassado − solicitado (o que dá pra sacar)
+  ajustes: AjusteFin[];
+
+  bruto: number;        // face vendida
+  cupom: number;        // cupons do produtor
+  liquido: number;      // bruto − cupom
+  taxaElleva: number;   // taxa de serviço gerada (receita Elleva)
+  creditos: number;
+  debitos: number;
+
+  aLiberar: number;     // retido (evento ainda não liberou)
+  disponivel: number;   // pode sacar já
+  antecipavel: number;  // retido não comprometido (dá pra antecipar)
+  solicitado: number;   // Σ payouts requested (bruto)
+  repassado: number;    // Σ payouts paid (bruto)
+  taxaAntecipacao: number; // Σ fee_amount de antecipações pagas (receita Elleva)
 }
 
-function liberado(startsAt: string | null, now: number): boolean {
+function isLiberado(startsAt: string | null, now: number): boolean {
   if (!startsAt) return false;
   return new Date(startsAt).getTime() + SAFETY_DAYS * 86400000 < now;
 }
 
-type ItemRow = {
-  event_id: string | null;
-  unit_price: number;
-  quantity: number;
-  is_addon: boolean | null;
-  order_id: string;
+type ProfRow = {
+  id: string;
+  full_name: string | null;
+  payout_pix_key: string | null;
+  payout_holder: string | null;
+  advance_enabled: boolean | null;
+  advance_fee_pct: number | null;
 };
 
-/** Calcula o financeiro de UM produtor (ou de um conjunto de eventos). */
-export async function computeProducerFinance(svc: Svc, producerId: string, now = Date.now()): Promise<ProducerFinance> {
-  const empty: ProducerFinance = { eventos: [], bruto: 0, cupom: 0, liquido: 0, taxaElleva: 0, liberado: 0, aLiberar: 0, repassado: 0, solicitado: 0, disponivel: 0 };
+function nomeDe(p: ProfRow | undefined, pid: string) {
+  return p?.full_name || p?.payout_holder || `Produtor ${pid.slice(0, 8)}`;
+}
 
-  const { data: evs } = await svc
-    .from("events")
-    .select("id, title, starts_at, service_fee_pct")
-    .eq("producer_id", producerId)
-    .order("starts_at", { ascending: false });
-  if (!evs?.length) {
-    // ainda pode ter payouts (raro) — busca mesmo assim
-    return await withPayouts(svc, producerId, empty);
+/** Agrega o financeiro de vários produtores numa passada. */
+async function aggregate(
+  svc: Svc,
+  producerIds: string[] | null,
+  now: number
+): Promise<Map<string, ProducerFinance>> {
+  // eventos (com dono)
+  let evq = svc.from("events").select("id, title, starts_at, service_fee_pct, producer_id").not("producer_id", "is", null);
+  if (producerIds) evq = evq.in("producer_id", producerIds);
+  const { data: evs } = await evq.order("starts_at", { ascending: false });
+  const eventos = evs ?? [];
+  const ids = producerIds ?? [...new Set(eventos.map((e) => e.producer_id as string))];
+
+  const { data: profs } = ids.length
+    ? await svc.from("profiles").select("id, full_name, payout_pix_key, payout_holder, advance_enabled, advance_fee_pct").in("id", ids)
+    : { data: [] as ProfRow[] };
+  const profById = new Map((profs ?? []).map((p) => [p.id, p as ProfRow]));
+
+  // resultado base por produtor
+  const out = new Map<string, ProducerFinance>();
+  for (const pid of ids) {
+    const p = profById.get(pid);
+    out.set(pid, {
+      producerId: pid,
+      nome: nomeDe(p, pid),
+      pixKey: p?.payout_pix_key ?? null,
+      advanceEnabled: !!p?.advance_enabled,
+      advanceFeePct: Number(p?.advance_fee_pct ?? 5),
+      eventos: [], ajustes: [],
+      bruto: 0, cupom: 0, liquido: 0, taxaElleva: 0, creditos: 0, debitos: 0,
+      aLiberar: 0, disponivel: 0, antecipavel: 0, solicitado: 0, repassado: 0, taxaAntecipacao: 0,
+    });
   }
-  const evById = new Map(evs.map((e) => [e.id, e]));
-  const ids = evs.map((e) => e.id);
 
-  const { data: items } = await svc
-    .from("order_items")
-    .select("event_id, unit_price, quantity, is_addon, orders!inner(id, status, discount, coupon_code)")
-    .in("event_id", ids)
-    .eq("orders.status", "paid");
+  const eventIds = eventos.map((e) => e.id);
+  const ownerOf = new Map(eventos.map((e) => [e.id, e.producer_id as string]));
+  const evById = new Map(eventos.map((e) => [e.id, e]));
 
-  // desconto de cupom de PRODUTOR por pedido (só cupom com event_id do produtor)
-  const orderById = new Map<string, { discount: number; coupon: string | null }>();
-  for (const it of (items ?? []) as unknown as (ItemRow & { orders: { id: string; discount: number; coupon_code: string | null } })[]) {
-    const o = it.orders;
-    if (o && !orderById.has(o.id)) orderById.set(o.id, { discount: Number(o.discount ?? 0), coupon: o.coupon_code ?? null });
+  // itens pagos
+  type ItemRow = {
+    event_id: string | null; unit_price: number; quantity: number; is_addon: boolean | null;
+    orders: { id: string; status: string; discount: number | null; coupon_code: string | null } | null;
+  };
+  let items: ItemRow[] = [];
+  if (eventIds.length) {
+    const { data } = await svc
+      .from("order_items")
+      .select("event_id, unit_price, quantity, is_addon, orders!inner(id, status, discount, coupon_code)")
+      .in("event_id", eventIds)
+      .eq("orders.status", "paid");
+    items = (data ?? []) as unknown as ItemRow[];
   }
-  const codes = [...new Set([...orderById.values()].map((o) => o.coupon).filter(Boolean))] as string[];
-  const producerCouponCodes = new Set<string>();
+
+  // quais cupons usados são de PRODUTOR (têm event_id)
+  const codes = [...new Set(items.map((i) => i.orders?.coupon_code).filter(Boolean))] as string[];
+  const couponEvent = new Map<string, string>();
   if (codes.length) {
     const { data: cps } = await svc.from("coupons").select("code, event_id").in("code", codes);
-    for (const c of cps ?? []) if (c.event_id && ids.includes(c.event_id)) producerCouponCodes.add(c.code);
-  }
-  // rateia o desconto do pedido só uma vez por pedido (no evento do cupom)
-  const producerDiscountByOrder = new Map<string, number>();
-  for (const [oid, o] of orderById) {
-    if (o.coupon && producerCouponCodes.has(o.coupon)) producerDiscountByOrder.set(oid, o.discount);
+    for (const c of cps ?? []) if (c.event_id) couponEvent.set(c.code, c.event_id);
   }
 
-  const agg = new Map<string, EventoFin>();
-  for (const e of evs) {
-    agg.set(e.id, {
+  // agrega por evento
+  const evAgg = new Map<string, EventoFin>();
+  for (const e of eventos) {
+    evAgg.set(e.id, {
       eventId: e.id, title: e.title, startsAt: e.starts_at,
       vendidos: 0, bruto: 0, cupom: 0, liquido: 0, taxa: 0,
-      liberado: liberado(e.starts_at, now),
+      liberado: isLiberado(e.starts_at, now),
     });
   }
-  const discountConsumed = new Set<string>();
-  for (const it of (items ?? []) as unknown as (ItemRow & { orders: { id: string } })[]) {
+  const descontoAplicado = new Set<string>(); // 1x por pedido
+  for (const it of items) {
     if (!it.event_id) continue;
-    const a = agg.get(it.event_id);
+    const a = evAgg.get(it.event_id);
     const e = evById.get(it.event_id);
     if (!a || !e) continue;
-    const qty = it.quantity;
-    const face = Number(it.unit_price) * qty;
-    a.bruto += face;
+    a.bruto += Number(it.unit_price) * it.quantity;
     if (!it.is_addon) {
-      a.vendidos += qty;
-      a.taxa += feeUnit(Number(it.unit_price), Number(e.service_fee_pct ?? 10)) * qty;
+      a.vendidos += it.quantity;
+      a.taxa += feeUnit(Number(it.unit_price), Number(e.service_fee_pct ?? 10)) * it.quantity;
     }
-    // aplica o desconto de cupom de produtor uma vez (no primeiro item do pedido/evento)
-    const oid = it.orders?.id;
-    if (oid && producerDiscountByOrder.has(oid) && !discountConsumed.has(oid)) {
-      a.cupom += producerDiscountByOrder.get(oid)!;
-      discountConsumed.add(oid);
+    const o = it.orders;
+    if (o?.coupon_code && !descontoAplicado.has(o.id)) {
+      const cupomEv = couponEvent.get(o.coupon_code);
+      if (cupomEv === it.event_id) {
+        a.cupom += Number(o.discount ?? 0);
+        descontoAplicado.add(o.id);
+      }
     }
   }
 
-  let bruto = 0, cupom = 0, taxaElleva = 0, libAcc = 0, aLiberarAcc = 0;
-  const eventos: EventoFin[] = [];
-  for (const a of agg.values()) {
+  // joga os eventos nos produtores
+  for (const a of evAgg.values()) {
+    const pid = ownerOf.get(a.eventId);
+    const acc = pid ? out.get(pid) : null;
+    if (!acc) continue;
     a.bruto = round2(a.bruto); a.taxa = round2(a.taxa); a.cupom = round2(a.cupom);
     a.liquido = round2(Math.max(0, a.bruto - a.cupom));
-    if (a.vendidos === 0 && a.bruto === 0) continue; // sem vendas: fora do extrato
-    eventos.push(a);
-    bruto += a.bruto; cupom += a.cupom; taxaElleva += a.taxa;
-    if (a.liberado) libAcc += a.liquido; else aLiberarAcc += a.liquido;
+    if (a.bruto === 0 && a.vendidos === 0) continue; // sem venda: fora do extrato
+    acc.eventos.push(a);
+    acc.bruto += a.bruto; acc.cupom += a.cupom; acc.taxaElleva += a.taxa;
+    if (a.liberado) acc.disponivel += a.liquido; // usado como "releasedPot" temporário
+    else acc.aLiberar += a.liquido;
   }
 
-  const base: ProducerFinance = {
-    eventos,
-    bruto: round2(bruto), cupom: round2(cupom), liquido: round2(bruto - cupom),
-    taxaElleva: round2(taxaElleva), liberado: round2(libAcc), aLiberar: round2(aLiberarAcc),
-    repassado: 0, solicitado: 0, disponivel: 0,
-  };
-  return await withPayouts(svc, producerId, base);
+  // ajustes manuais
+  let adjq = svc.from("finance_adjustments").select("id, producer_id, kind, amount, reason, created_at");
+  if (producerIds) adjq = adjq.in("producer_id", producerIds);
+  const { data: adjs } = await adjq.order("created_at", { ascending: false });
+  for (const a of adjs ?? []) {
+    const acc = out.get(a.producer_id as string);
+    if (!acc) continue;
+    const amount = Number(a.amount);
+    acc.ajustes.push({ id: a.id as string, kind: a.kind as "credit" | "debit", amount, reason: a.reason as string, createdAt: a.created_at as string });
+    if (a.kind === "credit") acc.creditos += amount; else acc.debitos += amount;
+  }
+
+  // payouts
+  let payq = svc.from("payouts").select("producer_id, amount, status, kind, fee_amount");
+  if (producerIds) payq = payq.in("producer_id", producerIds);
+  const { data: pays } = await payq;
+  for (const p of pays ?? []) {
+    const acc = out.get(p.producer_id as string);
+    if (!acc) continue;
+    const amount = Number(p.amount);
+    if (p.status === "paid") {
+      acc.repassado += amount;
+      if (p.kind === "advance") acc.taxaAntecipacao += Number(p.fee_amount ?? 0);
+    } else if (p.status === "requested") acc.solicitado += amount;
+  }
+
+  // fecha as contas (modelo de "pote"): ajustes entram como liberados
+  for (const acc of out.values()) {
+    const releasedVendas = acc.disponivel; // acumulado acima
+    const liquido = round2(acc.bruto - acc.cupom);
+    const pot = round2(liquido + acc.creditos - acc.debitos);
+    const releasedPot = round2(releasedVendas + acc.creditos - acc.debitos);
+    const committed = round2(acc.repassado + acc.solicitado);
+    const disponivel = round2(Math.max(0, releasedPot - committed));
+    const antecipavel = round2(Math.max(0, pot - committed - disponivel));
+
+    acc.liquido = liquido;
+    acc.bruto = round2(acc.bruto);
+    acc.cupom = round2(acc.cupom);
+    acc.taxaElleva = round2(acc.taxaElleva);
+    acc.creditos = round2(acc.creditos);
+    acc.debitos = round2(acc.debitos);
+    acc.aLiberar = round2(Math.max(0, pot - releasedPot));
+    acc.disponivel = disponivel;
+    acc.antecipavel = antecipavel;
+    acc.solicitado = round2(acc.solicitado);
+    acc.repassado = round2(acc.repassado);
+    acc.taxaAntecipacao = round2(acc.taxaAntecipacao);
+    acc.eventos.sort((a, b) => (b.startsAt ?? "").localeCompare(a.startsAt ?? ""));
+  }
+  return out;
 }
 
-export interface ProducerRow {
-  producerId: string;
-  nome: string;
-  liquido: number;
-  disponivel: number;
-  solicitado: number;
-  repassado: number;
-  pixKey: string | null;
+/** Financeiro de UM produtor. */
+export async function computeProducerFinance(svc: Svc, producerId: string, now = Date.now()): Promise<ProducerFinance> {
+  const map = await aggregate(svc, [producerId], now);
+  return (
+    map.get(producerId) ?? {
+      producerId, nome: "Produtor", pixKey: null, advanceEnabled: false, advanceFeePct: 5,
+      eventos: [], ajustes: [], bruto: 0, cupom: 0, liquido: 0, taxaElleva: 0, creditos: 0, debitos: 0,
+      aLiberar: 0, disponivel: 0, antecipavel: 0, solicitado: 0, repassado: 0, taxaAntecipacao: 0,
+    }
+  );
 }
+
 export interface PlatformFinance {
-  gmv: number;          // valor de face vendido (todos os produtores)
-  taxaTotal: number;    // RECEITA DA ELLEVA (soma das taxas)
-  liquidoTotal: number; // total líquido dos produtores
-  repassadoTotal: number;
-  solicitadoTotal: number;
-  produtores: ProducerRow[];
+  gmv: number;              // face vendida (total)
+  taxaTotal: number;        // receita de taxa de serviço
+  antecipacaoTotal: number; // receita de taxa de antecipação
+  receitaTotal: number;     // taxaTotal + antecipacaoTotal
+  liquidoTotal: number;     // líquido dos produtores
+  aPagarTotal: number;      // Σ disponível (o que a Elleva deve agora)
+  retidoTotal: number;      // Σ a liberar
+  pendentesTotal: number;   // Σ solicitado
+  repassadoTotal: number;   // Σ pago
+  produtores: ProducerFinance[];
 }
 
-/** Visão financeira da plataforma (admin): receita de taxas separada + por produtor. */
+/** Visão da plataforma (admin) — receita separada + saldo de cada produtor. */
 export async function computePlatformFinance(svc: Svc, now = Date.now()): Promise<PlatformFinance> {
-  const { data: evs } = await svc.from("events").select("producer_id").not("producer_id", "is", null);
-  const producerIds = [...new Set((evs ?? []).map((e) => e.producer_id as string))];
-
-  const { data: profs } = producerIds.length
-    ? await svc.from("profiles").select("id, full_name, payout_pix_key, payout_holder").in("id", producerIds)
-    : { data: [] as { id: string; full_name: string | null; payout_pix_key: string | null; payout_holder: string | null }[] };
-  const profById = new Map((profs ?? []).map((p) => [p.id, p]));
-
-  const produtores: ProducerRow[] = [];
-  let gmv = 0, taxaTotal = 0, liquidoTotal = 0, repassadoTotal = 0, solicitadoTotal = 0;
-  for (const pid of producerIds) {
-    const fin = await computeProducerFinance(svc, pid, now);
-    const prof = profById.get(pid);
-    gmv += fin.bruto; taxaTotal += fin.taxaElleva; liquidoTotal += fin.liquido;
-    repassadoTotal += fin.repassado; solicitadoTotal += fin.solicitado;
-    produtores.push({
-      producerId: pid,
-      // sem nome no perfil: cai pro titular do Pix e, em último caso, id curto —
-      // o admin precisa saber PARA QUEM está pagando.
-      nome: prof?.full_name || prof?.payout_holder || `Produtor ${pid.slice(0, 8)}`,
-      liquido: fin.liquido, disponivel: fin.disponivel, solicitado: fin.solicitado, repassado: fin.repassado,
-      pixKey: prof?.payout_pix_key ?? null,
-    });
-  }
-  produtores.sort((a, b) => b.disponivel - a.disponivel);
+  const map = await aggregate(svc, null, now);
+  const produtores = [...map.values()].filter((p) => p.bruto > 0 || p.repassado > 0 || p.solicitado > 0 || p.ajustes.length > 0);
+  const sum = (f: (p: ProducerFinance) => number) => round2(produtores.reduce((a, p) => a + f(p), 0));
+  const taxaTotal = sum((p) => p.taxaElleva);
+  const antecipacaoTotal = sum((p) => p.taxaAntecipacao);
+  produtores.sort((a, b) => b.disponivel - a.disponivel || b.liquido - a.liquido);
   return {
-    gmv: round2(gmv), taxaTotal: round2(taxaTotal), liquidoTotal: round2(liquidoTotal),
-    repassadoTotal: round2(repassadoTotal), solicitadoTotal: round2(solicitadoTotal),
+    gmv: sum((p) => p.bruto),
+    taxaTotal,
+    antecipacaoTotal,
+    receitaTotal: round2(taxaTotal + antecipacaoTotal),
+    liquidoTotal: sum((p) => p.liquido),
+    aPagarTotal: sum((p) => p.disponivel),
+    retidoTotal: sum((p) => p.aLiberar),
+    pendentesTotal: sum((p) => p.solicitado),
+    repassadoTotal: sum((p) => p.repassado),
     produtores,
   };
-}
-
-async function withPayouts(svc: Svc, producerId: string, base: ProducerFinance): Promise<ProducerFinance> {
-  const { data: pays } = await svc.from("payouts").select("amount, status").eq("producer_id", producerId);
-  let repassado = 0, solicitado = 0;
-  for (const p of pays ?? []) {
-    if (p.status === "paid") repassado += Number(p.amount);
-    else if (p.status === "requested") solicitado += Number(p.amount);
-  }
-  const disponivel = round2(Math.max(0, base.liberado - repassado - solicitado));
-  return { ...base, repassado: round2(repassado), solicitado: round2(solicitado), disponivel };
 }
