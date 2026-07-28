@@ -168,8 +168,8 @@ export async function computePlatformFinance(svc: Svc, now = Date.now()): Promis
   const producerIds = [...new Set((evs ?? []).map((e) => e.producer_id as string))];
 
   const { data: profs } = producerIds.length
-    ? await svc.from("profiles").select("id, full_name, payout_pix_key").in("id", producerIds)
-    : { data: [] as { id: string; full_name: string | null; payout_pix_key: string | null }[] };
+    ? await svc.from("profiles").select("id, full_name, payout_pix_key, payout_holder").in("id", producerIds)
+    : { data: [] as { id: string; full_name: string | null; payout_pix_key: string | null; payout_holder: string | null }[] };
   const profById = new Map((profs ?? []).map((p) => [p.id, p]));
 
   const produtores: ProducerRow[] = [];
@@ -181,7 +181,9 @@ export async function computePlatformFinance(svc: Svc, now = Date.now()): Promis
     repassadoTotal += fin.repassado; solicitadoTotal += fin.solicitado;
     produtores.push({
       producerId: pid,
-      nome: prof?.full_name || "Produtor",
+      // sem nome no perfil: cai pro titular do Pix e, em último caso, id curto —
+      // o admin precisa saber PARA QUEM está pagando.
+      nome: prof?.full_name || prof?.payout_holder || `Produtor ${pid.slice(0, 8)}`,
       liquido: fin.liquido, disponivel: fin.disponivel, solicitado: fin.solicitado, repassado: fin.repassado,
       pixKey: prof?.payout_pix_key ?? null,
     });

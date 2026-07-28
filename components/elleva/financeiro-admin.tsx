@@ -99,7 +99,10 @@ export function FinanceiroAdmin({ plat, requests }: { plat: PlatformFinance; req
           ) : (
             plat.produtores.map((p, i) => (
               <div key={p.producerId} className={`flex items-center gap-3 px-5 py-3.5 ${i ? "border-t-[1.5px] border-dashed border-tinta" : ""}`}>
-                <span className="flex-1 truncate text-[14px] font-medium text-tinta">{p.nome}</span>
+                <span className="flex-1 min-w-0 truncate">
+                  <span className="block truncate text-[14px] font-medium text-tinta">{p.nome}</span>
+                  <span className="block truncate font-mono text-[11px] text-tinta-60">{p.pixKey || "sem chave Pix"}</span>
+                </span>
                 <span className="numero w-24 text-right text-[14px] text-tinta-60">{fmtBRL(p.liquido)}</span>
                 <span className="numero w-24 text-right text-[14px] font-semibold text-tinta">{fmtBRL(p.disponivel)}</span>
                 <span className="numero w-24 text-right text-[14px] text-tinta-60">{fmtBRL(p.solicitado)}</span>

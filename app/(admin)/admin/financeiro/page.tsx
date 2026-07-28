@@ -12,15 +12,15 @@ export default async function AdminFinanceiro() {
   // solicitações pendentes + nome/pix do produtor
   const { data: reqs } = await svc
     .from("payouts")
-    .select("id, producer_id, amount, created_at, profiles(full_name, payout_pix_key)")
+    .select("id, producer_id, amount, created_at, profiles(full_name, payout_pix_key, payout_holder)")
     .eq("status", "requested")
     .order("created_at", { ascending: true });
 
   const requests: RequestRow[] = (reqs ?? []).map((r) => {
-    const prof = (Array.isArray(r.profiles) ? r.profiles[0] : r.profiles) as { full_name: string | null; payout_pix_key: string | null } | null;
+    const prof = (Array.isArray(r.profiles) ? r.profiles[0] : r.profiles) as { full_name: string | null; payout_pix_key: string | null; payout_holder: string | null } | null;
     return {
       id: r.id as string,
-      producer: prof?.full_name || "Produtor",
+      producer: prof?.full_name || prof?.payout_holder || `Produtor ${String(r.producer_id).slice(0, 8)}`,
       pixKey: prof?.payout_pix_key ?? null,
       amount: Number(r.amount),
       created_at: r.created_at as string,
