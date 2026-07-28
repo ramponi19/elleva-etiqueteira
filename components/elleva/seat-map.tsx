@@ -63,7 +63,7 @@ export function SeatMap({
     selecionados.reduce((a, s) => {
       const t = s.tierId ? tierById.get(s.tierId) : undefined;
       const price = t?.price ?? 0;
-      return a + price + feeUnit(price, event.feePct);
+      return a + price + (event.absorbFee ? 0 : feeUnit(price, event.feePct));
     }, 0)
   );
   const maxParcelas = event.maxInstallments ?? 12;
@@ -86,6 +86,7 @@ export function SeatMap({
           price: t?.price ?? 0,
           qty: 1,
           feePct: event.feePct,
+          absorbFee: !!event.absorbFee,
           maxInstallments: maxParcelas,
           seatId: s.id,
           seatLabel: s.label,

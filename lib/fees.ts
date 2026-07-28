@@ -14,7 +14,7 @@ export function feeUnit(price: number, pct: number): number {
   return Math.round(price * pct) / 100;
 }
 
-/** taxa total de um conjunto de itens (feeUnit × quantidade, por item) */
-export function feeOf(items: { price: number; qty: number; feePct: number }[]): number {
-  return round2(items.reduce((a, i) => a + feeUnit(i.price, i.feePct) * i.qty, 0));
+/** taxa total COBRADA do comprador (itens de evento que absorve a taxa não somam) */
+export function feeOf(items: { price: number; qty: number; feePct: number; absorbFee?: boolean }[]): number {
+  return round2(items.reduce((a, i) => a + (i.absorbFee ? 0 : feeUnit(i.price, i.feePct) * i.qty), 0));
 }

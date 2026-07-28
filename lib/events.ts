@@ -54,6 +54,26 @@ export interface EventItem {
   theme?: string | null;
   /** assentos marcados ativados neste evento (events.has_seating) */
   hasSeating?: boolean;
+  /** produtor absorve a taxa: o comprador NÃO paga taxa por cima */
+  absorbFee?: boolean;
+  /** como o produtor chama o ingresso (Ingresso, Inscrição, Convite...) */
+  nomenclatura?: string;
+  /** endereço completo + preferência de exibir no mapa */
+  showOnMaps?: boolean;
+  endereco?: {
+    logradouro?: string | null;
+    numero?: string | null;
+    complemento?: string | null;
+    bairro?: string | null;
+    cep?: string | null;
+    cidade?: string | null;
+    uf?: string | null;
+  };
+  /** quem organiza (exibido no bloco "Organização") */
+  produtorNome?: string | null;
+  produtorBio?: string | null;
+  /** término (para eventos de vários dias) */
+  endsAtISO?: string | null;
 }
 
 /** Um assento do mapa (quando o evento tem assentos marcados). */
@@ -111,6 +131,18 @@ type EventDbRow = {
   tracking_ga?: string | null;
   theme?: string | null;
   has_seating?: boolean;
+  absorb_fee?: boolean;
+  ticket_nomenclature?: string | null;
+  show_on_maps?: boolean;
+  address?: string | null;
+  address_number?: string | null;
+  address_complement?: string | null;
+  neighborhood?: string | null;
+  cep?: string | null;
+  state?: string | null;
+  producer_name?: string | null;
+  producer_bio?: string | null;
+  ends_at?: string | null;
 };
 
 // Serial derivado do uuid enquanto a migration 0018 (coluna events.serial)
@@ -146,6 +178,21 @@ function toEventItem(row: EventDbRow): EventItem {
     trackingGa: row.tracking_ga ?? null,
     theme: row.theme ?? null,
     hasSeating: row.has_seating ?? false,
+    absorbFee: row.absorb_fee ?? false,
+    nomenclatura: row.ticket_nomenclature || "Ingresso",
+    showOnMaps: row.show_on_maps ?? true,
+    endereco: {
+      logradouro: row.address ?? null,
+      numero: row.address_number ?? null,
+      complemento: row.address_complement ?? null,
+      bairro: row.neighborhood ?? null,
+      cep: row.cep ?? null,
+      cidade: row.city,
+      uf: row.state ?? null,
+    },
+    produtorNome: row.producer_name ?? null,
+    produtorBio: row.producer_bio ?? null,
+    endsAtISO: row.ends_at ?? null,
   };
 }
 
@@ -182,7 +229,7 @@ export async function getEvent(
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("events")
-      .select("id, slug, title, description, category, icon, venue, city, starts_at, status, cover_url, serial, service_fee_pct, max_installments, tracking_meta_pixel, tracking_ga, theme, has_seating, ticket_tiers(id, name, description, price, sort_order, capacity, sold, is_addon)")
+      .select("id, slug, title, description, category, icon, venue, city, state, starts_at, ends_at, status, cover_url, serial, service_fee_pct, absorb_fee, max_installments, tracking_meta_pixel, tracking_ga, theme, has_seating, ticket_nomenclature, show_on_maps, address, address_number, address_complement, neighborhood, cep, producer_name, producer_bio, ticket_tiers(id, name, description, price, sort_order, capacity, sold, is_addon)")
       .eq("slug", slug)
       .in("status", ["published", "sold_out"])
       .single();

@@ -78,6 +78,25 @@ export default async function EventPage({
     : null;
   const garantiram = tiers.reduce((a, t) => a + t.sold, 0);
 
+  // Endereço completo (era coletado no cadastro e nunca exibido) + duração
+  const end = event.endereco;
+  const enderecoLinha = [
+    [end?.logradouro, end?.numero].filter(Boolean).join(", "),
+    end?.complemento,
+    end?.bairro,
+    end?.cep,
+  ]
+    .filter((p) => p && String(p).trim())
+    .join(" · ");
+  const buscaMapa = enderecoLinha
+    ? `${event.venueCity} ${enderecoLinha}`
+    : event.venueCity;
+  const duracao = event.endsAtISO
+    ? new Intl.DateTimeFormat("pt-BR", {
+        timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit",
+      }).format(new Date(event.endsAtISO))
+    : null;
+
   // Dados estruturados schema.org/Event (rich results de eventos no Google)
   const venue = event.venueCity.split("·")[0]?.trim() ?? event.venueCity;
   const jsonLd = {
@@ -216,15 +235,23 @@ export default async function EventPage({
           <div className="rounded-[var(--radius-card)] border-[1.5px] border-tinta p-5">
             <h3 className="rotulo m-0 text-sol-escuro">Local</h3>
             <p className="corpo m-0 mt-2 font-medium text-tinta">{event.venueCity}</p>
-            <p className="corpo-suave m-0 mt-1">{event.d} {event.mon} · {event.time}</p>
-            <a
-              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.venueCity)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-3 inline-flex min-h-[44px] items-center gap-2 rounded-[var(--radius-pill)] border-[1.5px] border-tinta px-4 text-[14px] font-medium text-tinta transition-colors hover:bg-papel-2"
-            >
-              <Icon icon="lucide:map-pin" style={{ fontSize: 17, color: "var(--color-sol-escuro)" }} /> Como chegar
-            </a>
+            {/* endereço completo — era coletado no cadastro e nunca aparecia */}
+            {enderecoLinha && <p className="corpo-suave m-0 mt-1">{enderecoLinha}</p>}
+            <p className="corpo-suave m-0 mt-1">
+              {event.d} {event.mon} · {event.time}
+              {duracao ? ` · até ${duracao}` : ""}
+            </p>
+            {/* respeita a escolha do produtor em "mostrar o endereço no mapa" */}
+            {event.showOnMaps !== false && (
+              <a
+                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(buscaMapa)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-3 inline-flex min-h-[44px] items-center gap-2 rounded-[var(--radius-pill)] border-[1.5px] border-tinta px-4 text-[14px] font-medium text-tinta transition-colors hover:bg-papel-2"
+              >
+                <Icon icon="lucide:map-pin" style={{ fontSize: 17, color: "var(--color-sol-escuro)" }} /> Como chegar
+              </a>
+            )}
           </div>
           <div className="rounded-[var(--radius-card)] border-[1.5px] border-tinta p-5">
             <h3 className="rotulo m-0 text-sol-escuro">Meia-entrada</h3>
@@ -235,13 +262,25 @@ export default async function EventPage({
           </div>
           <div className="rounded-[var(--radius-card)] border-[1.5px] border-tinta p-5">
             <h3 className="rotulo m-0 text-sol-escuro">Organização</h3>
-            <p className="corpo-suave m-0 mt-2">
-              Evento produzido por parceiro local e vendido pela Elleva, a
-              bilheteria oficial do interior. Dúvidas?{" "}
-              <Link href="/ajuda" className="text-sol-escuro underline underline-offset-2">
-                Central de Ajuda
-              </Link>.
-            </p>
+            {/* nome/bio do produtor — o formulário pedia e nada era exibido */}
+            {event.produtorNome ? (
+              <>
+                <p className="corpo m-0 mt-2 font-medium text-tinta">{event.produtorNome}</p>
+                {event.produtorBio && <p className="corpo-suave m-0 mt-1">{event.produtorBio}</p>}
+                <p className="corpo-suave m-0 mt-2">
+                  Vendido pela Elleva, a bilheteria oficial do interior. Dúvidas?{" "}
+                  <Link href="/ajuda" className="text-sol-escuro underline underline-offset-2">Central de Ajuda</Link>.
+                </p>
+              </>
+            ) : (
+              <p className="corpo-suave m-0 mt-2">
+                Evento produzido por parceiro local e vendido pela Elleva, a
+                bilheteria oficial do interior. Dúvidas?{" "}
+                <Link href="/ajuda" className="text-sol-escuro underline underline-offset-2">
+                  Central de Ajuda
+                </Link>.
+              </p>
+            )}
           </div>
         </section>
       </div>

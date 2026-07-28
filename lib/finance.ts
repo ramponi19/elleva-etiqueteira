@@ -41,6 +41,7 @@ export interface EventoFin {
   cupom: number;
   liquido: number;
   taxa: number;       // receita da Elleva neste evento
+  absorvida: number;  // taxa que o PRODUTOR absorveu (sai do liquido dele)
   liberado: boolean;
   cancelado: boolean; // evento cancelado: NUNCA libera nem antecipa
 }
@@ -65,7 +66,8 @@ export interface ProducerFinance {
 
   bruto: number;        // face vendida
   cupom: number;        // cupons do produtor
-  liquido: number;      // bruto − cupom
+  absorvida: number;    // taxa de servico que o produtor absorveu
+  liquido: number;      // bruto − cupom − absorvida
   taxaElleva: number;   // taxa de serviço cobrada (receita Elleva)
   creditos: number;
   debitos: number;
@@ -105,7 +107,7 @@ type ProfRow = {
 
 type EventTotalRow = {
   event_id: string; producer_id: string; title: string; starts_at: string | null; status: string | null;
-  vendidos: number; bruto: number; taxa: number; cupom: number;
+  vendidos: number; bruto: number; taxa: number; cupom: number; absorvida: number;
 };
 type ProducerTotalRow = {
   producer_id: string; repassado: number; solicitado: number; taxa_antecipacao: number;
@@ -120,7 +122,7 @@ function vazio(pid: string): ProducerFinance {
   return {
     producerId: pid, nome: `Produtor ${pid.slice(0, 8)}`, pixKey: null,
     advanceEnabled: false, advanceFeePct: 5, eventos: [], ajustes: [],
-    bruto: 0, cupom: 0, liquido: 0, taxaElleva: 0, creditos: 0, debitos: 0,
+    bruto: 0, cupom: 0, absorvida: 0, liquido: 0, taxaElleva: 0, creditos: 0, debitos: 0,
     aLiberar: 0, retidoBruto: 0, bloqueado: 0, jaAntecipado: 0, disponivel: 0,
     saldoReal: 0, antecipavel: 0, solicitado: 0, repassado: 0, taxaAntecipacao: 0,
   };
@@ -175,17 +177,20 @@ async function aggregate(
     const bruto = round2(Number(r.bruto));
     const cupom = round2(Number(r.cupom));
     const taxa = round2(Number(r.taxa));
+    const absorvida = round2(Number(r.absorvida ?? 0));
     const vendidos = Number(r.vendidos);
     if (bruto === 0 && vendidos === 0) continue; // sem venda: fora do extrato
     const cancelado = r.status === "cancelled";
     const liberado = isLiberado(r.starts_at, now, r.status);
-    const liquido = round2(Math.max(0, bruto - cupom));
+    // quando o produtor absorve a taxa, ela sai do liquido dele
+    const liquido = round2(Math.max(0, bruto - cupom - absorvida));
     acc.eventos.push({
       eventId: r.event_id, title: r.title, startsAt: r.starts_at,
-      vendidos, bruto, cupom, liquido, taxa, liberado, cancelado,
+      vendidos, bruto, cupom, liquido, taxa, absorvida, liberado, cancelado,
     });
     acc.bruto += bruto;
     acc.cupom += cupom;
+    acc.absorvida += absorvida;
     acc.taxaElleva += taxa;
     if (liberado) releasedVendasPor.set(r.producer_id, (releasedVendasPor.get(r.producer_id) ?? 0) + liquido);
     else acc.retidoBruto += liquido;
@@ -221,7 +226,7 @@ async function aggregate(
     const cAdvance = round2(Number(t?.committed_advance ?? 0));
 
     const releasedVendas = round2(releasedVendasPor.get(acc.producerId) ?? 0);
-    const liquido = round2(acc.bruto - acc.cupom);
+    const liquido = round2(acc.bruto - acc.cupom - acc.absorvida);
     const pot = round2(liquido + acc.creditos - acc.debitos);
     const releasedPot = round2(releasedVendas + acc.creditos - acc.debitos);
     const retidoBruto = round2(acc.retidoBruto);
@@ -239,6 +244,7 @@ async function aggregate(
 
     acc.bruto = round2(acc.bruto);
     acc.cupom = round2(acc.cupom);
+    acc.absorvida = round2(acc.absorvida);
     acc.liquido = liquido;
     acc.taxaElleva = round2(acc.taxaElleva);
     acc.retidoBruto = retidoBruto;

@@ -49,40 +49,47 @@ function subtotalOf(items: Items) {
 // real do lote e o service_fee_pct do evento no banco. O price do cliente é
 // ignorado (só serve pra exibição). Tiers mock (id não-uuid) só passam quando
 // o modo mock é permitido (fora de produção).
-type PricedItem = Items[number] & { isAddon: boolean };
+type PricedItem = Items[number] & { isAddon: boolean; fee: number; feeAbsorbed: boolean };
 
 async function priceItems(
   svc: Svc,
   items: Items
-): Promise<{ items: PricedItem[]; fee: number } | { error: string }> {
+): Promise<{ items: PricedItem[]; fee: number; feeCobrada: number } | { error: string }> {
   const priced: PricedItem[] = [];
-  let fee = 0;
+  let fee = 0;         // receita da Elleva (cobrada do comprador OU absorvida pelo produtor)
+  let feeCobrada = 0;  // só o que entra no total do comprador
   for (const it of items) {
     if (isUuid(it.tierId)) {
       const { data: tier } = await svc
         .from("ticket_tiers")
-        .select("price, is_addon, events(service_fee_pct)")
+        .select("price, is_addon, events(service_fee_pct, absorb_fee)")
         .eq("id", it.tierId)
         .single();
       if (!tier) return { error: `O lote "${it.tierName}" não está mais disponível.` };
       const price = Number(tier.price);
-      const ev = tier.events as unknown as { service_fee_pct?: number } | null;
+      const ev = tier.events as unknown as { service_fee_pct?: number; absorb_fee?: boolean } | null;
       const pct = Number(ev?.service_fee_pct ?? DEFAULT_FEE_PCT);
-      priced.push({ ...it, price, isAddon: !!tier.is_addon });
-      fee += feeUnit(price, pct) * it.qty;
+      const absorve = !!ev?.absorb_fee;
+      const itemFee = round2(feeUnit(price, pct) * it.qty);
+      priced.push({ ...it, price, isAddon: !!tier.is_addon, fee: itemFee, feeAbsorbed: absorve });
+      fee += itemFee;
+      if (!absorve) feeCobrada += itemFee;
     } else {
       if (!mockAllowed()) return { error: "Ingresso inválido." };
-      priced.push({ ...it, isAddon: false });
-      fee += feeUnit(it.price, DEFAULT_FEE_PCT) * it.qty;
+      const itemFee = round2(feeUnit(it.price, DEFAULT_FEE_PCT) * it.qty);
+      priced.push({ ...it, isAddon: false, fee: itemFee, feeAbsorbed: false });
+      fee += itemFee;
+      feeCobrada += itemFee;
     }
   }
-  return { items: priced, fee: round2(fee) };
+  return { items: priced, fee: round2(fee), feeCobrada: round2(feeCobrada) };
 }
 
-function finalTotals(items: Items, discount: number, fee: number) {
+/** total do comprador soma só a taxa NÃO absorvida (a absorvida sai do produtor) */
+function finalTotals(items: Items, discount: number, feeCobrada: number) {
   const subtotal = subtotalOf(items);
   const d = Math.min(discount, subtotal);
-  return { subtotal, discount: d, fee, total: round2(subtotal - d + fee) };
+  return { subtotal, discount: d, fee: feeCobrada, total: round2(subtotal - d + feeCobrada) };
 }
 
 /** Valida um cupom e retorna o desconto sobre o subtotal (0 se inválido). */
@@ -137,9 +144,12 @@ async function checkStock(svc: Svc, items: Items): Promise<string | null> {
 
 async function insertPendingOrder(
   svc: Svc,
-  data: { buyerName: string; buyerEmail: string; buyerCpf?: string; buyerWhatsapp?: string; method: "pix" | "card"; provider: string; items: PricedItem[]; itemsFee: number; userId: string | null; discount?: number; couponCode?: string | null }
+  data: { buyerName: string; buyerEmail: string; buyerCpf?: string; buyerWhatsapp?: string; method: "pix" | "card"; provider: string; items: PricedItem[]; itemsFee: number; itemsFeeCobrada?: number; userId: string | null; discount?: number; couponCode?: string | null }
 ): Promise<{ error: string } | { orderId: string; total: number }> {
-  const { subtotal, discount, fee, total } = finalTotals(data.items, data.discount ?? 0, data.itemsFee);
+  // `itemsFee` = receita total da Elleva; `itemsFeeCobrada` = o que o comprador paga
+  const feeCobrada = data.itemsFeeCobrada ?? data.itemsFee;
+  const { subtotal, discount, total } = finalTotals(data.items, data.discount ?? 0, feeCobrada);
+  const fee = round2(data.itemsFee); // registra a receita cheia (inclui a absorvida)
   const { data: order, error } = await svc
     .from("orders")
     .insert({
@@ -169,6 +179,8 @@ async function insertPendingOrder(
       unit_price: it.price,
       quantity: it.qty,
       is_addon: it.isAddon,
+      fee: it.fee,
+      fee_absorbed: it.feeAbsorbed,
       seat_id: it.seatId && isUuid(it.seatId) ? it.seatId : null,
     }))
   );
@@ -235,10 +247,10 @@ export async function createOrder(input: z.input<typeof BaseSchema>): Promise<Cr
 
   // Ingresso gratuito (ou 100% de desconto): total zero não passa pelo
   // gateway — confirma direto e emite os ingressos.
-  const totals = finalTotals(priced.items, coupon?.discount ?? 0, priced.fee);
+  const totals = finalTotals(priced.items, coupon?.discount ?? 0, priced.feeCobrada);
   if (totals.total <= 0) {
     const prep = await insertPendingOrder(svc, {
-      ...parsed.data, items: priced.items, itemsFee: priced.fee,
+      ...parsed.data, items: priced.items, itemsFee: priced.fee, itemsFeeCobrada: priced.feeCobrada,
       method: "pix", provider: "free", userId: await currentUserId(),
       discount: coupon?.discount ?? 0, couponCode: coupon?.code ?? null,
     });
@@ -256,7 +268,7 @@ export async function createOrder(input: z.input<typeof BaseSchema>): Promise<Cr
     return { ok: false, error: "Pagamento indisponível no momento. Tente novamente em instantes." };
   }
   const prep = await insertPendingOrder(svc, {
-    ...parsed.data, items: priced.items, itemsFee: priced.fee,
+    ...parsed.data, items: priced.items, itemsFee: priced.fee, itemsFeeCobrada: priced.feeCobrada,
     method: "pix", provider: configured ? provider.id : "mock", userId: await currentUserId(),
     discount: coupon?.discount ?? 0, couponCode: coupon?.code ?? null,
   });
@@ -343,7 +355,7 @@ export async function createCardOrder(input: z.input<typeof CardSchema>): Promis
   if (coupon && "error" in coupon) return { ok: false, error: coupon.error };
 
   const prep = await insertPendingOrder(svc, {
-    ...parsed.data, items: priced.items, itemsFee: priced.fee,
+    ...parsed.data, items: priced.items, itemsFee: priced.fee, itemsFeeCobrada: priced.feeCobrada,
     method: "card", provider: "mercadopago", userId: await currentUserId(),
     discount: coupon?.discount ?? 0, couponCode: coupon?.code ?? null,
   });

@@ -43,10 +43,12 @@ export function CanhotoCheckout({
 
   const selecionados = tiers.filter((t) => (qty[t.id] || 0) > 0);
   const count = selecionados.reduce((a, t) => a + qty[t.id], 0);
-  // total já com a taxa de serviço — o comprador nunca é surpreendido depois
+  // total já com a taxa de serviço — o comprador nunca é surpreendido depois.
+  // Se o produtor ABSORVE a taxa, ela não entra no total do comprador.
+  const absorve = !!event.absorbFee;
   const total = round2(
     selecionados.reduce(
-      (a, t) => a + qty[t.id] * (t.price + feeUnit(t.price, event.feePct)),
+      (a, t) => a + qty[t.id] * (t.price + (absorve ? 0 : feeUnit(t.price, event.feePct))),
       0
     )
   );
@@ -63,6 +65,7 @@ export function CanhotoCheckout({
         price: t.price,
         qty: qty[t.id],
         feePct: event.feePct,
+        absorbFee: absorve,
         maxInstallments: maxParcelas,
       }))
     );
@@ -95,7 +98,8 @@ export function CanhotoCheckout({
           <p className="numero m-0 mt-1.5 text-[17px]">
             {fmtBRL(t.price)}{" "}
             <span className="rotulo font-medium text-tinta-60">
-              (+ {fmtBRL(feeUnit(t.price, event.feePct))} taxa){!t.isAddon && <> · meia {fmtBRL(t.price / 2)}</>}
+              {absorve ? "(taxa inclusa)" : `(+ ${fmtBRL(feeUnit(t.price, event.feePct))} taxa)`}
+              {!t.isAddon && <> · meia {fmtBRL(t.price / 2)}</>}
             </span>
           </p>
         </div>

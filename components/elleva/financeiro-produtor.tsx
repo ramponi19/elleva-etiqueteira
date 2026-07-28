@@ -214,7 +214,9 @@ export function FinanceiroProdutor({
               <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] text-tinta-60">
                 <span>{e.vendidos} vendido(s) · bruto {fmtBRL(e.bruto)}</span>
                 {e.cupom > 0 && <span>cupom −{fmtBRL(e.cupom)}</span>}
-                <span>taxa Elleva {fmtBRL(e.taxa)}</span>
+                {e.absorvida > 0
+                  ? <span className="text-sol-escuro">taxa absorvida por você −{fmtBRL(e.absorvida)}</span>
+                  : <span>taxa Elleva {fmtBRL(e.taxa)}</span>}
                 <Badge tom={e.cancelado ? "tinta" : e.liberado ? "sol" : "papel"}>
                   {e.cancelado ? "Evento cancelado" : e.liberado ? "Liberado" : "A liberar"}
                 </Badge>
