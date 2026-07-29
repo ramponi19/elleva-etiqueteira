@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
+import { getAuth } from "@/lib/auth";
 import { CriarEventoForm } from "@/components/elleva/criar-evento-form";
 
 export const metadata: Metadata = { title: "Editar evento" };
@@ -18,7 +19,18 @@ function split(iso: string | null) {
 
 export default async function EditarEvento({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  const { user, role } = await getAuth();
+  if (!user) notFound();
   const supabase = await createClient();
+
+  // A RLS deixa QUALQUER UM ler um evento publicado (é o que alimenta a página
+  // pública), então sem esta checagem a tela de edição abria o evento de outro
+  // produtor — expondo configuração que não é pública: taxa negociada, pixels de
+  // rastreamento, endereço completo, dados do produtor e modelo do certificado.
+  // Escrita já era barrada em updateEvent; aqui fechamos a LEITURA.
+  const { data: dono } = await supabase.from("events").select("producer_id").eq("id", id).single();
+  if (!dono) notFound();
+  if (role !== "admin" && dono.producer_id !== user.id) notFound();
 
   const { data: ev } = await supabase
     .from("events")
