@@ -53,8 +53,12 @@ export async function proxy(request: NextRequest) {
   return supabaseResponse;
 }
 
+//  sai do matcher: e o tunel do Sentry — relatorio de erro nao
+// deve pagar consulta de auth no Supabase nem depender de sessao pra passar.
+// `monitoring` está fora do matcher: é o túnel do Sentry — relatório de erro
+// não deve pagar consulta de auth no Supabase nem depender de sessão pra passar.
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|monitoring|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };
