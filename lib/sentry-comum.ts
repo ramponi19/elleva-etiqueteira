@@ -39,9 +39,20 @@ export function limpar(texto: string): string {
     .replace(CARTAO, "[numero]");
 }
 
+/**
+ * Preview e produção rodam com NODE_ENV=production na Vercel, então usar
+ * NODE_ENV aqui jogaria erro de branch de teste no mesmo balde do erro de
+ * cliente real. VERCEL_ENV separa ("production" | "preview"); a variante
+ * NEXT_PUBLIC_ é a que chega no navegador.
+ */
+const AMBIENTE =
+  process.env.NEXT_PUBLIC_VERCEL_ENV ??
+  process.env.VERCEL_ENV ??
+  process.env.NODE_ENV;
+
 export const opcoesComuns = {
   dsn: SENTRY_DSN,
-  environment: process.env.NODE_ENV,
+  environment: AMBIENTE,
 
   // NÃO enviar dado pessoal: sem isto o SDK anexa cabeçalhos, cookies e IP —
   // aqui isso significaria mandar sessão de comprador e CPF pra um terceiro.
