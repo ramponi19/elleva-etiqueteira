@@ -3,7 +3,7 @@
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { getAuth } from "@/lib/auth";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 
 const optStr = z.string().optional().or(z.literal("").transform(() => undefined));
 
@@ -344,7 +344,11 @@ export async function setFeatured(id: string, featured: boolean): Promise<EventF
   const { user, role } = await getAuth();
   if (!user || role !== "admin") return { ok: false, error: "Sem permissão." };
 
-  const supabase = await createClient();
+  // Destaque da home é inventário comercial da Elleva, não campo do produtor:
+  // a coluna `is_featured` perdeu o grant de UPDATE do papel `authenticated`
+  // (migration 0050), então esta escrita tem que sair pelo cliente de serviço
+  // — o admin também é `authenticated`. A permissão já foi conferida acima.
+  const supabase = await createServiceClient();
   const { error } = await supabase.from("events").update({ is_featured: featured }).eq("id", id);
   if (error) return { ok: false, error: error.message };
 

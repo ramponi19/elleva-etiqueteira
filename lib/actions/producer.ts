@@ -28,7 +28,12 @@ export async function becomeProducerAndGo(formData: FormData) {
     .maybeSingle();
 
   if ((profile?.role ?? "customer") === "customer") {
-    await supabase.from("profiles").update({ role: "producer" }).eq("id", user.id);
+    // `profiles.role` deixou de ser escrevível pelo próprio usuário (migration
+    // 0050): quem define papel é o servidor. A promoção continua em um clique,
+    // mas agora sai pelo cliente de serviço, e SÓ no caminho customer→producer
+    // que este bloco já garante. Escalada a admin segue barrada pelo trigger.
+    const svc = await createServiceClient();
+    await svc.from("profiles").update({ role: "producer" }).eq("id", user.id).eq("role", "customer");
     // O header (layout de marketing) lê o papel a cada request; revalida a home.
     revalidatePath("/", "layout");
   }
