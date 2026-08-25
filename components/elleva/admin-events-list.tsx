@@ -6,7 +6,7 @@ import { clsx } from "clsx";
 import { Badge } from "@/components/ui/badge";
 import { ConfirmDialog, PromptDialog } from "@/components/ui/modal";
 import FeaturedToggle from "@/components/app/featured-toggle";
-import { deleteEvent } from "@/lib/actions/events";
+import { deleteEvent, cancelEvent } from "@/lib/actions/events";
 import { setEventFeePct, setEventMaxInstallments } from "@/lib/actions/admin";
 
 export interface AdminEvent {
@@ -51,6 +51,7 @@ export function AdminEventsList({ events }: { events: AdminEvent[] }) {
   const [error, setError] = useState<string | null>(null);
   const [now] = useState(() => Date.now());
   const [deleteTarget, setDeleteTarget] = useState<AdminEvent | null>(null);
+  const [cancelTarget, setCancelTarget] = useState<AdminEvent | null>(null);
   const [feeTarget, setFeeTarget] = useState<AdminEvent | null>(null);
   const [parcelasTarget, setParcelasTarget] = useState<AdminEvent | null>(null);
 
@@ -71,6 +72,21 @@ export function AdminEventsList({ events }: { events: AdminEvent[] }) {
       setDeleteTarget(null);
       if (res.ok) setItems((s) => s.filter((e) => e.id !== t.id));
       else setError(res.error ?? "Erro ao excluir.");
+    });
+  }
+
+  function doCancel() {
+    const t = cancelTarget;
+    if (!t) return;
+    setError(null);
+    startTransition(async () => {
+      const res = await cancelEvent(t.id);
+      setCancelTarget(null);
+      if (res.ok) {
+        setItems((s) => s.map((ev) => (ev.id === t.id ? { ...ev, status: "cancelled" } : ev)));
+        const r = res.resumo;
+        if (r) setError(`“${t.title}” cancelado: ${r.reembolsados} reembolsado(s), ${r.pendentesCancelados} pendente(s) cancelado(s)${r.falhas ? `, ${r.falhas} estorno(s) a retentar` : ""}.`);
+      } else setError(res.error ?? "Erro ao cancelar.");
     });
   }
 
@@ -172,6 +188,18 @@ export function AdminEventsList({ events }: { events: AdminEvent[] }) {
               >
                 Editar
               </Link>
+              {e.status !== "cancelled" && (
+                <button
+                  type="button"
+                  onClick={() => setCancelTarget(e)}
+                  disabled={pending}
+                  aria-label={`Cancelar ${e.title}`}
+                  title="Cancela o evento e reembolsa todos os compradores"
+                  className="inline-flex min-h-[38px] items-center rounded-full border-[1.5px] border-tinta px-3 py-2 text-[12px] font-medium text-sol-escuro transition-colors hover:bg-papel-2 disabled:opacity-50"
+                >
+                  Cancelar
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => setDeleteTarget(e)}
@@ -196,6 +224,16 @@ export function AdminEventsList({ events }: { events: AdminEvent[] }) {
         title="Excluir evento"
         message={deleteTarget ? <>Excluir <strong>“{deleteTarget.title}”</strong>? Esta ação é permanente e não pode ser desfeita.</> : null}
         confirmLabel="Excluir"
+        danger
+        pending={pending}
+      />
+      <ConfirmDialog
+        open={cancelTarget !== null}
+        onClose={() => setCancelTarget(null)}
+        onConfirm={doCancel}
+        title="Cancelar evento"
+        message={cancelTarget ? <>Cancelar <strong>“{cancelTarget.title}”</strong> e <strong>reembolsar todos os compradores</strong>? As vendas param na hora e os ingressos são invalidados. Não pode ser desfeito.</> : null}
+        confirmLabel="Cancelar e reembolsar"
         danger
         pending={pending}
       />

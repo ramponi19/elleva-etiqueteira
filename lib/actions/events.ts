@@ -4,6 +4,7 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { getAuth } from "@/lib/auth";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
+import { refundOrder } from "@/lib/orders-helpers";
 
 const optStr = z.string().optional().or(z.literal("").transform(() => undefined));
 
@@ -354,6 +355,56 @@ export async function deleteEvent(id: string): Promise<EventFormState> {
   revalidatePath("/agenda");
   revalidatePath("/");
   return { ok: true };
+}
+
+export interface CancelResumo { pedidos: number; reembolsados: number; pendentesCancelados: number; falhas: number }
+
+/** Cancela um evento e reembolsa/cancela TODOS os pedidos dele, em lote.
+ *  É a alternativa a "excluir" quando já houve venda (o dinheiro NÃO some do
+ *  histórico). O evento vira `cancelled` primeiro — o que estanca vendas novas
+ *  na hora (a compra recusa evento cancelado) — e só então processa os pedidos.
+ *  Idempotente: pedidos já revertidos são pulados, então dá pra rodar de novo
+ *  se algum estorno falhar no gateway. Uma vez cancelado, o financeiro congela
+ *  o saldo do evento (não libera nem antecipa) — é dinheiro devido aos compradores. */
+export async function cancelEvent(id: string): Promise<{ ok: boolean; error?: string; resumo?: CancelResumo }> {
+  const auth = await authorize();
+  if (!auth) return { ok: false, error: "Sem permissão." };
+
+  const svc = await createServiceClient();
+  const { data: ev } = await svc.from("events").select("producer_id, status").eq("id", id).single();
+  if (!ev) return { ok: false, error: "Evento não encontrado." };
+  if (auth.role !== "admin" && ev.producer_id !== auth.user.id) return { ok: false, error: "Evento não é seu." };
+  if (ev.status === "cancelled") return { ok: false, error: "Este evento já está cancelado." };
+
+  // 1) estanca vendas novas imediatamente (priceItems recusa evento cancelado)
+  await svc.from("events").update({ status: "cancelled" }).eq("id", id);
+
+  // 2) junta os pedidos com item deste evento — PAGINADO (o PostgREST corta em
+  //    ~1000 sem avisar; num evento grande, parte dos compradores ficaria sem reembolso)
+  const orderIds = new Set<string>();
+  for (let from = 0; ; from += 1000) {
+    const { data, error } = await svc.from("order_items").select("order_id").eq("event_id", id).range(from, from + 999);
+    if (error || !data?.length) break;
+    for (const it of data) if (it.order_id) orderIds.add(it.order_id as string);
+    if (data.length < 1000) break;
+  }
+
+  let reembolsados = 0, pendentesCancelados = 0, falhas = 0;
+  for (const oid of orderIds) {
+    const r = await refundOrder(svc, oid);
+    if (r.action === "refunded") reembolsados++;
+    else if (r.action === "cancelled_pending") pendentesCancelados++;
+    else if (r.action === "failed") falhas++;
+    // "already" (já revertido): não conta — mantém o resumo honesto em reexecuções
+  }
+
+  revalidatePath("/admin/eventos");
+  revalidatePath("/admin/financeiro");
+  revalidatePath("/produtor");
+  revalidatePath("/produtor/financeiro");
+  revalidatePath("/agenda");
+  revalidatePath("/");
+  return { ok: true, resumo: { pedidos: orderIds.size, reembolsados, pendentesCancelados, falhas } };
 }
 
 export async function setFeatured(id: string, featured: boolean): Promise<EventFormState> {

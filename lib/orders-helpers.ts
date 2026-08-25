@@ -358,6 +358,41 @@ export async function sendReminderEmail(to: string, name: string, eventTitle: st
   } catch { /* ignore */ }
 }
 
+/** Estorna/cancela UM pedido, iniciado por nós (cancelamento de evento ou pelo
+ *  admin). Diferente de markOrderRefunded (webhook, onde o gateway JÁ estornou),
+ *  aqui somos nós que pedimos o estorno ao gateway primeiro. Idempotente:
+ *  - pending  → cancela e libera assentos (não houve cobrança).
+ *  - paid     → estorna no gateway; só então reverte local (markOrderRefunded).
+ *               Se o gateway falhar, NÃO marca refunded (o dinheiro não voltou);
+ *               devolve 'failed' pra quem chamou tratar/retentar.
+ *  - refunded/cancelled → no-op ('already'). */
+export type RefundAction = "refunded" | "cancelled_pending" | "already" | "failed";
+export async function refundOrder(svc: Svc, orderId: string): Promise<{ action: RefundAction; error?: string }> {
+  const { data: o } = await svc
+    .from("orders")
+    .select("status, payment_id, payment_provider")
+    .eq("id", orderId)
+    .single();
+  if (!o) return { action: "failed", error: "Pedido não encontrado." };
+  if (o.status === "refunded" || o.status === "cancelled") return { action: "already" };
+  if (o.status === "pending") {
+    await svc.from("orders").update({ status: "cancelled" }).eq("id", orderId).eq("status", "pending");
+    await releaseSeats(svc, orderId);
+    return { action: "cancelled_pending" };
+  }
+  // paid: estorna no provedor que processou ANTES de reverter localmente
+  const provider = getPaymentProvider();
+  if (o.payment_id && o.payment_provider === provider.id) {
+    try {
+      await provider.refund(o.payment_id as string);
+    } catch (e) {
+      return { action: "failed", error: e instanceof Error ? e.message : "Falha ao estornar no provedor." };
+    }
+  }
+  const r = await markOrderRefunded(svc, orderId);
+  return r.ok ? { action: "refunded" } : { action: "already" };
+}
+
 /** Reverte um pedido cujo pagamento foi ESTORNADO no gateway (refund/chargeback
  *  avisado por webhook). ATÔMICO e idempotente: só quem flipar paid→refunded age.
  *  NÃO chama provider.refund — o dinheiro já voltou no gateway; aqui só

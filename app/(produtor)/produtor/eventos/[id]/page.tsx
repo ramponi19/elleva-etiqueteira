@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { getAuth } from "@/lib/auth";
 import { CriarEventoForm } from "@/components/elleva/criar-evento-form";
+import CancelEventButton from "@/components/app/cancel-event-button";
 
 export const metadata: Metadata = { title: "Editar evento" };
 
@@ -120,6 +121,9 @@ export default async function EditarEvento({ params }: { params: Promise<{ id: s
       <h1 className="display-2 text-tinta">Editar evento</h1>
       <p className="corpo-suave mb-8 mt-1">{ev.title}</p>
       <CriarEventoForm eventId={id} statusAtual={ev.status as string} initial={initial} />
+      <div className="mt-10">
+        <CancelEventButton eventId={id} title={ev.title} status={ev.status as string} />
+      </div>
     </div>
   );
 }
