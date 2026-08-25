@@ -67,7 +67,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, [items]);
 
-  const addItems = (next: CartItem[]) => setItems((prev) => [...prev, ...next]);
+  // Um pedido = UM evento (como no mercado). Se os novos itens são de outro
+  // evento, o carrinho TROCA de evento em vez de misturar — assim cancelar um
+  // evento nunca reembolsa junto a compra de outro. Mesmo evento: acumula.
+  const addItems = (next: CartItem[]) =>
+    setItems((prev) => {
+      const evAtual = prev[0]?.eventId;
+      const evNovo = next[0]?.eventId;
+      if (prev.length && evNovo && evAtual !== evNovo) return next;
+      return [...prev, ...next];
+    });
   const removeItem = (index: number) =>
     setItems((prev) => prev.filter((_, i) => i !== index));
   const clear = () => setItems([]);

@@ -103,6 +103,14 @@ async function priceItems(
       feeCobrada += itemFee;
     }
   }
+  // Um pedido = UM evento. O cancelamento reembolsa por pedido; se um pedido
+  // misturasse eventos, cancelar um lesaria a compra do outro (e o rateio do
+  // financeiro por evento ficaria ambíguo). Os event_id aqui já vêm do banco.
+  const eventos = new Set(priced.filter((i) => isUuid(i.eventId)).map((i) => i.eventId));
+  if (eventos.size > 1) {
+    return { error: "Dá para comprar um evento por vez. Finalize este e faça outro pedido para o próximo." };
+  }
+
   return { items: priced, fee: round2(fee), feeCobrada: round2(feeCobrada) };
 }
 
