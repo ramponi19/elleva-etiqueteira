@@ -15,6 +15,7 @@ export interface AdminEvent {
   category: string;
   city: string;
   starts_at: string;
+  starts_label: string; // formatado no servidor (evita mismatch de hidratação)
   status: string;
   is_featured: boolean;
   service_fee_pct: number;
@@ -158,7 +159,7 @@ export function AdminEventsList({ events }: { events: AdminEvent[] }) {
           >
             <div className="min-w-0">
               <p className="m-0 truncate text-[14px] font-medium text-tinta">{e.title}</p>
-              <p className="corpo-suave m-0">{e.city} · {new Date(e.starts_at).toLocaleDateString("pt-BR")}</p>
+              <p className="corpo-suave m-0">{e.city} · {e.starts_label}</p>
             </div>
             <div className="flex flex-shrink-0 flex-wrap items-center gap-2">
               <Badge tom="papel">{e.category}</Badge>

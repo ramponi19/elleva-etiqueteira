@@ -18,6 +18,7 @@ export default async function AdminEventos() {
     category: e.category,
     city: e.city,
     starts_at: e.starts_at,
+    starts_label: new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", year: "numeric" }).format(new Date(e.starts_at)),
     status: e.status,
     is_featured: !!e.is_featured,
     service_fee_pct: Number(e.service_fee_pct ?? 10),

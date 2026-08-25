@@ -22,6 +22,7 @@ export interface AdminOrder {
   status: string;
   payment_method: string;
   created_at: string;
+  created_label: string; // já formatado no servidor (evita mismatch de hidratação)
   items: AdminOrderItem[];
 }
 
@@ -116,7 +117,7 @@ export default function OrdersAdmin({ orders, truncated }: { orders: AdminOrder[
                 aria-expanded={openId === o.id}
               >
                 <p className="m-0 truncate text-[14px] font-medium text-tinta">{o.buyer_name}</p>
-                <p className="corpo-suave m-0 truncate">{o.buyer_email} · {new Date(o.created_at).toLocaleString("pt-BR")}</p>
+                <p className="corpo-suave m-0 truncate">{o.buyer_email} · {o.created_label}</p>
               </button>
               <div className="flex flex-shrink-0 items-center gap-2">
                 <Badge tom="papel">{o.payment_method}</Badge>

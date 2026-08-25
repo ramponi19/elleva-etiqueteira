@@ -6,6 +6,14 @@ export const metadata: Metadata = { title: "Pedidos · Admin" };
 
 const LIMITE = 1000;
 
+// Formata no servidor com timezone fixo — sem isto o client component reformata
+// no fuso do navegador e o texto diverge do SSR (hydration mismatch, React #418).
+const fmtDT = (iso: string) =>
+  new Intl.DateTimeFormat("pt-BR", {
+    timeZone: "America/Sao_Paulo",
+    day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit",
+  }).format(new Date(iso));
+
 export default async function AdminPedidos() {
   const supabase = await createClient();
   const { data: orders } = await supabase
@@ -23,6 +31,7 @@ export default async function AdminPedidos() {
     status: o.status,
     payment_method: o.payment_method,
     created_at: o.created_at,
+    created_label: fmtDT(o.created_at),
     items: ((o.order_items ?? []) as { event_title: string; tier_name: string; quantity: number; unit_price: number }[])
       .map((i) => ({ event_title: i.event_title, tier_name: i.tier_name, quantity: i.quantity, unit_price: Number(i.unit_price) })),
   }));
