@@ -6,7 +6,7 @@ import { createServiceClient } from "@/lib/supabase/server";
 import { getPaymentProvider } from "@/lib/payments";
 import { reverseSold, cancelTickets, sendRefundEmail } from "@/lib/orders-helpers";
 
-export type Role = "customer" | "producer" | "admin";
+export type Role = "user" | "admin";
 
 export async function setUserRole(
   userId: string,

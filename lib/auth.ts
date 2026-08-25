@@ -1,7 +1,10 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
-export type Role = "customer" | "producer" | "admin";
+// Duas contas no sistema: `user` (compra E organiza — modelo de mercado) e
+// `admin` (a Elleva). Os valores antigos `customer`/`producer` foram colapsados
+// em `user` (migration 0052).
+export type Role = "user" | "admin";
 
 /** Usuário atual + papel (lê profiles.role). */
 export async function getAuth() {
@@ -19,7 +22,7 @@ export async function getAuth() {
 
   return {
     user,
-    role: ((data?.role as Role) ?? "customer") as Role,
+    role: ((data?.role as Role) ?? "user") as Role,
     fullName: (data?.full_name as string | null) ?? null,
     avatarUrl: (data?.avatar_url as string | null) ?? null,
   };

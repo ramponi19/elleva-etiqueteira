@@ -29,8 +29,7 @@ export default function RoleSelect({
       disabled={pending}
       className="rounded-full border-[1.5px] border-tinta bg-white px-3 py-1.5 text-[13px] text-tinta outline-none focus:border-sol disabled:opacity-60"
     >
-      <option value="customer">Cliente</option>
-      <option value="producer">Produtor</option>
+      <option value="user">Usuário</option>
       <option value="admin">Admin</option>
     </select>
   );

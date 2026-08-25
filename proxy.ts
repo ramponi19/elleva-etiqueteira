@@ -42,7 +42,7 @@ export async function proxy(request: NextRequest) {
       .select("role")
       .eq("id", user.id)
       .single();
-    const role = (profile?.role as string) ?? "customer";
+    const role = (profile?.role as string) ?? "user";
     const dest = role === "admin" ? "/admin" : "/conta";
 
     const url = request.nextUrl.clone();

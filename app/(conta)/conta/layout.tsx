@@ -1,4 +1,4 @@
-import { requireRole } from "@/lib/auth";
+import { requireAuth } from "@/lib/auth";
 import Nav from "@/components/elleva/nav";
 import Footer from "@/components/elleva/footer";
 import { ContaTabs } from "@/components/elleva/conta-tabs";
@@ -20,11 +20,7 @@ export default async function ContaLayout({
   children: React.ReactNode;
 }) {
   // Qualquer usuário logado tem conta
-  const { user, role, fullName, avatarUrl } = await requireRole([
-    "customer",
-    "producer",
-    "admin",
-  ]);
+  const { user, role, fullName, avatarUrl } = await requireAuth();
 
   return (
     <>
