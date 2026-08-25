@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { getAuth } from "@/lib/auth";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { refundOrder } from "@/lib/orders-helpers";
+import { META_PIXEL_RE, GA_ID_RE } from "@/lib/tracking-ids";
 
 const optStr = z.string().optional().or(z.literal("").transform(() => undefined));
 
@@ -14,11 +15,11 @@ const optStr = z.string().optional().or(z.literal("").transform(() => undefined)
 // conhecido + alfanum/hífen. Nada disso admite aspa, parêntese ou `<`.
 const metaPixelStr = z
   .string().trim()
-  .regex(/^\d{8,20}$/, "O ID do Pixel da Meta deve conter apenas números (ex.: 123456789012345).")
+  .regex(META_PIXEL_RE, "O ID do Pixel da Meta deve conter apenas números (ex.: 123456789012345).")
   .optional().or(z.literal("").transform(() => undefined));
 const gaIdStr = z
   .string().trim()
-  .regex(/^(G|UA|AW|GT)-[A-Za-z0-9-]{4,20}$/, "O ID do Google (Analytics/Ads) parece inválido (ex.: G-XXXXXXX).")
+  .regex(GA_ID_RE, "O ID do Google (Analytics/Ads) parece inválido (ex.: G-XXXXXXX).")
   .optional().or(z.literal("").transform(() => undefined));
 
 const TierSchema = z.object({

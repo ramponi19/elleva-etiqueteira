@@ -5,7 +5,10 @@ import sanitizeHtml from "sanitize-html";
 // sem atributos perigosos. Links ganham rel/target e só http(s)/mailto.
 const OPTS: sanitizeHtml.IOptions = {
   allowedTags: ["p", "br", "b", "strong", "i", "em", "u", "s", "ul", "ol", "li", "a", "h3", "h4", "blockquote", "span"],
-  allowedAttributes: { a: ["href"] },
+  // rel/target precisam estar na allowlist, senão o sanitize-html REMOVE os que
+  // o transformTags adiciona (filtra por allowedAttributes depois do transform)
+  // — e os links externos ficariam sem noopener/nofollow (tabnabbing/SEO).
+  allowedAttributes: { a: ["href", "rel", "target"] },
   allowedSchemes: ["http", "https", "mailto"],
   transformTags: {
     a: (tagName, attribs) => ({

@@ -2,21 +2,19 @@
 
 import Script from "next/script";
 import { useConsent } from "@/components/elleva/cookie-consent";
+import { safeMetaPixel, safeGaId } from "@/lib/tracking-ids";
 
-// Estes IDs viram texto CRU dentro de um <script>. Última barreira antes de
-// virar HTML: só passa quem bate o formato exato (dígitos p/ Meta; prefixo
-// conhecido + alfanum/hífen p/ Google). Assim, mesmo um valor legado malicioso
-// já salvo no banco (anterior à validação do servidor) é simplesmente ignorado
-// — nada de aspa, parêntese ou `<` chega ao script. Espelha events.ts.
-const META_OK = /^\d{8,20}$/;
-const GA_OK = /^(G|UA|AW|GT)-[A-Za-z0-9-]{4,20}$/;
+// Última barreira antes de virar HTML: os IDs viram texto CRU dentro de um
+// <script>, então só passa quem bate o formato exato (safeMetaPixel/safeGaId).
+// Assim um valor legado malicioso já salvo no banco também é ignorado — nada de
+// aspa, parêntese ou `<` chega ao script. Mesma allowlist do servidor (events.ts).
 
 // Pixel/GA por evento — dispara PageView/ViewContent só com consentimento de
 // cookies (LGPD). Sem IDs válidos ou sem aceite, não carrega nada.
 export function EventTracking({ metaPixel, ga }: { metaPixel?: string | null; ga?: string | null }) {
   const consent = useConsent();
-  const pixel = metaPixel?.trim() && META_OK.test(metaPixel.trim()) ? metaPixel.trim() : null;
-  const gaId = ga?.trim() && GA_OK.test(ga.trim()) ? ga.trim() : null;
+  const pixel = safeMetaPixel(metaPixel);
+  const gaId = safeGaId(ga);
   if (consent !== "aceitos" || (!pixel && !gaId)) return null;
 
   return (
