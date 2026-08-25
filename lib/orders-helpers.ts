@@ -2,7 +2,7 @@ import { randomBytes } from "crypto";
 import QRCode from "qrcode";
 import type { createServiceClient } from "@/lib/supabase/server";
 import { getPaymentProvider } from "@/lib/payments";
-import { sendEmail, isMailerConfigured, type MailAttachment } from "@/lib/mailer";
+import { sendEmail, isMailerConfigured, escapeHtml as esc, type MailAttachment } from "@/lib/mailer";
 
 type Svc = Awaited<ReturnType<typeof createServiceClient>>;
 
@@ -151,8 +151,8 @@ export async function sendConfirmationEmail(svc: Svc, orderId: string) {
   // Resumo do que foi comprado
   const rows = items
     .map((i) => `<tr>
-      <td style="padding:6px 0;color:#141210;font-weight:bold;text-transform:uppercase;font-size:14px">${i.event_title}<br>
-        <span style="font-weight:normal;text-transform:none;color:rgba(20,18,16,.6);font-size:13px">${i.tier_name} × ${i.quantity}</span></td>
+      <td style="padding:6px 0;color:#141210;font-weight:bold;text-transform:uppercase;font-size:14px">${esc(i.event_title)}<br>
+        <span style="font-weight:normal;text-transform:none;color:rgba(20,18,16,.6);font-size:13px">${esc(i.tier_name)} × ${i.quantity}</span></td>
     </tr>`)
     .join("");
 
@@ -173,9 +173,9 @@ export async function sendConfirmationEmail(svc: Svc, orderId: string) {
         <div style="padding:18px;text-align:center">
           <p style="margin:0 0 12px;color:#C93A15;font-size:10px;letter-spacing:3px;text-transform:uppercase;font-weight:bold">Elleva Tickets</p>
           ${cid ? `<img src="cid:${cid}" alt="QR do ingresso" width="184" height="184" style="display:block;margin:0 auto;border:1px solid #eee" />` : ""}
-          <p style="margin:14px 0 0;color:#141210;font-weight:bold;font-size:15px;text-transform:uppercase">${t.event_title}</p>
-          <p style="margin:3px 0 0;color:rgba(20,18,16,.6);font-size:13px">${t.tier_name}${t.seat_label ? ` · ${t.seat_label}` : ""}</p>
-          <p style="margin:10px 0 0;color:#141210;font-size:13px;font-weight:bold;letter-spacing:2px">${t.code}</p>
+          <p style="margin:14px 0 0;color:#141210;font-weight:bold;font-size:15px;text-transform:uppercase">${esc(t.event_title)}</p>
+          <p style="margin:3px 0 0;color:rgba(20,18,16,.6);font-size:13px">${esc(t.tier_name)}${t.seat_label ? ` · ${esc(t.seat_label)}` : ""}</p>
+          <p style="margin:10px 0 0;color:#141210;font-size:13px;font-weight:bold;letter-spacing:2px">${esc(t.code)}</p>
         </div>
       </div>`);
   }
@@ -184,7 +184,7 @@ export async function sendConfirmationEmail(svc: Svc, orderId: string) {
   <div style="font-family:Arial,Helvetica,sans-serif;max-width:480px;margin:0 auto;padding:32px 20px;background:#FAF5EC">
     <p style="margin:0;color:#C93A15;font-size:11px;letter-spacing:3px;text-transform:uppercase;font-weight:bold">Pagamento aprovado</p>
     <h1 style="margin:6px 0 0;color:#141210;font-size:30px;line-height:1;text-transform:uppercase;font-weight:900">Lugar garantido!</h1>
-    <p style="color:#141210;font-size:15px;margin:14px 0 0">${order.buyer_name}, seu ingresso chegou. Apresente o QR code na entrada.</p>
+    <p style="color:#141210;font-size:15px;margin:14px 0 0">${esc(order.buyer_name)}, seu ingresso chegou. Apresente o QR code na entrada.</p>
 
     ${ingressos.join("")}
 
@@ -279,7 +279,7 @@ export async function sendRefundEmail(svc: Svc, orderId: string) {
   const html = `
   <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;background:#FAF5EC">
     <h1 style="font-weight:900;text-transform:uppercase;color:#141210;font-size:24px;margin:0 0 4px">Elleva <span style="color:#E8481F">Tickets</span></h1>
-    <p style="color:#141210;font-size:15px">Olá, ${order.buyer_name}. Seu pedido foi <strong>reembolsado</strong>.</p>
+    <p style="color:#141210;font-size:15px">Olá, ${esc(order.buyer_name)}. Seu pedido foi <strong>reembolsado</strong>.</p>
     <div style="background:#fff;border:1px solid #141210;border-radius:14px;padding:20px;margin-top:16px">
       <p style="margin:0;color:#141210">Valor reembolsado: <strong>R$ ${Number(order.total).toLocaleString("pt-BR")}</strong></p>
       <p style="margin:8px 0 0;color:rgba(20,18,16,.6);font-size:13px">O estorno pode levar alguns dias para aparecer, conforme o meio de pagamento. Os ingressos deste pedido foram cancelados.</p>
@@ -324,9 +324,9 @@ export async function sendTransferEmail(svc: Svc, ticketId: string) {
       <div style="padding:18px;text-align:center">
         <p style="margin:0 0 12px;color:#C93A15;font-size:10px;letter-spacing:3px;text-transform:uppercase;font-weight:bold">Elleva Tickets</p>
         ${qrImg}
-        <p style="margin:14px 0 0;color:#141210;font-weight:bold;font-size:15px;text-transform:uppercase">${t.event_title}</p>
-        <p style="margin:3px 0 0;color:rgba(20,18,16,.6);font-size:13px">${t.tier_name}${t.seat_label ? ` · ${t.seat_label}` : ""}</p>
-        <p style="margin:10px 0 0;color:#141210;font-size:13px;font-weight:bold;letter-spacing:2px">${t.code}</p>
+        <p style="margin:14px 0 0;color:#141210;font-weight:bold;font-size:15px;text-transform:uppercase">${esc(t.event_title)}</p>
+        <p style="margin:3px 0 0;color:rgba(20,18,16,.6);font-size:13px">${esc(t.tier_name)}${t.seat_label ? ` · ${esc(t.seat_label)}` : ""}</p>
+        <p style="margin:10px 0 0;color:#141210;font-size:13px;font-weight:bold;letter-spacing:2px">${esc(t.code)}</p>
       </div>
     </div>
     <a href="${APP_URL}/conta" style="display:inline-block;margin-top:22px;background:#E8481F;color:#141210;text-decoration:none;font-weight:bold;padding:13px 26px;border-radius:9999px;font-size:15px">Ver na minha conta</a>
@@ -346,10 +346,10 @@ export async function sendReminderEmail(to: string, name: string, eventTitle: st
   const html = `
   <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;background:#FAF5EC">
     <h1 style="font-weight:900;text-transform:uppercase;color:#141210;font-size:24px;margin:0 0 4px">Elleva <span style="color:#E8481F">Tickets</span></h1>
-    <p style="color:#141210;font-size:15px">Olá, ${name}! Seu evento está chegando. 🎉</p>
+    <p style="color:#141210;font-size:15px">Olá, ${esc(name)}! Seu evento está chegando. 🎉</p>
     <div style="background:#fff;border:1px solid #141210;border-radius:14px;padding:20px;margin-top:16px">
-      <p style="font-weight:900;text-transform:uppercase;font-size:18px;color:#141210;margin:0">${eventTitle}</p>
-      <p style="color:rgba(20,18,16,.6);font-size:14px;margin:6px 0 0">${when}</p>
+      <p style="font-weight:900;text-transform:uppercase;font-size:18px;color:#141210;margin:0">${esc(eventTitle)}</p>
+      <p style="color:rgba(20,18,16,.6);font-size:14px;margin:6px 0 0">${esc(when)}</p>
     </div>
     <a href="${appUrl}/conta" style="display:inline-block;margin-top:20px;background:#E8481F;color:#141210;text-decoration:none;font-weight:600;padding:12px 24px;border-radius:9999px">Ver meus ingressos</a>
   </div>`;

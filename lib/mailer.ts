@@ -4,6 +4,18 @@
 // Genérico de propósito: basta trocar as env SMTP_* para mudar de provedor.
 import nodemailer, { type Transporter } from "nodemailer";
 
+/** Escapa dado de usuário antes de entrar no HTML do e-mail. Sem isto, o título
+ *  do evento (que o produtor controla) ou o nome do comprador podiam injetar
+ *  link/HTML num e-mail que sai do domínio da Elleva — phishing com a marca. */
+export function escapeHtml(s: string | null | undefined): string {
+  return String(s ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 let _tx: Transporter | null = null;
 
 function transporter(): Transporter | null {

@@ -1,7 +1,7 @@
 // E-mails do financeiro (repasse pago / não aprovado). Silencioso se o SMTP
 // não estiver configurado — e-mail nunca quebra o fluxo de dinheiro.
 import type { createServiceClient } from "@/lib/supabase/server";
-import { sendEmail, isMailerConfigured } from "@/lib/mailer";
+import { sendEmail, isMailerConfigured, escapeHtml as esc } from "@/lib/mailer";
 import { fmtBRL } from "@/lib/format";
 
 type Svc = Awaited<ReturnType<typeof createServiceClient>>;
@@ -45,7 +45,7 @@ export async function sendPayoutPaidEmail(
         ${isAdvance ? `<tr><td style="padding:4px 0;color:rgba(20,18,16,.6)">Taxa de antecipação</td><td style="text-align:right">− ${fmtBRL(info.fee)}</td></tr>` : ""}
         <tr><td style="padding:8px 0 0;border-top:1px dashed rgba(20,18,16,.2);color:rgba(20,18,16,.6)">Recebido</td><td style="padding:8px 0 0;border-top:1px dashed rgba(20,18,16,.2);text-align:right;font-size:20px;font-weight:900">${fmtBRL(info.net)}</td></tr>
       </table>
-      ${info.reference ? `<p style="margin:12px 0 0;color:rgba(20,18,16,.6);font-size:12px">Comprovante: ${info.reference}</p>` : ""}
+      ${info.reference ? `<p style="margin:12px 0 0;color:rgba(20,18,16,.6);font-size:12px">Comprovante: ${esc(info.reference)}</p>` : ""}
     </div>`);
   try {
     await sendEmail({ to, subject: `Repasse de ${fmtBRL(info.net)} enviado — Elleva Tickets`, html });
@@ -62,7 +62,7 @@ export async function sendPayoutRejectedEmail(svc: Svc, producerId: string, amou
     <p style="color:#141210;font-size:15px;margin:14px 0 0">A solicitação de ${fmtBRL(amount)} não foi aprovada agora. O saldo continua na sua conta e você pode solicitar de novo.</p>
     <div style="margin-top:16px;border:1px solid rgba(20,18,16,.2);border-radius:12px;background:#fff;padding:14px 18px">
       <p style="margin:0;color:rgba(20,18,16,.6);font-size:12px;letter-spacing:2px;text-transform:uppercase">Motivo</p>
-      <p style="margin:6px 0 0;color:#141210;font-size:14px">${reason}</p>
+      <p style="margin:6px 0 0;color:#141210;font-size:14px">${esc(reason)}</p>
     </div>`);
   try {
     await sendEmail({ to, subject: "Sobre a sua solicitação de repasse — Elleva Tickets", html });
