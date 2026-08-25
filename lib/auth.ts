@@ -25,19 +25,27 @@ export async function getAuth() {
   };
 }
 
-/** Área inicial de cada papel. */
+/** Área inicial após login. Como no mercado (Sympla/Eventbrite), toda conta é
+ *  comprador E organizador — só o admin (Elleva) tem área à parte. */
 export function homeForRole(role: Role | null): string {
-  if (role === "admin") return "/admin";
-  if (role === "producer") return "/produtor";
-  return "/conta";
+  return role === "admin" ? "/admin" : "/conta";
 }
 
-/** Exige login + um dos papéis; redireciona caso contrário. */
+/** Exige login + um dos papéis; redireciona caso contrário. Use para o admin. */
 export async function requireRole(allowed: Role[]) {
   const auth = await getAuth();
   if (!auth.user) redirect("/login");
   if (!auth.role || !allowed.includes(auth.role)) {
     redirect(homeForRole(auth.role));
   }
+  return auth;
+}
+
+/** Exige apenas estar logado (qualquer papel). É o portão da área de
+ *  organizador: qualquer conta pode criar/gerir eventos; a posse de cada
+ *  evento é conferida por `producer_id` nas actions e na RLS. */
+export async function requireAuth() {
+  const auth = await getAuth();
+  if (!auth.user) redirect("/login");
   return auth;
 }

@@ -186,8 +186,10 @@ function tierRows(eventId: string, tiers: EventData["tiers"]) {
 }
 
 async function authorize() {
+  // Qualquer conta logada organiza eventos (modelo de mercado). A posse de cada
+  // evento é conferida por producer_id em updateEvent/deleteEvent e pela RLS.
   const { user, role } = await getAuth();
-  if (!user || (role !== "producer" && role !== "admin")) return null;
+  if (!user) return null;
   return { user, role };
 }
 
@@ -245,8 +247,9 @@ export async function updateEvent(id: string, input: EventInput): Promise<EventF
   const supabase = await createClient();
 
   // posse explícita: sem isso a RLS barrava em silêncio (0 linhas, sem erro) e
-  // o produtor só via a falha depois, com mensagem crua do banco
-  if (auth.role === "producer") {
+  // o produtor só via a falha depois, com mensagem crua do banco. Admin edita
+  // qualquer evento; qualquer outra conta só o próprio.
+  if (auth.role !== "admin") {
     const { data: ev } = await supabase.from("events").select("producer_id").eq("id", id).single();
     if (!ev || ev.producer_id !== auth.user.id) return { ok: false, error: "Evento não é seu." };
   }
@@ -305,7 +308,7 @@ export async function deleteEvent(id: string): Promise<EventFormState> {
   if (!auth) return { ok: false, error: "Sem permissão." };
 
   const supabase = await createClient();
-  if (auth.role === "producer") {
+  if (auth.role !== "admin") {
     const { data: ev } = await supabase.from("events").select("producer_id").eq("id", id).single();
     if (!ev || ev.producer_id !== auth.user.id) return { ok: false, error: "Evento não é seu." };
   }

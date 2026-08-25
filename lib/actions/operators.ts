@@ -14,8 +14,10 @@ export interface GateOperator {
 }
 
 async function authorize() {
-  const { user, role } = await getAuth();
-  if (!user || (role !== "producer" && role !== "admin")) return null;
+  // Qualquer conta logada gere a portaria dos próprios eventos; a posse por
+  // producer_id protege as tabelas (gate_operators.producer_id = auth.uid()).
+  const { user } = await getAuth();
+  if (!user) return null;
   return user;
 }
 

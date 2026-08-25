@@ -49,7 +49,7 @@ export async function validateTicket(rawCode: string, operator?: Operador): Prom
   if (!code) return { ok: false, reason: "not_found", message: "Informe o código do ingresso." };
 
   const { user, role, fullName } = await getAuth();
-  if (!user || (role !== "admin" && role !== "producer")) {
+  if (!user) {
     return { ok: false, reason: "unauthorized", message: "Sem permissão para validar ingressos." };
   }
   // Validação feita de DENTRO do sistema (painel logado): quem validou é o
@@ -77,8 +77,9 @@ export async function validateTicket(rawCode: string, operator?: Operador): Prom
     return { ok: false, reason: "not_found", message: "Ingresso não encontrado." };
   }
 
-  // Produtor só valida ingressos dos próprios eventos
-  if (role === "producer") {
+  // Só o dono do evento valida (admin valida qualquer um). Quem não é dono é
+  // barrado aqui, mesmo o painel sendo acessível a qualquer conta.
+  if (role !== "admin") {
     const { data: ev } = await svc
       .from("events")
       .select("producer_id")
@@ -250,7 +251,7 @@ export async function regenerateCheckinToken(
   eventId: string
 ): Promise<{ ok: boolean; token?: string; error?: string }> {
   const { user, role } = await getAuth();
-  if (!user || (role !== "admin" && role !== "producer")) {
+  if (!user) {
     return { ok: false, error: "Sem permissão." };
   }
   let svc;
@@ -259,8 +260,8 @@ export async function regenerateCheckinToken(
   } catch {
     return { ok: false, error: "Serviço indisponível." };
   }
-  // produtor só mexe nos próprios eventos
-  if (role === "producer") {
+  // só mexe nos próprios eventos (admin em qualquer um)
+  if (role !== "admin") {
     const { data: ev } = await svc.from("events").select("producer_id").eq("id", eventId).single();
     if (!ev || ev.producer_id !== user.id) return { ok: false, error: "Evento não é seu." };
   }

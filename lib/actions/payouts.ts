@@ -15,8 +15,11 @@ function refresh() {
 }
 
 async function producerCtx() {
-  const { user, role } = await getAuth();
-  if (!user || (role !== "producer" && role !== "admin")) return null;
+  // Qualquer conta logada tem financeiro de organizador; o saldo é calculado
+  // sobre os eventos de que ela é dona (producer_id), então zera pra quem não
+  // organizou nada. requestPayout/requestAdvance operam só no próprio saldo.
+  const { user } = await getAuth();
+  if (!user) return null;
   return user;
 }
 async function adminCtx() {

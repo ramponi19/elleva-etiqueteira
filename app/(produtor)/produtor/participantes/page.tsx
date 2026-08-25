@@ -23,7 +23,7 @@ export default async function ProdutorParticipantes() {
   const supabase = await createClient();
 
   let evq = supabase.from("events").select("id, title").order("starts_at", { ascending: false });
-  if (role === "producer") evq = evq.eq("producer_id", user!.id);
+  if (role !== "admin") evq = evq.eq("producer_id", user!.id);
   const { data: events } = await evq;
   const eventos = events ?? [];
   const ids = eventos.map((e) => e.id);

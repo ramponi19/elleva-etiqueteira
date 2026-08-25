@@ -11,9 +11,11 @@ async function ownsEvent(svc: Awaited<ReturnType<typeof createServiceClient>>, e
   return data?.producer_id === userId;
 }
 
-// Promove o usuário logado a "producer" (se ainda for "customer") e o leva a uma
-// área de produtor. Estilo Sympla: qualquer pessoa pode criar evento — ao clicar
-// em "Criar evento"/"Meus eventos" o papel é elevado automaticamente.
+// Leva o usuário logado para a área de organizador. NÃO existe mais "virar
+// produtor": como no mercado (Sympla/Eventbrite), toda conta já é comprador e
+// organizador ao mesmo tempo. Quem não tem evento vê o painel vazio; o cadastro
+// de organizador (chave Pix p/ repasse) é preenchido em /produtor/financeiro,
+// não no signup. A posse de cada evento é garantida por `producer_id`.
 export async function becomeProducerAndGo(formData: FormData) {
   const supabase = await createClient();
   const {
@@ -21,27 +23,9 @@ export async function becomeProducerAndGo(formData: FormData) {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .maybeSingle();
-
-  if ((profile?.role ?? "customer") === "customer") {
-    // `profiles.role` deixou de ser escrevível pelo próprio usuário (migration
-    // 0050): quem define papel é o servidor. A promoção continua em um clique,
-    // mas agora sai pelo cliente de serviço, e SÓ no caminho customer→producer
-    // que este bloco já garante. Escalada a admin segue barrada pelo trigger.
-    const svc = await createServiceClient();
-    await svc.from("profiles").update({ role: "producer" }).eq("id", user.id).eq("role", "customer");
-    // O header (layout de marketing) lê o papel a cada request; revalida a home.
-    revalidatePath("/", "layout");
-  }
-
   const to = String(formData.get("to") ?? "");
   const allowed = to.startsWith("/produtor") || to === "/criar-evento";
-  const dest = allowed ? to : "/produtor";
-  redirect(dest);
+  redirect(allowed ? to : "/produtor");
 }
 
 /** Salva a conta de repasse (chave Pix) do produtor. */
@@ -85,7 +69,7 @@ export async function createEventCoupon(input: {
   maxUses?: number;
 }): Promise<{ ok: boolean; error?: string }> {
   const { user, role } = await getAuth();
-  if (!user || (role !== "producer" && role !== "admin")) return { ok: false, error: "Sem permissão." };
+  if (!user) return { ok: false, error: "Sem permissão." };
 
   const code = input.code.trim().toUpperCase();
   if (!code) return { ok: false, error: "Informe um código." };

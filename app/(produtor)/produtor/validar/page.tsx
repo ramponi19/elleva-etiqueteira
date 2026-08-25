@@ -15,7 +15,7 @@ export default async function ProdutorValidar() {
   try {
     const svc = await createServiceClient();
     let q = svc.from("events").select("id, title, checkin_token").order("starts_at", { ascending: false });
-    if (role === "producer") q = q.eq("producer_id", user!.id);
+    if (role !== "admin") q = q.eq("producer_id", user!.id);
     const { data } = await q;
     list = (data ?? []).map((e) => ({ id: e.id, title: e.title, token: e.checkin_token as string }));
   } catch {

@@ -1,4 +1,4 @@
-import { requireRole } from "@/lib/auth";
+import { requireAuth } from "@/lib/auth";
 import { DashShell } from "@/components/elleva/dash-shell";
 
 const NAV = [
@@ -16,7 +16,7 @@ export default async function ProdutorLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { fullName, user } = await requireRole(["producer", "admin"]);
+  const { fullName, user } = await requireAuth();
   return (
     <DashShell area="Área do produtor" items={NAV} userName={fullName ?? user!.email ?? "Produtor"}>
       {children}

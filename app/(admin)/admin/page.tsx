@@ -21,20 +21,23 @@ export default async function AdminOverview() {
 
   const [
     { count: eventsCount },
-    { count: customersCount },
-    { count: producersCount },
+    { count: usuariosCount },
     { data: totais },
     { data: recentOrders },
+    { data: eventProducers },
   ] = await Promise.all([
     supabase.from("events").select("id", { count: "exact", head: true }), // select("*") e bloqueado pelos grants por coluna -> count vinha nulo ("Eventos 0")
-    supabase.from("profiles").select("*", { count: "exact", head: true }).eq("role", "customer"),
-    supabase.from("profiles").select("*", { count: "exact", head: true }).eq("role", "producer"),
+    // Toda conta é comprador e organizador (modelo de mercado): "usuários" = todos
+    // que não são a Elleva. "Organizadores" = quem de fato publicou algum evento.
+    supabase.from("profiles").select("*", { count: "exact", head: true }).neq("role", "admin"),
     svc.rpc("admin_overview_totals"),
     supabase.from("orders").select("id, buyer_name, buyer_email, total, status, created_at").order("created_at", { ascending: false }).limit(8),
+    svc.from("events").select("producer_id"),
   ]);
 
   const t = (Array.isArray(totais) ? totais[0] : totais) as { recebido: number; taxa: number; pedidos_pagos: number } | null;
   const revenue = Number(t?.recebido ?? 0);
+  const organizadores = new Set((eventProducers ?? []).map((e) => e.producer_id).filter(Boolean)).size;
   const card = "rounded-[var(--radius-card)] border-[1.5px] border-tinta bg-white";
 
   const stats = [
@@ -42,8 +45,8 @@ export default async function AdminOverview() {
     { label: "Taxa da Elleva", value: fmtBRL(Number(t?.taxa ?? 0)), icon: "lucide:trending-up" },
     { label: "Pedidos pagos", value: String(Number(t?.pedidos_pagos ?? 0)), icon: "lucide:shopping-cart" },
     { label: "Eventos", value: String(eventsCount ?? 0), icon: "lucide:ticket" },
-    { label: "Clientes", value: String(customersCount ?? 0), icon: "lucide:users" },
-    { label: "Produtores", value: String(producersCount ?? 0), icon: "lucide:user-round" },
+    { label: "Usuários", value: String(usuariosCount ?? 0), icon: "lucide:users" },
+    { label: "Organizadores", value: String(organizadores), icon: "lucide:user-round" },
   ];
 
   return (

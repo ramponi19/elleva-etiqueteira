@@ -31,7 +31,7 @@ export default async function ProdutorInicio() {
     .from("events")
     .select("id, title, category, city, starts_at, status")
     .order("starts_at", { ascending: true });
-  if (role === "producer") q = q.eq("producer_id", user!.id);
+  if (role !== "admin") q = q.eq("producer_id", user!.id);
   const { data: events } = await q;
 
   // Agregado em SQL e restrito aos eventos DESTE produtor. Antes a query pegava

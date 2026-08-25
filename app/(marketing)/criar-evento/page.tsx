@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
-import { requireRole } from "@/lib/auth";
+import { requireAuth } from "@/lib/auth";
 import { CriarEventoForm } from "@/components/elleva/criar-evento-form";
 
 export const metadata: Metadata = { title: "Criar Evento" };
 
 export default async function CriarEventoPage() {
-  // Só produtor/admin. Quem chega pelo botão "Criar evento" já foi promovido.
-  await requireRole(["producer", "admin"]);
+  // Qualquer conta logada pode criar evento (modelo de mercado).
+  await requireAuth();
   return (
     <div className="bg-papel">
       <div className="mx-auto max-w-[860px] px-5 py-10 sm:px-10">
