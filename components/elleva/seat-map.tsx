@@ -185,7 +185,7 @@ export function SeatMap({
         </div>
         {total > 0 && maxParcelas > 1 && (
           <p className="corpo-suave m-0 mt-1 text-right">
-            ou até <strong className="text-tinta">{maxParcelas}x de {fmtBRL(total / maxParcelas)}</strong> no cartão
+            ou parcele em até <strong className="text-tinta">{maxParcelas}x</strong> no cartão
           </p>
         )}
         <Button

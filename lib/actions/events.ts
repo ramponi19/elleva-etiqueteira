@@ -4,9 +4,18 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { getAuth } from "@/lib/auth";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
-import { refundOrder } from "@/lib/orders-helpers";
+import { refundOrder, notifyEventChanged } from "@/lib/orders-helpers";
 import { META_PIXEL_RE, GA_ID_RE } from "@/lib/tracking-ids";
 import { audit } from "@/lib/audit";
+
+const MESES = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
+function quandoLabel(iso: string): string {
+  const p = new Intl.DateTimeFormat("pt-BR", {
+    timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false,
+  }).formatToParts(new Date(iso));
+  const g = (t: string) => p.find((x) => x.type === t)?.value ?? "";
+  return `${g("day")} ${MESES[parseInt(g("month"), 10) - 1]} · ${g("hour")}:${g("minute")}`;
+}
 
 const optStr = z.string().optional().or(z.literal("").transform(() => undefined));
 
@@ -275,8 +284,33 @@ export async function updateEvent(id: string, input: EventInput): Promise<EventF
     if (!ev || ev.producer_id !== auth.user.id) return { ok: false, error: "Evento não é seu." };
   }
 
-  const { error } = await supabase.from("events").update(eventColumns(v)).eq("id", id);
+  // F9: guarda o estado ANTES para detectar mudança de data/local e avisar quem
+  // já comprou (o comprador não pode descobrir na porta que a data mudou).
+  const { data: antes } = await supabase
+    .from("events").select("starts_at, venue, city, address, address_number").eq("id", id).single();
+
+  const cols = eventColumns(v);
+  const { error } = await supabase.from("events").update(cols).eq("id", id);
   if (error) return { ok: false, error: error.message };
+
+  // Compara e, se data ou local mudou, notifica os compradores pagos.
+  if (antes) {
+    const mudouData = antes.starts_at !== cols.starts_at;
+    const mudouLocal =
+      (antes.venue ?? "") !== (cols.venue ?? "") ||
+      (antes.city ?? "") !== (cols.city ?? "") ||
+      (antes.address ?? "") !== (cols.address ?? "") ||
+      (antes.address_number ?? "") !== (cols.address_number ?? "");
+    if (mudouData || mudouLocal) {
+      const partes: string[] = [];
+      if (mudouData) partes.push(`nova data e horário: ${quandoLabel(cols.starts_at)}`);
+      if (mudouLocal) partes.push(`novo local: ${[cols.venue, cols.city].filter(Boolean).join(" · ")}`);
+      try {
+        const svc = await createServiceClient();
+        await notifyEventChanged(svc, id, partes.join(" · "));
+      } catch { /* aviso é best-effort — não derruba o salvamento */ }
+    }
+  }
 
   // Se o evento JÁ VENDEU, não mexe em lotes/mapa. Antes o guard olhava só
   // `seats` vendidos/reservados — num evento sem assentos marcados (admissão

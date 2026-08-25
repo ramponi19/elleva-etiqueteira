@@ -339,6 +339,52 @@ export async function sendTransferEmail(svc: Svc, ticketId: string) {
   }
 }
 
+/** F9: avisa um comprador que o evento mudou (data e/ou local). */
+export async function sendEventChangedEmail(to: string, name: string, eventTitle: string, mudanca: string) {
+  if (!isMailerConfigured()) return;
+  const html = `
+  <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;background:#FAF5EC">
+    <p style="margin:0;color:#C93A15;font-size:11px;letter-spacing:3px;text-transform:uppercase;font-weight:bold">Mudança no evento</p>
+    <h1 style="font-weight:900;text-transform:uppercase;color:#141210;font-size:24px;margin:6px 0 0">${esc(eventTitle)}</h1>
+    <p style="color:#141210;font-size:15px;margin:14px 0 0">Olá, ${esc(name)}. A organização atualizou este evento — confira:</p>
+    <div style="background:#fff;border:2px solid #141210;border-radius:14px;padding:16px 18px;margin-top:14px">
+      <p style="margin:0;color:#141210;font-size:15px;font-weight:bold">${esc(mudanca)}</p>
+    </div>
+    <p style="color:rgba(20,18,16,.6);font-size:13px;margin-top:14px">Seu ingresso continua válido. Se a nova data ou local não servir pra você, fale com a organização.</p>
+    <a href="${APP_URL}/conta" style="display:inline-block;margin-top:18px;background:#E8481F;color:#141210;text-decoration:none;font-weight:bold;padding:12px 24px;border-radius:9999px;font-size:15px">Ver meu ingresso</a>
+  </div>`;
+  try {
+    await sendEmail({ to, subject: `Atualização: ${eventTitle} — Elleva Tickets`, html });
+  } catch { /* ignore */ }
+}
+
+/** F9: notifica TODOS os compradores pagos de um evento que ele mudou (paginado,
+ *  best-effort — um destinatário que falha não derruba os demais). */
+export async function notifyEventChanged(svc: Svc, eventId: string, mudanca: string) {
+  if (!isMailerConfigured()) return;
+  const { data: ev } = await svc.from("events").select("title").eq("id", eventId).single();
+  const title = (ev?.title as string) ?? "seu evento";
+  const seen = new Set<string>();
+  const PAGE = 1000;
+  for (let from = 0; ; from += PAGE) {
+    const { data: items, error } = await svc
+      .from("order_items")
+      .select("orders!inner(buyer_email, buyer_name, status)")
+      .eq("event_id", eventId)
+      .eq("orders.status", "paid")
+      .range(from, from + PAGE - 1);
+    if (error) break;
+    const lote = items ?? [];
+    for (const it of lote) {
+      const o = (Array.isArray(it.orders) ? it.orders[0] : it.orders) as { buyer_email: string; buyer_name: string } | undefined;
+      if (!o?.buyer_email || seen.has(o.buyer_email)) continue;
+      seen.add(o.buyer_email);
+      await sendEventChangedEmail(o.buyer_email, o.buyer_name ?? "", title, mudanca).catch(() => {});
+    }
+    if (lote.length < PAGE) break;
+  }
+}
+
 /** E-mail de lembrete de evento. */
 export async function sendReminderEmail(to: string, name: string, eventTitle: string, when: string) {
   if (!isMailerConfigured()) return;

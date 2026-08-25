@@ -280,6 +280,12 @@ export function FinanceiroProdutor({
                   </p>
                 </div>
                 <div className="flex flex-shrink-0 items-center gap-3">
+                  {p.status === "paid" && (
+                    <a href={`/recibo-repasse/${p.id}`} target="_blank" rel="noopener noreferrer"
+                      className="inline-flex min-h-[38px] items-center gap-1.5 rounded-[var(--radius-pill)] border-[1.5px] border-tinta px-3 text-[12px] font-medium text-tinta hover:bg-papel-2">
+                      <Icon icon="lucide:file-text" style={{ fontSize: 15 }} /> recibo
+                    </a>
+                  )}
                   {p.receipt_path && (
                     <button type="button" onClick={() => verComprovante(p.id)} disabled={pending}
                       className="inline-flex min-h-[38px] items-center gap-1.5 rounded-[var(--radius-pill)] border-[1.5px] border-tinta px-3 text-[12px] font-medium text-tinta hover:bg-papel-2 disabled:opacity-50">
