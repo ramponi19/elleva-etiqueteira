@@ -1,10 +1,12 @@
 "use server";
 
 import { z } from "zod";
+import { revalidatePath } from "next/cache";
+import { getAuth } from "@/lib/auth";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { getPaymentProvider } from "@/lib/payments";
 import { mpDeclineMessage, mpErrorMessage } from "@/lib/payments/mp-messages";
-import { markOrderPaid, claimSeats } from "@/lib/orders-helpers";
+import { markOrderPaid, claimSeats, refundOrder } from "@/lib/orders-helpers";
 import { feeUnit, round2, DEFAULT_FEE_PCT } from "@/lib/fees";
 import { isValidCPF } from "@/lib/cpf";
 import { allowHit, clientIp } from "@/lib/rate-limit";
@@ -458,6 +460,37 @@ export async function previewCoupon(
   if (!res) return { ok: false, error: "Informe um cupom." };
   if ("error" in res) return { ok: false, error: res.error };
   return { ok: true, discount: res.discount };
+}
+
+/** Reembolso pelo próprio comprador (autoatendimento). Regra: art. 49 do CDC —
+ *  7 dias de arrependimento a partir do pagamento — E o evento ainda não pode
+ *  ter começado. Reusa refundOrder (estorna no gateway + reverte). */
+export async function requestSelfRefund(orderId: string): Promise<{ ok: boolean; error?: string }> {
+  const { user } = await getAuth();
+  if (!user) return { ok: false, error: "Entre na sua conta para solicitar o reembolso." };
+  let svc: Svc;
+  try { svc = await createServiceClient(); } catch { return { ok: false, error: "Indisponível no momento." }; }
+
+  const { data: o } = await svc.from("orders").select("user_id, status, paid_at, created_at").eq("id", orderId).single();
+  if (!o || o.user_id !== user.id) return { ok: false, error: "Pedido não encontrado." };
+  if (o.status !== "paid") return { ok: false, error: "Só um pedido pago pode ser reembolsado." };
+
+  const base = (o.paid_at as string | null) ?? (o.created_at as string);
+  if (Date.now() > new Date(base).getTime() + 7 * 86400000) {
+    return { ok: false, error: "O prazo de 7 dias para reembolso automático já passou. Fale com a organização do evento." };
+  }
+  // evento já começou? não reembolsa por aqui
+  const { data: its } = await svc.from("order_items").select("events(starts_at)").eq("order_id", orderId);
+  const jaComecou = (its ?? []).some((it) => {
+    const ev = it.events as unknown as { starts_at?: string } | null;
+    return ev?.starts_at && new Date(ev.starts_at).getTime() < Date.now();
+  });
+  if (jaComecou) return { ok: false, error: "O evento já começou — o reembolso automático não vale mais." };
+
+  const r = await refundOrder(svc, orderId);
+  if (r.action === "failed") return { ok: false, error: "Não deu para concluir o reembolso agora. Tente de novo em instantes." };
+  revalidatePath("/conta");
+  return { ok: true };
 }
 
 /** Polling do status do pedido. */

@@ -9,6 +9,8 @@ import { IngressoCard } from "@/components/elleva/ingresso-card";
 import { fmtBRL } from "@/lib/format";
 import { transferTicket } from "@/lib/actions/tickets";
 import { issueCertificate } from "@/lib/actions/certificates";
+import { requestSelfRefund } from "@/lib/actions/orders";
+import { ConfirmDialog } from "@/components/ui/modal";
 
 export interface TicketView {
   id: string;
@@ -18,6 +20,8 @@ export interface TicketView {
   status: string;
   qr: string;
   certEligible?: boolean; // evento emite certificado (botão aparece nos utilizados)
+  orderId?: string;
+  refundEligible?: boolean; // pago, dentro dos 7 dias do CDC e evento futuro
 }
 
 export interface PendingOrder {
@@ -36,6 +40,18 @@ export function IngressosTabs({ tickets, pendentes = [] }: { tickets: TicketView
   const [msg, setMsg] = useState<string | null>(null);
   const [transferId, setTransferId] = useState<string | null>(null);
   const [certId, setCertId] = useState<string | null>(null);
+  const [refundOrderId, setRefundOrderId] = useState<string | null>(null);
+
+  function doRefund() {
+    const oid = refundOrderId;
+    if (!oid) return;
+    setMsg(null);
+    startTransition(async () => {
+      const res = await requestSelfRefund(oid);
+      setRefundOrderId(null);
+      setMsg(res.ok ? "Reembolso solicitado — o valor volta pelo mesmo meio de pagamento em alguns dias." : (res.error ?? "Não foi possível reembolsar."));
+    });
+  }
 
   const grouped = useMemo(() => {
     const g: Record<"valid" | "used" | "cancelled", TicketView[]> = { valid: [], used: [], cancelled: [] };
@@ -160,6 +176,16 @@ export function IngressosTabs({ tickets, pendentes = [] }: { tickets: TicketView
                   <Icon icon="lucide:send" style={{ fontSize: 15 }} /> Transferir ingresso
                 </button>
               )}
+              {tab === "valid" && t.refundEligible && t.orderId && (
+                <button
+                  type="button"
+                  onClick={() => setRefundOrderId(t.orderId!)}
+                  disabled={pending}
+                  className="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-[10px] border-[1.5px] border-tinta px-3 py-2.5 text-[13px] font-medium text-sol-escuro transition-colors hover:bg-papel-2 disabled:opacity-50"
+                >
+                  <Icon icon="lucide:rotate-ccw" style={{ fontSize: 15 }} /> Solicitar reembolso
+                </button>
+              )}
               {tab === "used" && t.certEligible && (
                 <button
                   type="button"
@@ -176,6 +202,17 @@ export function IngressosTabs({ tickets, pendentes = [] }: { tickets: TicketView
       ) : (
         <p className="corpo-suave py-12 text-center">Nenhum ingresso nesta aba.</p>
       )}
+
+      <ConfirmDialog
+        open={refundOrderId !== null}
+        onClose={() => setRefundOrderId(null)}
+        onConfirm={doRefund}
+        title="Solicitar reembolso"
+        message={<>Cancelar esta compra e receber o valor de volta? O ingresso deixa de valer e o estorno volta pelo mesmo meio de pagamento em alguns dias. Vale dentro de 7 dias da compra e antes do evento (art. 49 do CDC).</>}
+        confirmLabel="Reembolsar minha compra"
+        danger
+        pending={pending}
+      />
 
       <PromptDialog
         open={transferId !== null}
