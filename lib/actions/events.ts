@@ -7,6 +7,19 @@ import { createClient, createServiceClient } from "@/lib/supabase/server";
 
 const optStr = z.string().optional().or(z.literal("").transform(() => undefined));
 
+// IDs de rastreamento entram CRUS num <script> na página pública (event-tracking).
+// Sem allowlist, um "pixel" como `');<script do atacante>//` executaria pra todo
+// visitante. O formato é estrito por natureza: Meta = só dígitos; Google = prefixo
+// conhecido + alfanum/hífen. Nada disso admite aspa, parêntese ou `<`.
+const metaPixelStr = z
+  .string().trim()
+  .regex(/^\d{8,20}$/, "O ID do Pixel da Meta deve conter apenas números (ex.: 123456789012345).")
+  .optional().or(z.literal("").transform(() => undefined));
+const gaIdStr = z
+  .string().trim()
+  .regex(/^(G|UA|AW|GT)-[A-Za-z0-9-]{4,20}$/, "O ID do Google (Analytics/Ads) parece inválido (ex.: G-XXXXXXX).")
+  .optional().or(z.literal("").transform(() => undefined));
+
 const TierSchema = z.object({
   name: z.string().min(1),
   description: z.string().optional(),
@@ -48,8 +61,8 @@ const EventSchema = z.object({
   visibility: z.enum(["public", "private"]).default("public"),
   absorbFee: z.coerce.boolean().optional(),
   nomenclature: optStr,
-  trackingMetaPixel: optStr,
-  trackingGa: optStr,
+  trackingMetaPixel: metaPixelStr,
+  trackingGa: gaIdStr,
   theme: optStr,
   hasSeating: z.coerce.boolean().optional(),
   sectors: z.array(SectorSchema).optional(),
