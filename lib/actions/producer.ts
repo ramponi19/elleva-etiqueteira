@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { getAuth } from "@/lib/auth";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
+import { sendPixChangedEmail } from "@/lib/finance-emails";
 
 async function ownsEvent(svc: Awaited<ReturnType<typeof createServiceClient>>, eventId: string, userId: string, isAdmin: boolean) {
   if (isAdmin) return true;
@@ -45,6 +46,12 @@ export async function savePayoutAccount(input: {
   if (!pixKey) return { ok: false, error: "Informe a chave Pix." };
   if (!input.holder.trim()) return { ok: false, error: "Informe o titular da conta." };
 
+  // M8: a chave Pix decide PRA ONDE o repasse vai. Conta invadida = chave
+  // trocada e dinheiro desviado sem alerta. Detecta a MUDANÇA (só quando o valor
+  // muda) pra avisar o dono por e-mail.
+  const { data: antes } = await supabase.from("profiles").select("payout_pix_key").eq("id", user.id).single();
+  const mudou = (antes?.payout_pix_key ?? "") !== pixKey;
+
   const { error } = await supabase
     .from("profiles")
     .update({
@@ -56,6 +63,9 @@ export async function savePayoutAccount(input: {
     .eq("id", user.id);
   if (error) return { ok: false, error: error.message };
 
+  if (mudou && user.email) {
+    await sendPixChangedEmail(user.email, input.holder.trim(), pixKey).catch(() => {});
+  }
   revalidatePath("/produtor/financeiro");
   return { ok: true };
 }

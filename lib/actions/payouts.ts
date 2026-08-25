@@ -6,6 +6,7 @@ import { createServiceClient } from "@/lib/supabase/server";
 import { computeProducerFinance } from "@/lib/finance";
 import { round2 } from "@/lib/fees";
 import { sendPayoutPaidEmail, sendPayoutRejectedEmail } from "@/lib/finance-emails";
+import { audit } from "@/lib/audit";
 
 type Res = { ok: true; amount?: number; url?: string } | { ok: false; error: string };
 
@@ -157,6 +158,7 @@ export async function markPayoutPaid(
   if (!data?.length) return { ok: false, error: "Essa solicitação já foi processada." };
 
   const p = data[0];
+  await audit("payout_paid", payoutId, { producer_id: p.producer_id, amount: Number(p.amount), net: Number(p.net_amount ?? p.amount), method, forcado: !!forcar });
   await sendPayoutPaidEmail(svc, p.producer_id as string, {
     amount: Number(p.amount),
     net: Number(p.net_amount ?? p.amount),
@@ -182,6 +184,7 @@ export async function rejectPayout(payoutId: string, reason: string): Promise<Re
     .select("producer_id, amount");
   if (error) return { ok: false, error: error.message };
   if (!data?.length) return { ok: false, error: "Essa solicitação já foi processada." };
+  await audit("payout_rejected", payoutId, { producer_id: data[0].producer_id, amount: Number(data[0].amount), reason });
   await sendPayoutRejectedEmail(svc, data[0].producer_id as string, Number(data[0].amount), reason);
   refresh();
   return { ok: true };
@@ -212,6 +215,7 @@ export async function adminPayoutProducer(
     created_by: admin.id,
   });
   if (error) return { ok: false, error: error.message };
+  await audit("payout_direct", producerId, { amount: fin.disponivel, method });
   await sendPayoutPaidEmail(svc, producerId, {
     amount: fin.disponivel, net: fin.disponivel, fee: 0, kind: "normal", reference: reference || null,
   });
@@ -236,6 +240,7 @@ export async function createAdjustment(
     producer_id: producerId, kind, amount: v, reason: reason.trim(), created_by: admin.id,
   });
   if (error) return { ok: false, error: error.message };
+  await audit("adjustment_create", producerId, { kind, amount: v, reason: reason.trim() });
   refresh();
   return { ok: true, amount: v };
 }
@@ -254,6 +259,7 @@ export async function deleteAdjustment(id: string, motivo?: string): Promise<Res
     .select("id");
   if (error) return { ok: false, error: error.message };
   if (!data?.length) return { ok: false, error: "Esse lançamento já foi estornado." };
+  await audit("adjustment_reversed", id, { motivo: motivo || null });
   refresh();
   return { ok: true };
 }
@@ -274,6 +280,7 @@ export async function setAdvanceSettings(
     .update({ advance_enabled: enabled, advance_fee_pct: pct })
     .eq("id", producerId);
   if (error) return { ok: false, error: error.message };
+  await audit("advance_settings", producerId, { enabled, feePct: pct });
   refresh();
   return { ok: true };
 }

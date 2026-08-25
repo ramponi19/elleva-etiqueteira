@@ -52,6 +52,21 @@ export async function sendPayoutPaidEmail(
   } catch { /* ignore */ }
 }
 
+/** M8: avisa o produtor que a chave Pix de repasse foi alterada. Mascara a chave
+ *  (mostra só o fim) — se não foi ele, é sinal de conta comprometida. */
+export async function sendPixChangedEmail(to: string, holder: string, pixKey: string) {
+  if (!isMailerConfigured()) return;
+  const mask = pixKey.length > 4 ? `••••${esc(pixKey.slice(-4))}` : "••••";
+  const html = wrap(`
+    <p style="margin:0;color:#C93A15;font-size:11px;letter-spacing:3px;text-transform:uppercase;font-weight:bold">Segurança da conta</p>
+    <h1 style="margin:6px 0 0;color:#141210;font-size:24px;line-height:1.1;text-transform:uppercase;font-weight:900">Sua chave de repasse mudou</h1>
+    <p style="color:#141210;font-size:15px;margin:14px 0 0">A conta de recebimento da sua bilheteria foi atualizada — titular <strong>${esc(holder)}</strong>, chave terminando em <strong>${mask}</strong>.</p>
+    <p style="color:#141210;font-size:14px;margin:12px 0 0"><strong>Foi você?</strong> Pode ignorar este aviso. <strong>Não foi você?</strong> Fale com a Elleva imediatamente — os próximos repasses iriam para essa chave.</p>`);
+  try {
+    await sendEmail({ to, subject: "Sua chave de repasse foi alterada — Elleva Tickets", html });
+  } catch { /* ignore */ }
+}
+
 export async function sendPayoutRejectedEmail(svc: Svc, producerId: string, amount: number, reason: string) {
   if (!isMailerConfigured()) return;
   const to = await producerEmail(svc, producerId);

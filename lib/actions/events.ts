@@ -6,6 +6,7 @@ import { getAuth } from "@/lib/auth";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { refundOrder } from "@/lib/orders-helpers";
 import { META_PIXEL_RE, GA_ID_RE } from "@/lib/tracking-ids";
+import { audit } from "@/lib/audit";
 
 const optStr = z.string().optional().or(z.literal("").transform(() => undefined));
 
@@ -68,7 +69,10 @@ const EventSchema = z.object({
   trackingGa: gaIdStr,
   theme: optStr,
   hasSeating: z.coerce.boolean().optional(),
-  sectors: z.array(SectorSchema).optional(),
+  // M11: teto de setores + total de assentos. Cada setor é rows×cols (até
+  // 60×80 = 4800); sem limite de setores, um form com 100 deles geraria ~480 mil
+  // linhas em `seats` num único insert. 40 setores × 4800 já cobre casas grandes.
+  sectors: z.array(SectorSchema).max(40).optional(),
   certificateEnabled: z.coerce.boolean().optional(),
   certificateTitle: optStr,
   certificateBody: optStr,
@@ -401,6 +405,7 @@ export async function cancelEvent(id: string): Promise<{ ok: boolean; error?: st
     // "already" (já revertido): não conta — mantém o resumo honesto em reexecuções
   }
 
+  await audit("cancel_event", id, { pedidos: orderIds.size, reembolsados, pendentesCancelados, falhas });
   revalidatePath("/admin/eventos");
   revalidatePath("/admin/financeiro");
   revalidatePath("/produtor");

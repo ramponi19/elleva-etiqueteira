@@ -497,8 +497,16 @@ export async function requestSelfRefund(orderId: string): Promise<{ ok: boolean;
 export async function getOrderStatus(orderId: string): Promise<string | null> {
   try {
     const svc = await createServiceClient();
-    const { data } = await svc.from("orders").select("status").eq("id", orderId).single();
-    return (data?.status as string) ?? null;
+    const { data } = await svc.from("orders").select("status, user_id").eq("id", orderId).single();
+    if (!data) return null;
+    // M5: pedido de conta logada → só o dono consulta o status. Convidado
+    // (user_id null) → quem tem o UUID da própria compra acompanha (não há
+    // sessão pra conferir). Sem isto, qualquer UUID revelava o status alheio.
+    if (data.user_id) {
+      const { user } = await getAuth();
+      if (!user || user.id !== data.user_id) return null;
+    }
+    return (data.status as string) ?? null;
   } catch {
     return null;
   }

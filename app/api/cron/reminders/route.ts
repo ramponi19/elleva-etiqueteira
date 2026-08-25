@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server";
-import { sendReminderEmail } from "@/lib/orders-helpers";
+import { sendReminderEmail, releaseSeats } from "@/lib/orders-helpers";
 
 const MONTHS = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
 function fmtWhen(iso: string) {
@@ -73,8 +73,29 @@ export async function GET(request: Request) {
     await svc.from("events").update({ reminder_sent_at: new Date().toISOString() }).eq("id", ev.id);
   }
 
+  // M9: Pix pendente que passou do prazo vira 'cancelled' e libera os assentos.
+  // Sem isto, a pendência ficava eterna (a lista do admin acumulava e o número
+  // de "pendentes" no financeiro nunca fechava). Só toca pendentes já vencidos.
+  let expirados = 0;
+  try {
+    const { data: velhos } = await svc
+      .from("orders")
+      .select("id")
+      .eq("status", "pending")
+      .not("expires_at", "is", null)
+      .lt("expires_at", nowIso);
+    for (const o of velhos ?? []) {
+      const { data: done } = await svc
+        .from("orders").update({ status: "cancelled" }).eq("id", o.id).eq("status", "pending").select("id");
+      if (done?.length) {
+        await releaseSeats(svc, o.id as string);
+        expirados++;
+      }
+    }
+  } catch { /* faxina não pode derrubar o cron */ }
+
   // faxina das janelas antigas de rate limit (A7) — não deixa a tabela crescer
   await svc.rpc("rate_limit_gc").then(undefined, () => {});
 
-  return NextResponse.json({ ok: true, events: events?.length ?? 0, emails: sent, falhas: failed });
+  return NextResponse.json({ ok: true, events: events?.length ?? 0, emails: sent, falhas: failed, expirados });
 }

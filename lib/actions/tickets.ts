@@ -42,7 +42,12 @@ async function holderInfo(
     .select("buyer_name, buyer_cpf")
     .eq("id", ticket.order_id)
     .single();
-  return { seat, holderName: o?.buyer_name ?? undefined, holderDoc: o?.buyer_cpf ?? undefined };
+  // M3: a portaria só precisa CONFERIR o documento — mostra ***.***.**-99 (3
+  // últimos). O link de check-in circula em grupo de WhatsApp; o CPF inteiro
+  // do comprador não deve trafegar por ali.
+  const cpf = o?.buyer_cpf ? onlyDigits(o.buyer_cpf) : "";
+  const holderDoc = cpf.length === 11 ? `***.***.**${cpf.slice(-3, -2)}-${cpf.slice(-2)}` : undefined;
+  return { seat, holderName: o?.buyer_name ?? undefined, holderDoc };
 }
 
 export async function validateTicket(rawCode: string, operator?: Operador): Promise<ValidateResult> {

@@ -161,6 +161,12 @@ export function CriarEventoForm({
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // M13: num form longo, a mensagem de erro nascia fora da tela e o "Salvar"
+  // parecia morto. Rola até ela sempre que aparece.
+  const errorRef = useRef<HTMLParagraphElement>(null);
+  useEffect(() => {
+    if (error) errorRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [error]);
   const [notice, setNotice] = useState<{ msg: string; go: () => void } | null>(null);
 
   const set = <K extends keyof FormState>(k: K, v: FormState[K]) =>
@@ -844,7 +850,7 @@ export function CriarEventoForm({
       </section>
 
       {error && (
-        <p className="rounded-[10px] border-[1.5px] border-sol bg-[rgb(232_72_31/0.08)] px-4 py-3 text-[14px] text-sol-escuro">
+        <p ref={errorRef} className="rounded-[10px] border-[1.5px] border-sol bg-[rgb(232_72_31/0.08)] px-4 py-3 text-[14px] text-sol-escuro">
           {error}
         </p>
       )}
