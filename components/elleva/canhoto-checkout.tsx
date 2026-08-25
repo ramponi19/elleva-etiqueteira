@@ -90,16 +90,19 @@ export function CanhotoCheckout({
     return (
       <div key={t.id} className={clsx("flex items-center gap-3 rounded-[10px] border-[1.5px] border-tinta p-4", esgotado && "opacity-55")}>
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <span className="text-[15px] font-medium text-tinta">{t.name}</span>
+            {t.isHalf && <Badge tom="papel">Meia-entrada</Badge>}
             {esgotado && <Badge tom="tinta">Sold out</Badge>}
           </div>
           {t.desc && <p className="corpo-suave m-0 mt-0.5">{t.desc}</p>}
+          {/* meia-entrada é ingresso próprio agora (F3) — não mais um texto genérico
+              em todo lote. O comprador leva documento na entrada. */}
+          {t.isHalf && <p className="corpo-suave m-0 mt-0.5">Levar documento de estudante, idoso ou PCD na entrada.</p>}
           <p className="numero m-0 mt-1.5 text-[17px]">
             {fmtBRL(t.price)}{" "}
             <span className="rotulo font-medium text-tinta-60">
               {absorve ? "(taxa inclusa)" : `(+ ${fmtBRL(feeUnit(t.price, event.feePct))} taxa)`}
-              {!t.isAddon && <> · meia {fmtBRL(t.price / 2)}</>}
             </span>
           </p>
         </div>

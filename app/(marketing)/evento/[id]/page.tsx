@@ -257,13 +257,17 @@ export default async function EventPage({
               </a>
             )}
           </div>
-          <div className="rounded-[var(--radius-card)] border-[1.5px] border-tinta p-5">
-            <h3 className="rotulo m-0 text-sol-escuro">Meia-entrada</h3>
-            <p className="corpo-suave m-0 mt-2">
-              Estudantes, idosos e PCD pagam meia com documento na entrada.
-              Leva o comprovante junto do ingresso.
-            </p>
-          </div>
+          {/* Só promete meia quando o evento REALMENTE oferece um ingresso de
+              meia-entrada (F3) — antes o texto aparecia em todo evento. */}
+          {tiers.some((t) => t.isHalf) && (
+            <div className="rounded-[var(--radius-card)] border-[1.5px] border-tinta p-5">
+              <h3 className="rotulo m-0 text-sol-escuro">Meia-entrada</h3>
+              <p className="corpo-suave m-0 mt-2">
+                Este evento tem ingresso de meia-entrada. Estudantes, idosos e PCD
+                apresentam documento na entrada — leve o comprovante junto do ingresso.
+              </p>
+            </div>
+          )}
           <div className="rounded-[var(--radius-card)] border-[1.5px] border-tinta p-5">
             <h3 className="rotulo m-0 text-sol-escuro">Organização</h3>
             {/* nome/bio do produtor — o formulário pedia e nada era exibido */}

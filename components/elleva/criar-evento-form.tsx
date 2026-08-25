@@ -49,6 +49,7 @@ interface Tier {
   capacity: string;
   isFree: boolean;
   isAddon: boolean;
+  isHalf: boolean;
 }
 
 interface Sector {
@@ -96,13 +97,14 @@ interface FormState {
   visibility: "public" | "private";
 }
 
-const emptyTier = (opts: { isFree?: boolean; isAddon?: boolean } = {}): Tier => ({
-  name: "",
+const emptyTier = (opts: { isFree?: boolean; isAddon?: boolean; isHalf?: boolean } = {}): Tier => ({
+  name: opts.isHalf ? "Meia-entrada" : "",
   description: "",
   price: "",
   capacity: "",
   isFree: opts.isFree ?? false,
   isAddon: opts.isAddon ?? false,
+  isHalf: opts.isHalf ?? false,
 });
 
 const EMPTY: FormState = {
@@ -209,7 +211,7 @@ export function CriarEventoForm({
   }
 
   // ── ingressos ─────────────────────────────────────────────────────────
-  const addTier = (opts: { isFree?: boolean; isAddon?: boolean } = {}) =>
+  const addTier = (opts: { isFree?: boolean; isAddon?: boolean; isHalf?: boolean } = {}) =>
     setF((s) => ({ ...s, tiers: [...s.tiers, emptyTier(opts)] }));
   const setTier = (i: number, k: keyof Tier, v: string | boolean) =>
     setF((s) => ({ ...s, tiers: s.tiers.map((t, idx) => (idx === i ? { ...t, [k]: v } : t)) }));
@@ -309,6 +311,7 @@ export function CriarEventoForm({
         capacity: t.capacity || undefined,
         isFree: t.isFree,
         isAddon: t.isAddon,
+        isHalf: t.isHalf,
       })),
       hasSeating: f.hasSeating,
       sectors: f.hasSeating
@@ -571,12 +574,19 @@ export function CriarEventoForm({
           <Button variante="contorno" type="button" onClick={() => addTier({ isFree: true })}>
             <Icon icon="lucide:plus" style={{ fontSize: 16 }} /> Ingresso gratuito
           </Button>
+          <Button variante="contorno" type="button" onClick={() => addTier({ isHalf: true })}>
+            <Icon icon="lucide:plus" style={{ fontSize: 16 }} /> Meia-entrada
+          </Button>
           <Button variante="contorno" type="button" onClick={() => addTier({ isAddon: true })}>
             <Icon icon="lucide:plus" style={{ fontSize: 16 }} /> Produto/adicional
           </Button>
         </div>
         <p className="corpo-suave mt-2 text-center text-[12.5px] text-tinta-60">
           Produto/adicional (copo, camiseta, estacionamento) é vendido junto, mas não gera QR de entrada.
+        </p>
+        <p className="corpo-suave mt-1 text-center text-[12.5px] text-tinta-60">
+          Meia-entrada: por lei, ofereça pelo menos 40% dos ingressos a metade do preço (defina o preço
+          e a cota na capacidade do lote). O comprador apresenta documento na entrada.
         </p>
 
         {f.tiers.length > 0 && (
@@ -585,7 +595,7 @@ export function CriarEventoForm({
               <div key={i} className="rounded-[10px] border-[1.5px] border-tinta p-4">
                 <div className="mb-2 flex items-center justify-between">
                   <span className="rotulo text-tinta-60">
-                    {t.isAddon ? "Produto/adicional" : t.isFree ? "Ingresso gratuito" : "Ingresso pago"}
+                    {t.isAddon ? "Produto/adicional" : t.isHalf ? "Meia-entrada" : t.isFree ? "Ingresso gratuito" : "Ingresso pago"}
                   </span>
                   <button
                     type="button"

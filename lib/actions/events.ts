@@ -28,6 +28,7 @@ const TierSchema = z.object({
   capacity: z.coerce.number().int().positive().optional().or(z.literal("").transform(() => undefined)),
   isFree: z.coerce.boolean().optional(),
   isAddon: z.coerce.boolean().optional(),
+  isHalf: z.coerce.boolean().optional(),
 });
 
 // Um setor do mapa de assentos: grade rows×cols ligada a um lote (por índice).
@@ -195,6 +196,7 @@ function tierRows(eventId: string, tiers: EventData["tiers"]) {
     capacity: t.capacity ?? null,
     is_free: t.isFree ?? false,
     is_addon: t.isAddon ?? false,
+    is_half: t.isHalf ?? false,
     sort_order: i,
   }));
 }
