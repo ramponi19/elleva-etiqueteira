@@ -73,5 +73,8 @@ export async function GET(request: Request) {
     await svc.from("events").update({ reminder_sent_at: new Date().toISOString() }).eq("id", ev.id);
   }
 
+  // faxina das janelas antigas de rate limit (A7) — não deixa a tabela crescer
+  await svc.rpc("rate_limit_gc").then(undefined, () => {});
+
   return NextResponse.json({ ok: true, events: events?.length ?? 0, emails: sent, falhas: failed });
 }

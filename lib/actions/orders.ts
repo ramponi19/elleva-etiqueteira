@@ -7,6 +7,7 @@ import { mpDeclineMessage, mpErrorMessage } from "@/lib/payments/mp-messages";
 import { markOrderPaid, claimSeats } from "@/lib/orders-helpers";
 import { feeUnit, round2, DEFAULT_FEE_PCT } from "@/lib/fees";
 import { isValidCPF } from "@/lib/cpf";
+import { allowHit, clientIp } from "@/lib/rate-limit";
 
 const isUuid = (s: string) =>
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
@@ -358,6 +359,14 @@ export async function createCardOrder(input: z.input<typeof CardSchema>): Promis
   const parsed = CardSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Dados inválidos" };
 
+  // A7: o checkout transparente é um alvo para testar cartão roubado em lote —
+  // e cada tentativa recusada conta contra a conta MP da Elleva (multa/risco de
+  // descredenciamento). Teto por IP: 6 tentativas de cartão a cada 10 min.
+  const ip = await clientIp();
+  if (!(await allowHit(`card:${ip}`, 6, 600))) {
+    return { ok: false, error: "Muitas tentativas de pagamento. Aguarde alguns minutos e tente de novo." };
+  }
+
   const provider = getPaymentProvider();
   if (!provider.isConfigured()) return { ok: false, error: "Pagamento por cartão indisponível." };
 
@@ -438,6 +447,11 @@ export async function previewCoupon(
 ): Promise<{ ok: true; discount: number } | { ok: false; error: string }> {
   const parsedItems = z.array(ItemSchema).safeParse(items);
   if (!parsedItems.success) return { ok: false, error: "Itens inválidos" };
+  // A7: previewCoupon diz se um código é válido — dá pra varrer palavras atrás
+  // de cupons ativos. Teto por IP: 30 consultas / 5 min.
+  if (!(await allowHit(`coupon:${await clientIp()}`, 30, 300))) {
+    return { ok: false, error: "Muitas tentativas. Aguarde um momento." };
+  }
   let svc: Svc;
   try { svc = await createServiceClient(); } catch { return { ok: false, error: "Indisponível" }; }
   const res = await couponDiscount(svc, code, parsedItems.data);

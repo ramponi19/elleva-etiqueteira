@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { getAuth } from "@/lib/auth";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { isValidCPF, onlyDigits } from "@/lib/cpf";
+import { allowHit, isAllowed, clientIp } from "@/lib/rate-limit";
 
 export interface GateOperator {
   id: string;
@@ -96,8 +97,12 @@ export async function resolveGateOperator(
   if (!token || !clean) return null;
   try {
     const svc = await createServiceClient();
-    const { data: ev } = await svc.from("events").select("producer_id").eq("checkin_token", token).single();
+    const { data: ev } = await svc.from("events").select("id, producer_id").eq("checkin_token", token).single();
     if (!ev?.producer_id) return null;
+    // A7 + M4: mesmo freio de brute-force do PIN da validação (só falhas contam).
+    const ip = await clientIp();
+    const pinBucket = `pinfail:${ev.id}:${ip}`;
+    if (!(await isAllowed(pinBucket, 10, 300))) return null;
     const { data: op } = await svc
       .from("gate_operators")
       .select("name")
@@ -105,7 +110,11 @@ export async function resolveGateOperator(
       .eq("pin", clean)
       .eq("active", true)
       .maybeSingle();
-    return op ? { name: op.name as string } : null;
+    if (!op) {
+      await allowHit(pinBucket, 10, 300);
+      return null;
+    }
+    return { name: op.name as string };
   } catch {
     return null;
   }

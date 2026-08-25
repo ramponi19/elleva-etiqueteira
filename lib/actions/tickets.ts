@@ -6,6 +6,7 @@ import { getAuth } from "@/lib/auth";
 import { createServiceClient } from "@/lib/supabase/server";
 import { sendTransferEmail } from "@/lib/orders-helpers";
 import { onlyDigits } from "@/lib/cpf";
+import { allowHit, isAllowed, clientIp } from "@/lib/rate-limit";
 
 /** Operador que está validando na portaria (pra auditoria).
  *  Se vier `pin`, o servidor resolve o nome/CPF do cadastro (à prova de fraude). */
@@ -155,6 +156,15 @@ export async function validateByToken(token: string, rawCode: string, operator?:
   if ((operadoresAtivos ?? 0) > 0) {
     const pin = operator?.pin?.trim();
     if (!pin) return { ok: false, reason: "forbidden", message: "Informe o PIN do operador para liberar entradas." };
+    // A7 + M4: o PIN tem só 4 dígitos (10 mil combinações). Sem freio, dá pra
+    // varrer todos e liberar entradas no nome de um operador inocente. Contamos
+    // só as FALHAS por (evento, ip): a portaria legítima acerta o PIN e nunca é
+    // limitada; quem erra 10 vezes em 5 min é bloqueado por essa janela.
+    const ip = await clientIp();
+    const pinBucket = `pinfail:${ev.id}:${ip}`;
+    if (!(await isAllowed(pinBucket, 10, 300))) {
+      return { ok: false, reason: "forbidden", message: "Muitas tentativas de PIN. Aguarde alguns minutos." };
+    }
     const { data: op } = await svc
       .from("gate_operators")
       .select("name, doc")
@@ -162,7 +172,10 @@ export async function validateByToken(token: string, rawCode: string, operator?:
       .eq("pin", pin)
       .eq("active", true)
       .maybeSingle();
-    if (!op) return { ok: false, reason: "forbidden", message: "PIN de operador inválido ou revogado." };
+    if (!op) {
+      await allowHit(pinBucket, 10, 300); // conta a falha
+      return { ok: false, reason: "forbidden", message: "PIN de operador inválido ou revogado." };
+    }
     operator = { name: op.name as string, doc: op.doc as string };
   } else if (operator?.pin) {
     // sem operadores cadastrados, PIN não vale como identidade
