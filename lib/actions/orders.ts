@@ -60,18 +60,39 @@ async function priceItems(
   let feeCobrada = 0;  // só o que entra no total do comprador
   for (const it of items) {
     if (isUuid(it.tierId)) {
+      // TUDO que define preço, receita e a QUEM pertence a venda vem do banco,
+      // nunca do carrinho. Antes, event_id/event_title/tier_name eram gravados
+      // com o valor do cliente (C5): dava pra creditar a venda no evento de
+      // outro produtor e gravar títulos falsos no ingresso/e-mail.
       const { data: tier } = await svc
         .from("ticket_tiers")
-        .select("price, is_addon, events(service_fee_pct, absorb_fee)")
+        .select("name, event_id, price, is_addon, events(title, status, starts_at, service_fee_pct, absorb_fee)")
         .eq("id", it.tierId)
         .single();
-      if (!tier) return { error: `O lote "${it.tierName}" não está mais disponível.` };
+      if (!tier) return { error: `O ingresso "${it.tierName}" não está mais disponível.` };
+      const ev = tier.events as unknown as
+        | { title?: string; status?: string; starts_at?: string; service_fee_pct?: number; absorb_fee?: boolean }
+        | null;
+      // A4: só vende evento à venda (publicado/esgotado) e que ainda não começou.
+      // Sem isto, cobrava-se por evento cancelado (dinheiro devido em reembolso),
+      // rascunho (lido via service client, fora da RLS) ou já encerrado.
+      if (!ev || (ev.status !== "published" && ev.status !== "sold_out")) {
+        return { error: "Este evento não está disponível para compra." };
+      }
+      if (ev.starts_at && new Date(ev.starts_at).getTime() < Date.now()) {
+        return { error: "As vendas para este evento já foram encerradas." };
+      }
       const price = Number(tier.price);
-      const ev = tier.events as unknown as { service_fee_pct?: number; absorb_fee?: boolean } | null;
-      const pct = Number(ev?.service_fee_pct ?? DEFAULT_FEE_PCT);
-      const absorve = !!ev?.absorb_fee;
+      const pct = Number(ev.service_fee_pct ?? DEFAULT_FEE_PCT);
+      const absorve = !!ev.absorb_fee;
       const itemFee = round2(feeUnit(price, pct) * it.qty);
-      priced.push({ ...it, price, isAddon: !!tier.is_addon, fee: itemFee, feeAbsorbed: absorve });
+      priced.push({
+        ...it,
+        eventId: (tier.event_id as string) ?? it.eventId,   // dono real da venda
+        eventTitle: (ev.title as string) ?? it.eventTitle,  // título real
+        tierName: (tier.name as string) ?? it.tierName,     // nome real do lote
+        price, isAddon: !!tier.is_addon, fee: itemFee, feeAbsorbed: absorve,
+      });
       fee += itemFee;
       if (!absorve) feeCobrada += itemFee;
     } else {
