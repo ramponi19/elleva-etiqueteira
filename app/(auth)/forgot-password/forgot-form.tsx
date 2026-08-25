@@ -48,8 +48,8 @@ export function ForgotForm() {
   return (
     <form onSubmit={submit} className="flex flex-col gap-3.5">
       <div>
-        <label className={label}>E-mail</label>
-        <input className={input} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="voce@email.com" required />
+        <label className={label} htmlFor="fp-email">E-mail</label>
+        <input id="fp-email" name="email" autoComplete="email" className={input} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="voce@email.com" required />
       </div>
       {error && <p className="rounded-[10px] border-[1.5px] border-sol bg-[rgb(232_72_31/0.08)] px-3.5 py-2.5 text-[13.5px] text-sol-escuro">{error}</p>}
       <Button type="submit" variante="primario" className="mt-1 w-full" disabled={loading}>

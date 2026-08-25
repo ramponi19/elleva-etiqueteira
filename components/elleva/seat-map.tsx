@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { clsx } from "clsx";
@@ -20,11 +21,13 @@ export function SeatMap({
   tiers,
   seats,
   loggedIn,
+  saleClosed = false,
 }: {
   event: EventItem;
   tiers: Tier[];
   seats: Seat[];
   loggedIn: boolean;
+  saleClosed?: boolean;
 }) {
   const router = useRouter();
   const { addItems } = useCart();
@@ -139,7 +142,7 @@ export function SeatMap({
                         <button
                           key={s.id}
                           type="button"
-                          disabled={s.taken}
+                          disabled={s.taken || saleClosed}
                           onClick={() => toggle(s)}
                           aria-label={`Assento ${s.label}${s.taken ? " (indisponível)" : ""}`}
                           aria-pressed={ativo}
@@ -172,7 +175,16 @@ export function SeatMap({
         <span className="inline-flex items-center gap-1.5"><span className="inline-block h-3 w-3 rounded-[3px] bg-tinta/10" /> ocupado</span>
       </div>
 
-      {/* total */}
+      {/* total — ou aviso de venda encerrada quando o evento já passou */}
+      {saleClosed ? (
+        <div className="mt-6 rounded-[10px] border-[1.5px] border-tinta bg-papel-2 p-4 text-center">
+          <p className="rotulo m-0 text-tinta">Vendas encerradas</p>
+          <p className="corpo-suave m-0 mt-1">
+            Este evento já aconteceu. Confira a{" "}
+            <Link href="/agenda" className="text-sol-escuro underline underline-offset-2">agenda</Link> para os próximos.
+          </p>
+        </div>
+      ) : (
       <div className="mt-6 border-t-[1.5px] border-dashed border-tinta pt-4">
         {count > 0 && (
           <p className="corpo-suave m-0 mb-2">
@@ -198,6 +210,7 @@ export function SeatMap({
         </Button>
         <p className="corpo-suave m-0 mt-3 text-center">Pix aprovado na hora · ingresso no WhatsApp</p>
       </div>
+      )}
 
       {showAuth && <AuthModal onClose={() => setShowAuth(false)} onSuccess={proceed} />}
     </aside>

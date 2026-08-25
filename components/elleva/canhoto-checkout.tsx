@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { clsx } from "clsx";
@@ -22,10 +23,12 @@ export function CanhotoCheckout({
   event,
   tiers,
   loggedIn,
+  saleClosed = false,
 }: {
   event: EventItem;
   tiers: Tier[];
   loggedIn: boolean;
+  saleClosed?: boolean;
 }) {
   const router = useRouter();
   const { addItems } = useCart();
@@ -86,9 +89,10 @@ export function CanhotoCheckout({
 
   const linha = (t: Tier) => {
     const esgotado = t.available != null && t.available <= 0;
+    const bloqueado = esgotado || saleClosed;
     const noMax = t.available != null && (qty[t.id] || 0) >= t.available;
     return (
-      <div key={t.id} className={clsx("flex items-center gap-3 rounded-[10px] border-[1.5px] border-tinta p-4", esgotado && "opacity-55")}>
+      <div key={t.id} className={clsx("flex items-center gap-3 rounded-[10px] border-[1.5px] border-tinta p-4", bloqueado && "opacity-55")}>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-[15px] font-medium text-tinta">{t.name}</span>
@@ -106,7 +110,7 @@ export function CanhotoCheckout({
             </span>
           </p>
         </div>
-        {!esgotado && (
+        {!bloqueado && (
           <div className="flex flex-shrink-0 items-center gap-2">
             <button type="button" aria-label={`Tirar um ${t.name}`} disabled={(qty[t.id] || 0) === 0} onClick={() => dec(t.id)} className={clsx(stepBtn, "border-[1.5px] border-tinta text-tinta hover:bg-papel-2")}>−</button>
             <span className="numero w-5 text-center text-[15px]" aria-live="polite">{qty[t.id] || 0}</span>
@@ -143,29 +147,39 @@ export function CanhotoCheckout({
         </div>
       )}
 
-      {/* total após o picote */}
-      <div className="mt-6 border-t-[1.5px] border-dashed border-tinta pt-4">
-        <div className="flex items-baseline justify-between">
-          <span className="rotulo text-tinta-60">Total com taxas</span>
-          <span className="numero text-[26px]">{fmtBRL(total)}</span>
-        </div>
-        {total > 0 && maxParcelas > 1 && (
-          <p className="corpo-suave m-0 mt-1 text-right">
-            ou parcele em até <strong className="text-tinta">{maxParcelas}x</strong> no cartão
+      {/* total após o picote — ou aviso de venda encerrada quando o evento já passou */}
+      {saleClosed ? (
+        <div className="mt-6 rounded-[10px] border-[1.5px] border-tinta bg-papel-2 p-4 text-center">
+          <p className="rotulo m-0 text-tinta">Vendas encerradas</p>
+          <p className="corpo-suave m-0 mt-1">
+            Este evento já aconteceu. Confira a{" "}
+            <Link href="/agenda" className="text-sol-escuro underline underline-offset-2">agenda</Link> para os próximos.
           </p>
-        )}
-        <Button
-          type="button"
-          onClick={prosseguir}
-          disabled={count === 0}
-          className="mt-4 w-full disabled:cursor-default disabled:opacity-45"
-        >
-          Garantir meu lugar →
-        </Button>
-        <p className="corpo-suave m-0 mt-3 text-center">
-          Pix aprovado na hora · ingresso no WhatsApp
-        </p>
-      </div>
+        </div>
+      ) : (
+        <div className="mt-6 border-t-[1.5px] border-dashed border-tinta pt-4">
+          <div className="flex items-baseline justify-between">
+            <span className="rotulo text-tinta-60">Total com taxas</span>
+            <span className="numero text-[26px]">{fmtBRL(total)}</span>
+          </div>
+          {total > 0 && maxParcelas > 1 && (
+            <p className="corpo-suave m-0 mt-1 text-right">
+              ou parcele em até <strong className="text-tinta">{maxParcelas}x</strong> no cartão
+            </p>
+          )}
+          <Button
+            type="button"
+            onClick={prosseguir}
+            disabled={count === 0}
+            className="mt-4 w-full disabled:cursor-default disabled:opacity-45"
+          >
+            Garantir meu lugar →
+          </Button>
+          <p className="corpo-suave m-0 mt-3 text-center">
+            Pix aprovado na hora · ingresso no WhatsApp
+          </p>
+        </div>
+      )}
 
       {showAuth && (
         <AuthModal onClose={() => setShowAuth(false)} onSuccess={proceed} />

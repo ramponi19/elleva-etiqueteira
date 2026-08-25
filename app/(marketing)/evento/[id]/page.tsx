@@ -67,6 +67,9 @@ export default async function EventPage({
   const [data, { user }] = await Promise.all([getEvent(id), getAuth()]);
   if (!data) notFound();
   const { event, tiers } = data;
+  // Evento já começou → venda encerrada (calculado na camada de dados; a página
+  // segue acessível pelo link direto — quem comprou revisita — mas sem comprar).
+  const vendasEncerradas = data.saleClosed ?? false;
   const arte = arteDoEvento(event.theme, event.catLabel);
   const serie = numeroSerie(event.serial);
   const cidade = cidadeDoEvento(event);
@@ -211,9 +214,9 @@ export default async function EventPage({
 
         {/* CANHOTO */}
         {event.hasSeating ? (
-          <SeatMap event={event} tiers={tiers} seats={await getSeats(event.uuid)} loggedIn={!!user} />
+          <SeatMap event={event} tiers={tiers} seats={await getSeats(event.uuid)} loggedIn={!!user} saleClosed={vendasEncerradas} />
         ) : (
-          <CanhotoCheckout event={event} tiers={tiers} loggedIn={!!user} />
+          <CanhotoCheckout event={event} tiers={tiers} loggedIn={!!user} saleClosed={vendasEncerradas} />
         )}
       </div>
 

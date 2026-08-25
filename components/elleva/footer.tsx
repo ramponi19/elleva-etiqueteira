@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { LogoElleva } from "@/components/elleva/logo";
+import { CONTATO_EMAIL, sociaisLinks } from "@/lib/site";
 
 // Footer do sistema Cartaz (spec §7): tinta, colunas de links, régua
 // papel-inv e assinatura em rótulo.
@@ -21,10 +22,10 @@ const COLUNAS: { titulo: string; links: { label: string; href: string }[] }[] = 
   },
   {
     titulo: "Contato",
+    // sociais só entram quando configurados em lib/site.ts (nada de link quebrado)
     links: [
-      { label: "contato@ellevaeventos.com.br", href: "mailto:contato@ellevaeventos.com.br" },
-      { label: "Instagram", href: "https://instagram.com" },
-      { label: "WhatsApp", href: "https://wa.me/" },
+      { label: CONTATO_EMAIL, href: `mailto:${CONTATO_EMAIL}` },
+      ...sociaisLinks(),
     ],
   },
 ];

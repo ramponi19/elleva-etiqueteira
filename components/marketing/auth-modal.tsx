@@ -113,17 +113,17 @@ export default function AuthModal({
         <form onSubmit={submit} className="flex flex-col gap-3.5">
           {mode === "signup" && (
             <div>
-              <label className={labelCls}>Nome completo</label>
-              <input className={inputCls} value={name} onChange={(e) => setName(e.target.value)} placeholder="Seu nome" required />
+              <label className={labelCls} htmlFor="am-nome">Nome completo</label>
+              <input id="am-nome" name="name" autoComplete="name" className={inputCls} value={name} onChange={(e) => setName(e.target.value)} placeholder="Seu nome" required />
             </div>
           )}
           <div>
-            <label className={labelCls}>E-mail</label>
-            <input className={inputCls} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="voce@email.com" required />
+            <label className={labelCls} htmlFor="am-email">E-mail</label>
+            <input id="am-email" name="email" autoComplete="email" className={inputCls} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="voce@email.com" required />
           </div>
           <div>
-            <label className={labelCls}>Senha</label>
-            <input className={inputCls} type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required minLength={mode === "signup" ? 8 : undefined} />
+            <label className={labelCls} htmlFor="am-senha">Senha</label>
+            <input id="am-senha" name="password" autoComplete={mode === "login" ? "current-password" : "new-password"} className={inputCls} type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required minLength={mode === "signup" ? 8 : undefined} />
           </div>
 
           {error && (

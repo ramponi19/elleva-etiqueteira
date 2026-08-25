@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Barras } from "@/components/ui/barras";
 import { Button } from "@/components/ui/button";
@@ -41,6 +42,9 @@ const SWATCHES = [
 ] as const;
 
 export default function DevUiPage() {
+  // Styleguide interno (aceite da Fase A). Fica fora do ar em produção;
+  // segue acessível em localhost e nos previews da Vercel.
+  if (process.env.VERCEL_ENV === "production") notFound();
   return (
     <main className="mx-auto max-w-5xl px-6 pb-24">
       <header className="py-10">

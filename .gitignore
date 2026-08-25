@@ -46,3 +46,7 @@ next-env.d.ts
 
 # relatorios locais de QA (prints com dados de teste — repo publico)
 /relatorios-locais/
+
+# Segredos soltos na raiz (nunca commitar)
+Sentry Token.txt
+*.token

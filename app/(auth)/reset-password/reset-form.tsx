@@ -33,8 +33,8 @@ export function ResetForm() {
   return (
     <form onSubmit={submit} className="flex flex-col gap-3.5">
       <div>
-        <label className={label}>Nova senha</label>
-        <input className={input} type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Mínimo 8 caracteres" required minLength={8} />
+        <label className={label} htmlFor="rp-senha">Nova senha</label>
+        <input id="rp-senha" name="password" autoComplete="new-password" className={input} type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Mínimo 8 caracteres" required minLength={8} />
       </div>
       {error && <p className="rounded-[10px] border-[1.5px] border-sol bg-[rgb(232_72_31/0.08)] px-3.5 py-2.5 text-[13.5px] text-sol-escuro">{error}</p>}
       <Button type="submit" variante="primario" className="mt-1 w-full" disabled={loading}>

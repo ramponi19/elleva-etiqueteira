@@ -63,16 +63,16 @@ export function SignupForm() {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">
       <div>
-        <label className={label}>Nome completo</label>
-        <input className={input} value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Seu nome" required />
+        <label className={label} htmlFor="su-nome">Nome completo</label>
+        <input id="su-nome" name="name" autoComplete="name" className={input} value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Seu nome" required />
       </div>
       <div>
-        <label className={label}>E-mail</label>
-        <input className={input} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="voce@email.com" required />
+        <label className={label} htmlFor="su-email">E-mail</label>
+        <input id="su-email" name="email" autoComplete="email" className={input} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="voce@email.com" required />
       </div>
       <div>
-        <label className={label}>Senha</label>
-        <input className={input} type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Mínimo 8 caracteres" required minLength={8} />
+        <label className={label} htmlFor="su-senha">Senha</label>
+        <input id="su-senha" name="password" autoComplete="new-password" className={input} type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Mínimo 8 caracteres" required minLength={8} />
       </div>
 
       {error && <p className="rounded-[10px] border-[1.5px] border-sol bg-[rgb(232_72_31/0.08)] px-3.5 py-2.5 text-[13.5px] text-sol-escuro">{error}</p>}

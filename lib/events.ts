@@ -210,6 +210,7 @@ export async function getEvents(): Promise<EventItem[]> {
       .select("id, slug, title, description, category, subcategory, icon, venue, city, starts_at, status, cover_url, is_featured, featured_order, serial, service_fee_pct, ticket_tiers(price)")
       .in("status", ["published", "sold_out"])
       .or("visibility.eq.public,visibility.is.null") // privado só pelo link direto
+      .gt("starts_at", new Date().toISOString()) // evento passado sai da vitrine (venda encerrada no servidor)
       .order("starts_at", { ascending: true });
     if (error || !data?.length) return mockEventsAllowed() ? MOCK_EVENTS : [];
     return (data as EventDbRow[]).map(toEventItem);
@@ -229,7 +230,7 @@ export async function getFeaturedEvents(): Promise<EventItem[]> {
 
 export async function getEvent(
   slug: string
-): Promise<{ event: EventItem; tiers: Tier[] } | null> {
+): Promise<{ event: EventItem; tiers: Tier[]; saleClosed?: boolean } | null> {
   try {
     const supabase = await createClient();
     const { data, error } = await supabase
@@ -255,7 +256,10 @@ export async function getEvent(
         isAddon: !!t.is_addon,
         isHalf: !!t.is_half,
       }));
-    return { event: toEventItem(row), tiers };
+    // Venda encerrada quando o evento já começou (mesma régua do gate de servidor).
+    // Calculado aqui (camada de dados) e não no render, que exige função pura.
+    const saleClosed = new Date(row.starts_at).getTime() <= Date.now();
+    return { event: toEventItem(row), tiers, saleClosed };
   } catch {
     return mockEventBySlug(slug);
   }
@@ -299,7 +303,8 @@ export async function getEventSlugs(): Promise<string[]> {
       .from("events")
       .select("slug")
       .in("status", ["published", "sold_out"])
-      .or("visibility.eq.public,visibility.is.null"); // privado fora do sitemap
+      .or("visibility.eq.public,visibility.is.null") // privado fora do sitemap
+      .gt("starts_at", new Date().toISOString()); // evento passado fora do sitemap/prerender
     if (error || !data?.length) return mockEventsAllowed() ? MOCK_EVENTS.map((e) => e.id) : [];
     return data.map((r) => r.slug as string);
   } catch {
