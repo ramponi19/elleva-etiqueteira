@@ -45,7 +45,7 @@ export interface CardChargeResult {
 }
 
 // Status normalizado que o webhook precisa para decidir a ação.
-export type WebhookStatus = "approved" | "cancelled" | "rejected" | "other";
+export type WebhookStatus = "approved" | "refunded" | "cancelled" | "rejected" | "other";
 export interface WebhookPayment {
   orderId: string | null;
   status: WebhookStatus;

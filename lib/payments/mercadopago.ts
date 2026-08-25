@@ -130,8 +130,16 @@ export const mercadoPagoProvider: PaymentProvider = {
     if (!c) return null;
     const payment = await new Payment(c).get({ id: paymentId });
     const raw = payment.status;
+    // `refunded` = estorno total; `charged_back` = chargeback (disputa no cartão).
+    // Antes ambos caíam em "other" e o webhook IGNORAVA — o dinheiro voltava pro
+    // comprador mas o pedido seguia "paid": ingresso válido e venda contando no
+    // saldo do produtor. Agora viram "refunded" e o pedido é revertido.
     const status =
-      raw === "approved" ? "approved" : raw === "cancelled" ? "cancelled" : raw === "rejected" ? "rejected" : "other";
+      raw === "approved" ? "approved"
+      : raw === "refunded" || raw === "charged_back" ? "refunded"
+      : raw === "cancelled" ? "cancelled"
+      : raw === "rejected" ? "rejected"
+      : "other";
     return { orderId: payment.external_reference ?? null, status };
   },
 };

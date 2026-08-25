@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { mercadoPagoProvider } from "@/lib/payments/mercadopago";
 import { createServiceClient } from "@/lib/supabase/server";
-import { markOrderPaid } from "@/lib/orders-helpers";
+import { markOrderPaid, markOrderRefunded } from "@/lib/orders-helpers";
 
 // Webhook do Mercado Pago. A assinatura e a leitura do pagamento ficam no
 // adaptador (lib/payments/mercadopago). Outros provedores têm sua própria rota.
@@ -35,9 +35,17 @@ export async function POST(request: Request) {
     if (payment.status === "approved") {
       const svc = await createServiceClient();
       await markOrderPaid(svc, payment.orderId);
-    } else if (payment.status === "cancelled" || payment.status === "rejected") {
+    } else if (payment.status === "refunded") {
+      // A2: estorno/chargeback no gateway — reverte o pedido pago (idempotente).
       const svc = await createServiceClient();
-      await svc.from("orders").update({ status: "cancelled" }).eq("id", payment.orderId);
+      await markOrderRefunded(svc, payment.orderId);
+    } else if (payment.status === "cancelled" || payment.status === "rejected") {
+      // A3: só cancela quem AINDA está pendente. Sem esta guarda, uma notificação
+      // fora de ordem (o Pix expira e o pagamento cai logo depois; ou um
+      // 'rejected' que chega após o 'approved') derrubava um pedido JÁ PAGO —
+      // comprador com ingresso válido e produtor perdendo a venda do extrato.
+      const svc = await createServiceClient();
+      await svc.from("orders").update({ status: "cancelled" }).eq("id", payment.orderId).eq("status", "pending");
     }
 
     return NextResponse.json({ received: true });

@@ -358,6 +358,26 @@ export async function sendReminderEmail(to: string, name: string, eventTitle: st
   } catch { /* ignore */ }
 }
 
+/** Reverte um pedido cujo pagamento foi ESTORNADO no gateway (refund/chargeback
+ *  avisado por webhook). ATÔMICO e idempotente: só quem flipar paid→refunded age.
+ *  NÃO chama provider.refund — o dinheiro já voltou no gateway; aqui só
+ *  sincronizamos o nosso lado (cancela ingressos, devolve estoque, avisa).
+ *  Ao virar 'refunded', a venda sai sozinha do GMV/saldo (o financeiro só conta
+ *  status='paid'). */
+export async function markOrderRefunded(svc: Svc, orderId: string): Promise<{ ok: boolean }> {
+  const { data: claimed } = await svc
+    .from("orders")
+    .update({ status: "refunded" })
+    .eq("id", orderId)
+    .eq("status", "paid")
+    .select("id");
+  if (!claimed || claimed.length === 0) return { ok: false }; // não estava pago (ou já revertido)
+  await cancelTickets(svc, orderId);
+  await reverseSold(svc, orderId);
+  await sendRefundEmail(svc, orderId);
+  return { ok: true };
+}
+
 /** Marca pedido como pago. ATÔMICO e idempotente: só o PRIMEIRO caller
  *  (retorno síncrono OU webhook) vence a transição pending→paid, então
  *  estoque/cupom/ingressos rodam exatamente uma vez. */
