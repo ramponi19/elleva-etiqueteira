@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import { archivo } from "./fonts";
+import { archivo, arimo } from "./fonts";
 import { SITE_URL } from "@/lib/site";
 import CookieConsent from "@/components/elleva/cookie-consent";
 import "./globals.css";
@@ -49,7 +49,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR" className={`${archivo.variable} antialiased`}>
+    <html lang="pt-BR" className={`${archivo.variable} ${arimo.variable} antialiased`}>
       <body className="min-h-screen flex flex-col">
         {children}
         <CookieConsent gtmId={process.env.NEXT_PUBLIC_GTM_ID} />
