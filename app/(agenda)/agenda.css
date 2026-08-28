@@ -1,0 +1,90 @@
+/* ===========================================================
+   AGENDA "A NOITE" (escopo .eag) — grade de cartazes escuros
+   =========================================================== */
+:root:has(.eag),body:has(.eag){background:#08070A}
+.eag{
+  --sans:"Helvetica Neue",Helvetica,var(--font-arimo),Arial,sans-serif;
+  --bg:#08070A;--ink:#F6F1E9;--muted:#9A9082;--dim:#635a4f;
+  --warm:#FF5A1F;--warm-2:#FF9F5A;--cool:#A24BFF;--line:rgba(246,241,233,.12);--card:#131013;
+  position:relative;background:var(--bg);color:var(--ink);font-family:var(--sans);min-height:100dvh;overflow-x:hidden;
+}
+.eag *{box-sizing:border-box}
+.eag h1,.eag h2,.eag h3{margin:0;font-weight:700;letter-spacing:-.035em;line-height:.95;text-wrap:balance}
+.eag a{color:inherit;text-decoration:none}
+.eag .wrap{max-width:1240px;margin:0 auto;padding:0 30px;position:relative;z-index:3}
+.eag .eyebrow{font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:var(--warm);font-weight:700}
+.eag .amb{position:fixed;inset:0;z-index:0;pointer-events:none;background:
+  radial-gradient(50% 40% at 8% 20%,rgba(255,90,31,.09),transparent 62%),
+  radial-gradient(46% 40% at 92% 60%,rgba(156,75,255,.09),transparent 62%)}
+
+/* NAV */
+.eag nav.top{position:sticky;top:0;z-index:40;background:rgba(8,7,10,.72);backdrop-filter:blur(16px);border-bottom:1px solid var(--line)}
+.eag .nav-in{max-width:1240px;margin:0 auto;padding:0 30px;height:72px;display:flex;align-items:center;gap:28px}
+.eag .brand img{height:40px;display:block;filter:drop-shadow(0 0 18px rgba(255,120,60,.3)) brightness(1.07) contrast(1.05)}
+.eag .nav-links{display:flex;gap:26px;margin-left:6px}
+.eag .nav-links a{font-size:14px;font-weight:600;color:var(--muted)}
+.eag .nav-links a:hover{color:var(--ink)}
+.eag .nav-right{margin-left:auto;display:flex;align-items:center;gap:18px}
+.eag .nav-right .entrar{font-size:14px;font-weight:600}
+
+/* HEADER + FILTROS */
+.eag .head{padding:64px 0 8px}
+.eag .head h1{font-size:clamp(38px,6.5vw,88px);text-transform:uppercase;margin-top:14px}
+.eag .head h1 .em{color:var(--warm)}
+.eag .filters{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;margin:26px 0 4px}
+.eag .fsearch{flex:1;min-width:240px;max-width:440px}
+.eag .fsearch form{display:flex;gap:8px}
+.eag .fsearch input{flex:1;background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:999px;padding:13px 20px;color:var(--ink);font-family:inherit;font-size:14px;outline:none}
+.eag .fsearch input::placeholder{color:var(--dim)}
+.eag .fsearch input:focus{border-color:var(--warm)}
+.eag .fsearch button{background:var(--warm);color:#180a03;border:0;border-radius:999px;width:46px;flex:none;cursor:pointer;font-size:16px}
+.eag .pills{display:flex;gap:8px;flex-wrap:wrap}
+.eag .pill{font-size:12.5px;font-weight:600;padding:9px 15px;border-radius:999px;border:1px solid var(--line);color:var(--muted);transition:.15s}
+.eag .pill:hover{color:var(--ink);border-color:var(--ink)}
+.eag .pill.on{background:var(--warm);color:#180a03;border-color:var(--warm)}
+.eag .qinfo{color:var(--muted);font-size:14px;margin:18px 0 0}
+.eag .qinfo a{color:var(--warm);text-decoration:underline;text-underline-offset:2px}
+
+/* MÊS + GRADE */
+.eag .mes{margin-top:44px}
+.eag .mes h2{font-size:13px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-bottom:18px;font-weight:700}
+.eag .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.eag .card{position:relative;aspect-ratio:3/3.6;border-radius:10px;overflow:hidden;border:1px solid var(--line);display:block;
+  transition:transform .18s cubic-bezier(.16,1,.3,1),border-color .18s;isolation:isolate}
+.eag .card:hover{transform:translateY(-6px);border-color:rgba(246,241,233,.4)}
+.eag .card .bg{position:absolute;inset:0;z-index:-3;background-size:cover;background-position:center;transition:transform .5s}
+.eag .card:hover .bg{transform:scale(1.05)}
+.eag .card .ghost{position:absolute;right:-6%;bottom:-6%;font-size:22vh;font-weight:700;line-height:.7;color:rgba(255,255,255,.08);text-transform:uppercase;letter-spacing:-.05em;z-index:-2}
+.eag .card .scrim{position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,rgba(0,0,0,.05) 35%,rgba(0,0,0,.82) 100%)}
+.eag .card .pc{position:relative;height:100%;padding:18px;display:flex;flex-direction:column;justify-content:space-between;color:#fff}
+.eag .card .ptag{align-self:flex-start;font-size:10px;letter-spacing:.16em;text-transform:uppercase;font-weight:700;padding:5px 10px;border:1px solid rgba(255,255,255,.5);border-radius:999px;backdrop-filter:blur(4px)}
+.eag .card .esg{align-self:flex-start;margin-top:6px;font-size:10px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;padding:4px 9px;border-radius:999px;background:rgba(0,0,0,.5);color:#fff}
+.eag .card .ttl{font-size:clamp(19px,1.9vw,24px);font-weight:700;text-transform:uppercase;letter-spacing:-.03em;line-height:.98;text-shadow:0 2px 20px rgba(0,0,0,.5)}
+.eag .card .meta{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;margin-top:12px}
+.eag .card .when{font-size:12px;color:rgba(255,255,255,.85);font-weight:600}
+.eag .card .venue{font-size:11.5px;color:rgba(255,255,255,.6)}
+.eag .card .price{font-size:20px;font-weight:700;letter-spacing:-.02em;white-space:nowrap}
+.eag .card .price small{font-size:10px;color:rgba(255,255,255,.6);font-weight:400}
+.eag .empty{color:var(--muted);margin:48px 0;font-size:16px;max-width:46ch}
+.eag .empty a{color:var(--warm);text-decoration:underline}
+
+/* generativos */
+.eag .g-show{background:radial-gradient(90% 60% at 78% 12%,#ffd27a,transparent 55%),linear-gradient(160deg,#FF5A1F,#4a0f2b)}
+.eag .g-festa{background:radial-gradient(80% 55% at 22% 10%,#ff86c6,transparent 55%),radial-gradient(70% 60% at 90% 85%,#3ad2ff,transparent 60%),linear-gradient(160deg,#9C4BFF,#180a3e)}
+.eag .g-esporte{background:radial-gradient(85% 60% at 82% 16%,#7dffcf,transparent 55%),linear-gradient(160deg,#12b981,#04241c)}
+.eag .g-teatro{background:radial-gradient(85% 60% at 25% 84%,#ffb36b,transparent 55%),linear-gradient(160deg,#c0341c,#2c0704)}
+.eag .g-corp{background:radial-gradient(85% 60% at 80% 10%,#8fb6ff,transparent 55%),linear-gradient(160deg,#243a66,#080e1c)}
+
+/* FOOTER */
+.eag footer{border-top:1px solid var(--line);margin-top:80px;padding:52px 0 64px;position:relative;z-index:3}
+.eag .foot-grid{display:flex;justify-content:space-between;gap:40px;flex-wrap:wrap}
+.eag .foot-brand img{height:44px;margin-bottom:14px;filter:drop-shadow(0 0 18px rgba(255,120,60,.26))}
+.eag .foot-brand p{max-width:32ch;color:var(--muted);font-size:14px;margin:0}
+.eag .foot-col h5{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);margin:0 0 12px}
+.eag .foot-col a{display:block;color:var(--muted);font-size:14px;margin-bottom:9px}
+.eag .foot-col a:hover{color:var(--ink)}
+.eag .foot-base{margin-top:40px;padding-top:20px;border-top:1px solid var(--line);color:var(--dim);font-size:12px}
+
+.eag :focus-visible{outline:2px solid var(--warm);outline-offset:3px}
+@media (max-width:900px){.eag .nav-links{display:none}.eag .grid{grid-template-columns:1fr 1fr}}
+@media (max-width:560px){.eag .grid{grid-template-columns:1fr}.eag .wrap{padding:0 18px}.eag .filters{flex-direction:column;align-items:stretch}}

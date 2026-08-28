@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { AgendaNoite } from "@/components/elleva/agenda-noite";
+import { AgendaGrade } from "@/components/elleva/agenda-grade";
 import { getEvents } from "@/lib/events";
 
 export const metadata: Metadata = {
@@ -9,27 +9,11 @@ export const metadata: Metadata = {
 };
 export const revalidate = 300;
 
-export default async function AgendaPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ q?: string }>;
-}) {
+export default async function AgendaPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
   const [events, { q }] = await Promise.all([getEvents(), searchParams]);
-
   const query = q?.trim() ?? "";
   const filtrados = query
-    ? events.filter((e) =>
-        `${e.title} ${e.venueCity} ${e.catLabel}`
-          .toLowerCase()
-          .includes(query.toLowerCase())
-      )
+    ? events.filter((e) => `${e.title} ${e.venueCity} ${e.catLabel}`.toLowerCase().includes(query.toLowerCase()))
     : events;
-
-  return (
-    <AgendaNoite
-      events={filtrados}
-      destaqueHeader="no interior"
-      query={query || undefined}
-    />
-  );
+  return <AgendaGrade events={filtrados} destaqueHeader="no interior" query={query || undefined} />;
 }
