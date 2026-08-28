@@ -1,3 +1,4 @@
+import "./conta.css";
 import { requireAuth } from "@/lib/auth";
 import Nav from "@/components/elleva/nav";
 import Footer from "@/components/elleva/footer";
@@ -23,7 +24,8 @@ export default async function ContaLayout({
   const { user, role, fullName, avatarUrl } = await requireAuth();
 
   return (
-    <>
+    <div className="ect">
+      <div className="amb" aria-hidden />
       <Nav
         loggedIn={!!user}
         role={role}
@@ -32,7 +34,7 @@ export default async function ContaLayout({
         avatarUrl={avatarUrl}
         initials={initialsFrom(fullName ?? null, user!.email ?? null)}
       />
-      <main className="min-h-[70vh] bg-papel">
+      <main className="min-h-[70vh]">
         <div className="mx-auto max-w-[1100px] px-5 py-10 sm:px-10">
           <h1 className="display-2 text-tinta">Minha conta</h1>
           <div className="mt-6">
@@ -42,6 +44,6 @@ export default async function ContaLayout({
         </div>
       </main>
       <Footer />
-    </>
+    </div>
   );
 }
