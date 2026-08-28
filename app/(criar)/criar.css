@@ -1,0 +1,39 @@
+/* ===========================================================
+   CRIAR EVENTO "A NOITE" (escopo .ecri) — form standalone, chrome limpo
+   Swap escopado + ajustes de cartão/input/CTA.
+   =========================================================== */
+:root:has(.ecri),body:has(.ecri){background:#08070A}
+.ecri{
+  --color-papel:#0f0d12; --color-papel-2:#1b181f; --color-tinta:#F6F1E9;
+  --color-tinta-60:rgb(246 241 233 / 0.62); --color-tinta-35:rgb(246 241 233 / 0.40);
+  --color-tinta-70:rgb(246 241 233 / 0.70);
+  --color-sol-escuro:#FF7A45; --color-papel-inv:rgb(246 241 233 / 0.14);
+  --cor-texto:#F6F1E9; --cor-texto-suave:rgb(246 241 233 / 0.60); --cor-borda:rgb(246 241 233 / 0.18);
+  --cor-fundo:#0f0d12; --color-cartaz:#F6B94A; --color-palco:#4FCB94;
+  --font-sans:"Helvetica Neue",Helvetica,var(--font-arimo),Arial,sans-serif;
+  position:relative;background:#08070A;color:#F6F1E9;min-height:100dvh;
+  font-family:var(--font-sans);
+}
+.ecri .amb{position:fixed;inset:0;z-index:0;pointer-events:none;background:
+  radial-gradient(48% 40% at 12% 12%,rgba(255,90,31,.08),transparent 60%),
+  radial-gradient(44% 42% at 90% 82%,rgba(156,75,255,.07),transparent 60%)}
+
+/* NAV limpa */
+.ecri nav.top{position:sticky;top:0;z-index:40;background:rgba(8,7,10,.72);backdrop-filter:blur(16px);border-bottom:1px solid rgba(246,241,233,.12)}
+.ecri .nav-in{max-width:900px;margin:0 auto;padding:0 24px;height:66px;display:flex;align-items:center;gap:18px}
+.ecri .brand img{height:36px;display:block;filter:drop-shadow(0 0 16px rgba(255,120,60,.3)) brightness(1.07) contrast(1.05)}
+.ecri .nav-right{margin-left:auto;font-size:14px;font-weight:600}
+.ecri .content{position:relative;z-index:3}
+
+/* superfícies/inputs/sombra */
+.ecri .bg-white{background-color:#15121a !important}
+.ecri input,.ecri textarea,.ecri select{background:#15121a}
+.ecri input::placeholder,.ecri textarea::placeholder{color:rgb(246 241 233 / 0.32)}
+.ecri [class*="shadow-"]{box-shadow:0 18px 50px rgba(0,0,0,.5) !important}
+/* laranja com texto escuro; bandas bg-tinta escuras; botões tinta -> laranja */
+.ecri [class*="bg-sol"]{color:#180a03}
+.ecri footer[class*="bg-tinta"],.ecri section[class*="bg-tinta"],.ecri div[class*="bg-tinta"]{background:#141013 !important}
+.ecri [class*="bg-tinta"] [class*="text-papel"]{color:rgb(246 241 233 / 0.80)}
+.ecri button[class*="bg-tinta"],.ecri a[class*="bg-tinta"]{background:var(--color-sol) !important;color:#180a03 !important;border:0 !important}
+
+.ecri :focus-visible{outline:2px solid #FF5A1F;outline-offset:2px}
