@@ -1,0 +1,33 @@
+/* ===========================================================
+   CHECKOUT "A NOITE" (escopo .echk) — dark, sem quebrar o fluxo
+   Swap papel<->tinta escopado só no checkout + ajustes de botão.
+   =========================================================== */
+:root:has(.echk),body:has(.echk){background:#08070A}
+.echk{
+  --color-papel:#0f0d12; --color-papel-2:#1b181f; --color-tinta:#F6F1E9;
+  --color-tinta-60:rgb(246 241 233 / 0.62); --color-tinta-35:rgb(246 241 233 / 0.40);
+  --color-sol-escuro:#FF7A45; --color-papel-inv:rgb(246 241 233 / 0.14);
+  --cor-texto:#F6F1E9; --cor-texto-suave:rgb(246 241 233 / 0.60); --cor-borda:rgb(246 241 233 / 0.18);
+  --color-palco:#4FCB94;
+  --font-sans:"Helvetica Neue",Helvetica,var(--font-arimo),Arial,sans-serif;
+  position:relative;background:#08070A;color:#F6F1E9;min-height:100dvh;
+  font-family:var(--font-sans);
+}
+.echk .amb{position:fixed;inset:0;z-index:0;pointer-events:none;background:
+  radial-gradient(50% 40% at 10% 20%,rgba(255,90,31,.09),transparent 62%),
+  radial-gradient(46% 40% at 90% 60%,rgba(156,75,255,.09),transparent 62%)}
+.echk-nav{position:relative;z-index:3;display:flex;align-items:center;justify-content:space-between;
+  max-width:960px;margin:0 auto;padding:20px 24px;border-bottom:1px solid rgba(246,241,233,.1)}
+.echk-nav img{height:38px;filter:drop-shadow(0 0 16px rgba(255,120,60,.3)) brightness(1.07) contrast(1.05)}
+.echk-nav .safe{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:rgb(246 241 233/.5);display:flex;align-items:center;gap:7px}
+.echk-nav .safe::before{content:"🔒";font-size:13px}
+.echk .ck-body{position:relative;z-index:3}
+
+/* superfícies claras -> escuras */
+.echk .bg-white{background-color:#15121a !important}
+.echk input,.echk textarea{background:#15121a;color:#F6F1E9}
+.echk input::placeholder{color:rgb(246 241 233/.35)}
+/* CTA laranja: texto escuro (o bg-sol não é trocado, só a cor do texto seguiria o swap) */
+.echk [class*="bg-sol"]{color:#180a03}
+/* "tinta" (selecionado do pagamento, botões secundários) -> laranja com texto escuro */
+.echk .bg-tinta{background:var(--color-sol) !important;color:#180a03 !important;border-color:var(--color-sol) !important}
