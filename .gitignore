@@ -50,3 +50,7 @@ next-env.d.ts
 # Segredos soltos na raiz (nunca commitar)
 Sentry Token.txt
 *.token
+
+# Arquivo pessoal (handoffs de design, copias antigas) — fora do versionamento
+# e fora do tsc: as copias antigas poluiam a checagem com erro de codigo morto.
+/arquivos/
