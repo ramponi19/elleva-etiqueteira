@@ -245,7 +245,7 @@ export default function HomeNoite({
             <button className="reel-nav prev" aria-label="Anterior" onClick={() => reelRef.current?.scrollBy({ left: -step(), behavior: "smooth" })}>‹</button>
             <button className="reel-nav next" aria-label="Próximo" onClick={() => reelRef.current?.scrollBy({ left: step(), behavior: "smooth" })}>›</button>
             <div className="reel" ref={reelRef}>
-              <div style={{ flex: "0 0 max(30px,calc((100vw - 1240px)/2 + 30px))" }} />
+              <div style={{ flex: "1 0 30px" }} />
               {cards.map(({ e, cat: c }) => {
                 const show = visible.some((v) => v.e.id === e.id);
                 const bgStyle = e.cover ? { backgroundImage: `url(${e.cover})` } : undefined;
@@ -268,7 +268,7 @@ export default function HomeNoite({
                   </div>
                 );
               })}
-              <div style={{ flex: "0 0 max(30px,calc((100vw - 1240px)/2 + 30px))" }} />
+              <div style={{ flex: "1 0 30px" }} />
             </div>
           </div>
         </section>

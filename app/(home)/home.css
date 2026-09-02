@@ -88,10 +88,10 @@
   border:1px solid var(--line);background:rgba(10,9,8,.55);backdrop-filter:blur(8px);color:var(--ink);
   font-size:24px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .2s,border-color .2s,transform .18s}
 .ehome .reel-nav:hover{background:var(--warm);color:#180a03;border-color:var(--warm);transform:translateY(-50%) scale(1.06)}
-.ehome .reel-nav.prev{left:max(14px,calc((100vw - 1240px)/2 - 4px))}
-/* a fila avança à direita sem espaçador (só há um na esquerda), então a seta
-   "próximo" fica fora da faixa dos cards, na folga à direita do último. */
-.ehome .reel-nav.next{right:max(14px,calc((100vw - 1240px)/2 - 152px))}
+/* Espaçadores da fila crescem igual (flex:1) e centralizam os cards quando
+   cabem; as setas ficam simétricas, na folga de cada lado do bloco central. */
+.ehome .reel-nav.prev{left:max(14px,calc(50vw - 703px))}
+.ehome .reel-nav.next{right:max(14px,calc(50vw - 703px))}
 .ehome .slide{flex:0 0 auto;width:clamp(280px,32vw,400px);scroll-snap-align:center}
 .ehome .slide .inr{position:relative;aspect-ratio:3/4.1;border-radius:8px;overflow:hidden;border:1px solid var(--line);
   transform-origin:center;transition:transform .12s linear,filter .3s;will-change:transform;isolation:isolate;cursor:pointer}
