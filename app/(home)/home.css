@@ -91,7 +91,7 @@
 .ehome .reel-nav.prev{left:max(14px,calc((100vw - 1240px)/2 - 4px))}
 /* a fila avança à direita sem espaçador (só há um na esquerda), então a seta
    "próximo" fica fora da faixa dos cards, na folga à direita do último. */
-.ehome .reel-nav.next{right:max(14px,calc((100vw - 1240px)/2 - 104px))}
+.ehome .reel-nav.next{right:max(14px,calc((100vw - 1240px)/2 - 152px))}
 .ehome .slide{flex:0 0 auto;width:clamp(280px,32vw,400px);scroll-snap-align:center}
 .ehome .slide .inr{position:relative;aspect-ratio:3/4.1;border-radius:8px;overflow:hidden;border:1px solid var(--line);
   transform-origin:center;transition:transform .12s linear,filter .3s;will-change:transform;isolation:isolate;cursor:pointer}
