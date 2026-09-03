@@ -126,10 +126,6 @@ export default function EventoNoite({
     <div className="closed"><b>Vendas encerradas</b><span>Este evento já aconteceu.</span></div>
   ) : (
     <>
-      <div className="bhead">
-        <div className="from"><span>A partir de</span><b>{fmt(event.priceFrom)}</b></div>
-        <div className="cd">Pix na hora</div>
-      </div>
       <div>
         {ingressos.map(tierRow)}
         {adicionais.length > 0 && adicionais.map(tierRow)}
