@@ -2,16 +2,16 @@
    CONTA "A NOITE" (escopo .ect) — Meus ingressos/Favoritos/Perfil
    Swap papel<->tinta escopado + ajustes de banda/botão/QR.
    =========================================================== */
-:root:has(.ect),body:has(.ect){background:#08070A}
+:root:has(.ect),body:has(.ect){background:#120f19}
 .ect{
-  --color-papel:#0f0d12; --color-papel-2:#1b181f; --color-tinta:#F6F1E9;
+  --color-papel:#181320; --color-papel-2:#2a2338; --color-tinta:#F6F1E9;
   --color-tinta-60:rgb(246 241 233 / 0.62); --color-tinta-35:rgb(246 241 233 / 0.40);
   --color-sol-escuro:#FF7A45; --color-papel-inv:rgb(246 241 233 / 0.14);
   --cor-texto:#F6F1E9; --cor-texto-suave:rgb(246 241 233 / 0.60); --cor-borda:rgb(246 241 233 / 0.18);
-  --cor-fundo:#08070A; /* furos/notches do ingresso mostram o fundo escuro */
+  --cor-fundo:#120f19; /* furos/notches do ingresso mostram o fundo por trás do card */
   --color-cartaz:#F6B94A; --color-palco:#4FCB94;
   --font-sans:"Helvetica Neue",Helvetica,var(--font-arimo),Arial,sans-serif;
-  position:relative;background:#08070A;color:#F6F1E9;min-height:100dvh;
+  position:relative;background:#120f19;color:#F6F1E9;min-height:100dvh;
   font-family:var(--font-sans);
 }
 .ect .amb{position:fixed;inset:0;z-index:0;pointer-events:none;background:
@@ -19,11 +19,14 @@
   radial-gradient(46% 42% at 90% 76%,rgba(156,75,255,.08),transparent 60%)}
 .ect main{position:relative;z-index:3;background:transparent}
 
-/* superfícies/sombra/botões */
-.ect .bg-white{background-color:#15121a !important}
-.ect input,.ect textarea,.ect select{background:#15121a}
+/* superfícies/sombra/botões — camadas subidas + card descolado do fundo */
+.ect .bg-white{background-color:#221c2e !important}
+.ect .bg-white:not(input):not(textarea):not(select){box-shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 34px rgba(0,0,0,.32)}
+.ect input,.ect textarea,.ect select{background:#221c2e}
 .ect [class*="bg-sol"]{color:#180a03}
 .ect [class*="shadow-"]{box-shadow:0 18px 50px rgba(0,0,0,.5) !important}
+/* bordas branco puro -> hairline elegante */
+.ect [class*="border-tinta"]{border-color:rgb(246 241 233 / 0.12)}
 /* bandas de contraste bg-tinta (footer, blocos largos) NÃO viram ilha clara:
    só footer/section/div — os Badges <span> ficam pílula clara sólida do swap. */
 .ect footer[class*="bg-tinta"],.ect section[class*="bg-tinta"],.ect div[class*="bg-tinta"]{background:#141013 !important}
