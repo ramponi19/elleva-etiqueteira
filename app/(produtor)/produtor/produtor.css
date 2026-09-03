@@ -4,24 +4,34 @@
    cupons, validar, check-in, editar evento. Swap escopado + ajustes.
    Não toca no DashShell (admin segue claro).
    =========================================================== */
-:root:has(.eprd),body:has(.eprd){background:#08070A}
+/* Camadas subidas (não "breu chapado"): base < conteúdo < cards, com brilho
+   ambiente sutil no conteúdo e bordas em hairline (não branco puro). */
+:root:has(.eprd),body:has(.eprd){background:#120f19}
 .eprd{
-  --color-papel:#0f0d12; --color-papel-2:#1b181f; --color-tinta:#F6F1E9;
+  --color-papel:#181320; --color-papel-2:#2a2338; --color-tinta:#F6F1E9;
   --color-tinta-60:rgb(246 241 233 / 0.62); --color-tinta-35:rgb(246 241 233 / 0.40);
   --color-tinta-70:rgb(246 241 233 / 0.70);
   --color-sol-escuro:#FF7A45; --color-papel-inv:rgb(246 241 233 / 0.14);
   --cor-texto:#F6F1E9; --cor-texto-suave:rgb(246 241 233 / 0.60); --cor-borda:rgb(246 241 233 / 0.18);
-  --cor-fundo:#0f0d12;
+  --cor-fundo:#181320;
   --color-cartaz:#F6B94A; --color-palco:#4FCB94;
   --font-sans:"Helvetica Neue",Helvetica,var(--font-arimo),Arial,sans-serif;
   color:#F6F1E9;font-family:var(--font-sans);
 }
 
-/* superfícies (sidebar, cards, inputs) e sombras */
-.eprd .bg-white{background-color:#15121a !important}
-.eprd input,.eprd textarea,.eprd select{background:#15121a}
+/* brilho ambiente sutil no conteúdo (o painel não tinha, ficava sem vida) */
+.eprd main{background:
+  radial-gradient(70% 38% at 80% 0%, rgba(255,90,31,.06), transparent 58%),
+  radial-gradient(55% 40% at 6% 6%, rgba(156,75,255,.05), transparent 60%)}
+
+/* superfícies (sidebar, cards, inputs): descoladas do fundo + sombra leve */
+.eprd .bg-white{background-color:#221c2e !important}
+.eprd .bg-white:not(input):not(textarea):not(select){box-shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 34px rgba(0,0,0,.32)}
+.eprd input,.eprd textarea,.eprd select{background:#221c2e}
 .eprd input::placeholder,.eprd textarea::placeholder{color:rgb(246 241 233 / 0.32)}
 .eprd [class*="shadow-"]{box-shadow:0 18px 50px rgba(0,0,0,.5) !important}
+/* bordas branco puro -> hairline elegante */
+.eprd [class*="border-tinta"]{border-color:rgb(246 241 233 / 0.12)}
 
 /* laranja: texto escuro em cima de bg-sol (botões/badges) */
 .eprd [class*="bg-sol"]{color:#180a03}
