@@ -71,8 +71,8 @@
 .eev .disc{color:var(--muted);font-size:13.5px;margin-top:14px;max-width:64ch}
 .eev .divider{height:1px;background:var(--line);margin:0 0 44px}
 
-.eev .mapc{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--card)}
-.eev .mapc iframe.map{width:100%;height:220px;border:0;display:block}
+.eev .mapc{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--card);max-width:540px}
+.eev .mapc iframe.map{width:100%;height:auto;aspect-ratio:1/1;border:0;display:block}
 .eev .mapc .map{position:relative;height:190px;background:
   repeating-linear-gradient(0deg,rgba(246,241,233,.05) 0 1px,transparent 1px 34px),
   repeating-linear-gradient(90deg,rgba(246,241,233,.05) 0 1px,transparent 1px 34px),
