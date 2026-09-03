@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server";
-import { sendReminderEmail, releaseSeats, releaseCouponForOrder } from "@/lib/orders-helpers";
+import { sendReminderEmail, releaseSeats, releaseCouponForOrder, fulfillOrder } from "@/lib/orders-helpers";
 
 const MONTHS = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
 function fmtWhen(iso: string) {
@@ -95,8 +95,28 @@ export async function GET(request: Request) {
     }
   } catch { /* faxina não pode derrubar o cron */ }
 
+  // A-2: recupera pedidos PAGOS cuja entrega não completou (falha após o flip
+  // pending→paid: comprador pagou e ficou sem ingresso). Só os pagos há mais de
+  // 5 min sem estoque reservado, pra não competir com a entrega síncrona em curso.
+  // fulfillOrder é idempotente/reentrante.
+  let recuperados = 0;
+  try {
+    const cutoff = new Date(Date.now() - 5 * 60000).toISOString();
+    const { data: presos } = await svc
+      .from("orders")
+      .select("id")
+      .eq("status", "paid")
+      .eq("stock_reserved", false)
+      .lt("paid_at", cutoff)
+      .limit(50);
+    for (const o of presos ?? []) {
+      const r = await fulfillOrder(svc, o.id as string);
+      if (r.ok) recuperados++;
+    }
+  } catch { /* recuperação best-effort; não derruba o cron */ }
+
   // faxina das janelas antigas de rate limit (A7) — não deixa a tabela crescer
   await svc.rpc("rate_limit_gc").then(undefined, () => {});
 
-  return NextResponse.json({ ok: true, events: events?.length ?? 0, emails: sent, falhas: failed, expirados });
+  return NextResponse.json({ ok: true, events: events?.length ?? 0, emails: sent, falhas: failed, expirados, recuperados });
 }

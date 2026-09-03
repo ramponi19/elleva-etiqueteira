@@ -481,27 +481,46 @@ export async function markOrderPaid(svc: Svc, orderId: string): Promise<{ ok: bo
     .eq("id", orderId)
     .eq("status", "pending")
     .select("id");
-  if (!claimed || claimed.length === 0) {
-    // não fomos nós que flipamos — reporta o resultado final ao caller síncrono
-    const { data: cur } = await svc.from("orders").select("status").eq("id", orderId).single();
-    return { ok: cur?.status === "paid" };
+  if (claimed && claimed.length > 0) {
+    return fulfillOrder(svc, orderId); // fomos nós que flipamos → entrega
+  }
+  // não fomos nós — se JÁ está pago, garante a entrega (reentrante: A-2); senão reporta
+  const { data: cur } = await svc.from("orders").select("status").eq("id", orderId).single();
+  if (cur?.status === "paid") return fulfillOrder(svc, orderId);
+  return { ok: false };
+}
+
+/** A-2: efeitos pós-pagamento, IDEMPOTENTES e REENTRANTES. Pode ser reexecutado
+ *  (webhook repetido, retry, ou o cron de recuperação) sem duplicar estoque,
+ *  ingresso ou e-mail. A reserva de estoque é reivindicada atomicamente pelo flag
+ *  `stock_reserved` (só o primeiro caller decrementa); sellSeats e generateTickets
+ *  já são idempotentes; o e-mail sai uma única vez (na primeira entrega). */
+export async function fulfillOrder(svc: Svc, orderId: string): Promise<{ ok: boolean }> {
+  // reivindica o fulfillment do estoque de forma atômica: só quem flipar
+  // stock_reserved false→true decrementa o estoque; os demais pulam (idempotente).
+  const { data: claimedStock } = await svc
+    .from("orders")
+    .update({ stock_reserved: true })
+    .eq("id", orderId)
+    .eq("stock_reserved", false)
+    .select("id");
+  const primeira = !!(claimedStock && claimedStock.length);
+
+  if (primeira) {
+    // estoque atômico com guarda de capacidade; se estourou (corrida no último
+    // ingresso), estorna em vez de vender além da lotação
+    const esgotou = await reserveStock(svc, orderId);
+    if (esgotou) {
+      await refundOversold(svc, orderId);
+      return { ok: false };
+    }
   }
 
-  // estoque atômico com guarda de capacidade; se estourou (corrida no último
-  // ingresso), estorna em vez de vender além da lotação
-  const esgotou = await reserveStock(svc, orderId);
-  if (esgotou) {
-    await refundOversold(svc, orderId);
-    return { ok: false };
-  }
-
-  // A-1: o uso do cupom já foi RESERVADO na criação do pedido (increment_coupon_use
-  // atômico, respeitando max_uses); aqui NÃO incrementa de novo. A liberação ocorre
-  // em cancelamento / Pix expirado / estorno (releaseCouponForOrder).
-
-  await sellSeats(svc, orderId);
+  // A-1: o uso do cupom já foi RESERVADO na criação do pedido (respeitando max_uses);
+  // aqui NÃO incrementa. Liberação ocorre em cancelamento/expiração/estorno.
+  await sellSeats(svc, orderId);       // held→sold por order_id (idempotente)
   await maybeMarkSoldOut(svc, orderId);
-  await generateTickets(svc, orderId);
-  await sendConfirmationEmail(svc, orderId);
+  await generateTickets(svc, orderId); // checa count>0 antes de inserir (idempotente)
+  if (primeira) await sendConfirmationEmail(svc, orderId);
   return { ok: true };
 }
