@@ -14,7 +14,6 @@ function genre(label: string) {
   if (/corp|congresso|curso|palestra|summit/.test(l)) return "g-corp";
   return "g-show";
 }
-const fmt = (n: number) => "R$ " + Math.round(n).toLocaleString("pt-BR");
 
 function agruparPorMes(events: EventItem[]): [string, EventItem[]][] {
   const grupos = new Map<string, EventItem[]>();
@@ -82,7 +81,6 @@ export function AgendaGrade({
                       <h3 className="ttl">{e.title}</h3>
                       <div className="meta">
                         <div><div className="when">{e.d} {e.mon} · {e.time}</div><div className="venue">{e.venueCity}</div></div>
-                        <div className="price">{fmt(e.priceFrom)}<small> +taxa</small></div>
                       </div>
                     </div>
                   </div>

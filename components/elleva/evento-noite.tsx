@@ -256,7 +256,7 @@ export default function EventoNoite({
                       <div className={"ra " + (e.cover ? "" : g.cls)} style={e.cover ? { backgroundImage: `url(${e.cover})` } : undefined}>
                         <div className="rs" /><div className="rt">{e.title}</div>
                       </div>
-                      <div className="rf"><span className="rw">{e.d} {e.mon} · {event.endereco?.cidade ?? e.venueCity.split("·").pop()?.trim()}</span><span className="rp">{fmt(e.priceFrom)}</span></div>
+                      <div className="rf"><span className="rw">{e.d} {e.mon} · {event.endereco?.cidade ?? e.venueCity.split("·").pop()?.trim()}</span></div>
                     </Link>
                   );
                 })}

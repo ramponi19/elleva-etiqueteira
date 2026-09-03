@@ -15,7 +15,6 @@ function catOf(label: string): Cat {
   if (/corp|congresso|curso|palestra|summit/.test(l)) return { key: "Corporativo", cls: "g-corp" };
   return { key: "Show", cls: "g-show" };
 }
-const fmt = (n: number) => "R$ " + Math.round(n).toLocaleString("pt-BR");
 
 const PILLS = [
   { cat: "tudo", label: "Tudo" },
@@ -250,7 +249,6 @@ export default function HomeNoite({
                           <h3 className="pttl">{e.title}</h3>
                           <div className="pmeta">
                             <div><div className="pwhen">{e.dateFull} · {e.time}</div><div className="pvenue">{e.venueCity}</div></div>
-                            <div className="pprice">{fmt(e.priceFrom)}<small> +taxa</small></div>
                           </div>
                         </div>
                       </div>
