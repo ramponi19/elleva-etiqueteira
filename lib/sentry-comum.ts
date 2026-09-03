@@ -30,13 +30,16 @@ const CPF = /\b\d{3}\.?\d{3}\.?\d{3}-?\d{2}\b/g;
 const CARTAO = /\b\d{13,19}\b/g;
 /** Pix copia-e-cola começa com o payload EMV "000201..." e é enorme. */
 const PIX = /\b000201[0-9A-Za-z.*\-$%+/:]{30,}/g;
+/** E-mail do comprador (M-4): pode aparecer cru em erro de SMTP/validação. */
+const EMAIL = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/g;
 
 /** Remove dado sensível de qualquer texto que vá pro relatório. */
 export function limpar(texto: string): string {
   return texto
     .replace(CPF, "[cpf]")
     .replace(PIX, "[pix]")
-    .replace(CARTAO, "[numero]");
+    .replace(CARTAO, "[numero]")
+    .replace(EMAIL, "[email]");
 }
 
 /**

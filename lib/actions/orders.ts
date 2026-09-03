@@ -85,6 +85,24 @@ async function priceItems(
       if (ev.starts_at && new Date(ev.starts_at).getTime() < Date.now()) {
         return { error: "As vendas para este evento já foram encerradas." };
       }
+      // C-1: se o item traz um assento, ele PRECISA pertencer a este lote e a
+      // este evento — e representar exatamente 1 ingresso. Sem isto, dava pra
+      // mandar tierId do lote barato + seatId de uma cadeira de outro lote/evento
+      // e pagar barato ocupando o assento caro (o preço vem do lote, o assento
+      // do id enviado, e nada os amarrava).
+      if (it.seatId != null) {
+        if (!isUuid(it.seatId) || it.qty !== 1) {
+          return { error: `Assento inválido para "${tier.name}".` };
+        }
+        const { data: seat } = await svc
+          .from("seats")
+          .select("event_id, tier_id")
+          .eq("id", it.seatId)
+          .single();
+        if (!seat || seat.event_id !== tier.event_id || seat.tier_id !== it.tierId) {
+          return { error: "Esse assento não pertence a este ingresso. Recarregue a página e escolha de novo." };
+        }
+      }
       const price = Number(tier.price);
       const pct = Number(ev.service_fee_pct ?? DEFAULT_FEE_PCT);
       const absorve = !!ev.absorb_fee;
@@ -267,6 +285,14 @@ export async function createOrder(input: z.input<typeof BaseSchema>): Promise<Cr
 
   let svc: Svc;
   try { svc = await createServiceClient(); } catch { return { ok: false, error: "Pagamento indisponível." }; }
+
+  // A-3: teto por IP no checkout Pix/gratuito (o cartão já tinha o seu). Sem isto,
+  // um loop de createOrder drenava lote gratuito/cupom-100%, segurava o mapa de
+  // assentos (hold de 30min) e spammava cobranças no MP.
+  const ipOrder = await clientIp();
+  if (!(await allowHit(`order:${ipOrder}`, 10, 600))) {
+    return { ok: false, error: "Muitas tentativas seguidas. Aguarde um instante e tente de novo." };
+  }
 
   const priced = await priceItems(svc, parsed.data.items);
   if ("error" in priced) return { ok: false, error: priced.error };
