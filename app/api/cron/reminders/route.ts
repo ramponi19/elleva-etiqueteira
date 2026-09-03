@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server";
 import { sendReminderEmail, releaseSeats, releaseCouponForOrder, fulfillOrder } from "@/lib/orders-helpers";
 
+// M-2: dá folga pra faxina (lembretes + expiração de Pix + recuperação de pedidos).
+// A Vercel limita ao teto do plano; pedir mais é inofensivo (fica no teto).
+export const maxDuration = 300;
+
 const MONTHS = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
 function fmtWhen(iso: string) {
   const p = new Intl.DateTimeFormat("pt-BR", {
