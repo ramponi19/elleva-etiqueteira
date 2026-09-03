@@ -63,14 +63,6 @@ export default async function ProdutorInicio() {
           <Button href="/criar-evento" variante="primario">
             <Icon icon="lucide:plus" style={{ fontSize: 16 }} /> Criar evento presencial
           </Button>
-          <button
-            type="button"
-            disabled
-            title="Em breve"
-            className="inline-flex cursor-default items-center gap-2 rounded-[var(--radius-pill)] border-[1.5px] border-tinta px-[22px] py-3 text-[15px] font-medium text-tinta-35"
-          >
-            Criar evento online <span className="rotulo">· em breve</span>
-          </button>
         </div>
       </div>
 
