@@ -36,7 +36,6 @@ export default function HomeNoite({
   const router = useRouter();
   const [cat, setCat] = useState("tudo");
   const [q, setQ] = useState("");
-  const [ov, setOv] = useState<EventItem | null>(null);
   const reelRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLCanvasElement>(null);
 
@@ -176,16 +175,6 @@ export default function HomeNoite({
     return () => { alive = false; removeEventListener("resize", onR); removeEventListener("pointermove", onP); removeEventListener("scroll", onS); };
   }, []);
 
-  /* fecha overlay no Esc + trava scroll */
-  useEffect(() => {
-    if (!ov) { document.body.style.overflow = ""; return; }
-    document.body.style.overflow = "hidden";
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOv(null); };
-    addEventListener("keydown", onKey);
-    return () => removeEventListener("keydown", onKey);
-  }, [ov]);
-
-  const ovCat = ov ? catOf(ov.catLabel) : null;
 
   return (
     <div className="ehome">
@@ -252,7 +241,7 @@ export default function HomeNoite({
                 const bgStyle = e.cover ? { backgroundImage: `url(${e.cover})` } : undefined;
                 return (
                   <div className="slide" key={e.id} style={{ display: show ? undefined : "none" }}>
-                    <div className="inr reveal" onClick={() => setOv(e)}>
+                    <div className="inr reveal" onClick={() => router.push(`/evento/${e.id}`)}>
                       <div className={"bg " + (e.cover ? "" : c.cls)} style={bgStyle}>{!e.cover && <span className="ghost">{c.key}</span>}</div>
                       <div className="streak" /><div className="scrim" /><div className="glare" />
                       <div className="pc">
@@ -310,30 +299,6 @@ export default function HomeNoite({
         </div>
       </footer>
 
-      {/* OVERLAY — prévia com rasgo, leva pra página do evento */}
-      <div className={"ov" + (ov ? " open" : "")} role="dialog" aria-modal="true" aria-label="Detalhe do evento">
-        <div className="ov-bd" onClick={() => setOv(null)} />
-        {ov && ovCat && (
-          <div className="ov-panel">
-            <button className="ov-close" aria-label="Fechar" onClick={() => setOv(null)}>✕</button>
-            <div className="ov-seam" aria-hidden />
-            <div className="ov-art" style={ov.cover ? { backgroundImage: `url(${ov.cover})` } : undefined}>
-              {!ov.cover && <div className={"bg " + ovCat.cls} style={{ position: "absolute", inset: 0, zIndex: -1 }} />}
-              {!ov.cover && <span className="ghost">{ovCat.key}</span>}
-              <div className="scrim" />
-              <div className="ac"><span className="ptag">{ov.catLabel}</span><h3>{ov.title}</h3></div>
-            </div>
-            <div className="ov-buy">
-              <div className="ov-when">{ov.dateFull} · {ov.time}</div>
-              <div className="ov-venue">{ov.venueCity}</div>
-              <div className="ov-tier"><div className="ti"><div className="tn">A partir de</div><div className="tp">ingresso mais barato do evento</div></div><div className="pprice" style={{ fontSize: 24, fontWeight: 700 }}>{fmt(ov.priceFrom)}</div></div>
-              <div className="ov-total"><span className="tl">Preço inicial</span><span className="tv">{fmt(ov.priceFrom)}</span></div>
-              <button className="btn btn-warm" onClick={() => router.push(`/evento/${ov.id}`)}>Ver ingressos →</button>
-              <div className="ov-reassure">Pix aprovado na hora · ingresso no WhatsApp e na conta</div>
-            </div>
-          </div>
-        )}
-      </div>
     </div>
   );
 }
