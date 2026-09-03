@@ -250,7 +250,9 @@ async function aggregate(
     acc.retidoBruto = retidoBruto;
     acc.bloqueado = bloqueado;
     acc.jaAntecipado = cAdvance;
-    acc.aLiberar = round2(Math.max(0, retidoBruto - cAdvance));
+    // M-7: exclui o retido de evento cancelado (bloqueado) — ele não vai liberar,
+    // então somá-lo superestimava o "a liberar" no extrato.
+    acc.aLiberar = round2(Math.max(0, retidoBruto - cAdvance - bloqueado));
     acc.disponivel = disponivel;
     acc.saldoReal = saldoReal;
     acc.antecipavel = antecipavel;
