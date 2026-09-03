@@ -30,6 +30,8 @@
 /* bandas de contraste bg-tinta (footer, blocos largos) NÃO viram ilha clara:
    só footer/section/div — os Badges <span> ficam pílula clara sólida do swap. */
 .ect footer[class*="bg-tinta"],.ect section[class*="bg-tinta"],.ect div[class*="bg-tinta"]{background:#141013 !important}
+/* o rodapé é banda escura: força o texto/logo em creme (papel é escuro no .ect) */
+.ect footer[class*="bg-tinta"]{color:rgb(246 241 233 / 0.86)}
 .ect [class*="bg-tinta"] [class*="text-papel"]{color:rgb(246 241 233 / 0.80)}
 /* botões/links tinta -> laranja com texto escuro */
 .ect button[class*="bg-tinta"],.ect a[class*="bg-tinta"]{background:var(--color-sol) !important;color:#180a03 !important;border:0 !important}

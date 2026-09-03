@@ -90,7 +90,7 @@ export function LogoElleva({ className }: { className?: string }) {
         <svg
           viewBox="0 0 56 74"
           aria-hidden
-          style={{ height: "0.72em", width: "auto", marginLeft: "0.02em", alignSelf: "baseline", color: "var(--color-sol)" }}
+          style={{ height: "0.8em", width: "auto", marginLeft: "0.02em", alignSelf: "baseline", color: "var(--color-sol)" }}
         >
           <path d={A_PATH} fill="currentColor" />
         </svg>
