@@ -197,7 +197,17 @@ export default function EventoNoite({
             <div className="sec-block">
               <h2>Local</h2>
               <div className="mapc">
-                <div className="map"><span className="pin" /></div>
+                {event.showOnMaps !== false ? (
+                  <iframe
+                    className="map"
+                    title={`Mapa — ${event.venueCity}`}
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                    src={`https://www.google.com/maps?q=${encodeURIComponent(buscaMapa)}&z=15&output=embed`}
+                  />
+                ) : (
+                  <div className="map"><span className="pin" /></div>
+                )}
                 <div className="minfo">
                   <div><b>{event.venueCity}</b>{enderecoLinha && <><br /><span>{enderecoLinha}</span></>}</div>
                   {event.showOnMaps !== false && (
