@@ -61,7 +61,7 @@ export default async function ProdutorInicio() {
         <p className="corpo-suave mt-1">Já publicou seu evento?</p>
         <div className="mt-5 flex flex-wrap gap-3">
           <Button href="/criar-evento" variante="primario">
-            <Icon icon="lucide:plus" style={{ fontSize: 16 }} /> Criar evento presencial
+            <Icon icon="lucide:plus" style={{ fontSize: 16 }} /> Criar evento
           </Button>
         </div>
       </div>
@@ -93,7 +93,7 @@ export default async function ProdutorInicio() {
             Você tem total autonomia para cadastrar, gerenciar e acompanhar todas as informações do seu evento.
           </p>
           <Button href="/criar-evento" variante="primario" className="mt-6">
-            <Icon icon="lucide:plus" style={{ fontSize: 16 }} /> Criar evento presencial
+            <Icon icon="lucide:plus" style={{ fontSize: 16 }} /> Criar evento
           </Button>
         </div>
       ) : (
