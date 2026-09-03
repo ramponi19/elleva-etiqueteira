@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { getAuth } from "@/lib/auth";
 import { createServiceClient } from "@/lib/supabase/server";
 import { getPaymentProvider } from "@/lib/payments";
-import { reverseSold, cancelTickets, sendRefundEmail } from "@/lib/orders-helpers";
+import { reverseSold, cancelTickets, sendRefundEmail, releaseCouponForOrder } from "@/lib/orders-helpers";
 import { audit } from "@/lib/audit";
 
 export type Role = "user" | "admin";
@@ -86,12 +86,14 @@ export async function cancelOrder(
       }
     }
     await svc.from("orders").update({ status: "refunded" }).eq("id", orderId);
+    await releaseCouponForOrder(svc, orderId); // A-1
     await cancelTickets(svc, orderId);
     await reverseSold(svc, orderId);
     await sendRefundEmail(svc, orderId);
     await audit("order_refunded", orderId, {});
   } else {
     await svc.from("orders").update({ status: "cancelled" }).eq("id", orderId);
+    await releaseCouponForOrder(svc, orderId); // A-1
     await audit("order_cancelled", orderId, {});
   }
 

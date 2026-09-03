@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server";
-import { sendReminderEmail, releaseSeats } from "@/lib/orders-helpers";
+import { sendReminderEmail, releaseSeats, releaseCouponForOrder } from "@/lib/orders-helpers";
 
 const MONTHS = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
 function fmtWhen(iso: string) {
@@ -89,6 +89,7 @@ export async function GET(request: Request) {
         .from("orders").update({ status: "cancelled" }).eq("id", o.id).eq("status", "pending").select("id");
       if (done?.length) {
         await releaseSeats(svc, o.id as string);
+        await releaseCouponForOrder(svc, o.id as string); // A-1
         expirados++;
       }
     }

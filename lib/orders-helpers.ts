@@ -52,6 +52,14 @@ export async function releaseSeats(svc: Svc, orderId: string) {
   await svc.from("seats").update({ status: "available", order_id: null, held_until: null }).eq("order_id", orderId);
 }
 
+/** A-1: devolve o uso de cupom que este pedido reservou na criação. Chamado uma
+ *  vez por transição terminal (cancelado / Pix expirado / reembolsado). Lê o
+ *  coupon_code do próprio pedido, então é seguro chamar sem saber se havia cupom. */
+export async function releaseCouponForOrder(svc: Svc, orderId: string) {
+  const { data: o } = await svc.from("orders").select("coupon_code").eq("id", orderId).single();
+  if (o?.coupon_code) await svc.rpc("release_coupon_use", { p_code: o.coupon_code });
+}
+
 /** Reserva ATÔMICA de estoque dos lotes do pedido (RPC com guarda de capacity).
  *  Retorna `true` se ESGOTOU (algum lote estourou) — nesse caso já desfaz o que
  *  reservou deste pedido, pra quem chamou tratar (estorno). */
@@ -86,6 +94,7 @@ async function refundOversold(svc: Svc, orderId: string) {
   await svc.from("orders").update({ status: "refunded" }).eq("id", orderId);
   await cancelTickets(svc, orderId);
   await releaseSeats(svc, orderId);
+  await releaseCouponForOrder(svc, orderId); // A-1
   await sendRefundEmail(svc, orderId);
 }
 
@@ -424,6 +433,7 @@ export async function refundOrder(svc: Svc, orderId: string): Promise<{ action: 
   if (o.status === "pending") {
     await svc.from("orders").update({ status: "cancelled" }).eq("id", orderId).eq("status", "pending");
     await releaseSeats(svc, orderId);
+    await releaseCouponForOrder(svc, orderId); // A-1
     return { action: "cancelled_pending" };
   }
   // paid: estorna no provedor que processou ANTES de reverter localmente
@@ -453,6 +463,7 @@ export async function markOrderRefunded(svc: Svc, orderId: string): Promise<{ ok
     .eq("status", "paid")
     .select("id");
   if (!claimed || claimed.length === 0) return { ok: false }; // não estava pago (ou já revertido)
+  await releaseCouponForOrder(svc, orderId); // A-1
   await cancelTickets(svc, orderId);
   await reverseSold(svc, orderId);
   await sendRefundEmail(svc, orderId);
@@ -469,14 +480,12 @@ export async function markOrderPaid(svc: Svc, orderId: string): Promise<{ ok: bo
     .update({ status: "paid", paid_at: new Date().toISOString() })
     .eq("id", orderId)
     .eq("status", "pending")
-    .select("coupon_code");
+    .select("id");
   if (!claimed || claimed.length === 0) {
     // não fomos nós que flipamos — reporta o resultado final ao caller síncrono
     const { data: cur } = await svc.from("orders").select("status").eq("id", orderId).single();
     return { ok: cur?.status === "paid" };
   }
-
-  const couponCode = claimed[0].coupon_code as string | null;
 
   // estoque atômico com guarda de capacidade; se estourou (corrida no último
   // ingresso), estorna em vez de vender além da lotação
@@ -486,8 +495,9 @@ export async function markOrderPaid(svc: Svc, orderId: string): Promise<{ ok: bo
     return { ok: false };
   }
 
-  // uso de cupom de forma atômica (respeita max_uses)
-  if (couponCode) await svc.rpc("increment_coupon_use", { p_code: couponCode });
+  // A-1: o uso do cupom já foi RESERVADO na criação do pedido (increment_coupon_use
+  // atômico, respeitando max_uses); aqui NÃO incrementa de novo. A liberação ocorre
+  // em cancelamento / Pix expirado / estorno (releaseCouponForOrder).
 
   await sellSeats(svc, orderId);
   await maybeMarkSoldOut(svc, orderId);

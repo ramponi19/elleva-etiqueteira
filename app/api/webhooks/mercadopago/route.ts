@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { mercadoPagoProvider } from "@/lib/payments/mercadopago";
 import { createServiceClient } from "@/lib/supabase/server";
-import { markOrderPaid, markOrderRefunded } from "@/lib/orders-helpers";
+import { markOrderPaid, markOrderRefunded, releaseSeats, releaseCouponForOrder } from "@/lib/orders-helpers";
 
 // Webhook do Mercado Pago. A assinatura e a leitura do pagamento ficam no
 // adaptador (lib/payments/mercadopago). Outros provedores têm sua própria rota.
@@ -45,7 +45,13 @@ export async function POST(request: Request) {
       // 'rejected' que chega após o 'approved') derrubava um pedido JÁ PAGO —
       // comprador com ingresso válido e produtor perdendo a venda do extrato.
       const svc = await createServiceClient();
-      await svc.from("orders").update({ status: "cancelled" }).eq("id", payment.orderId).eq("status", "pending");
+      const { data: done } = await svc
+        .from("orders").update({ status: "cancelled" }).eq("id", payment.orderId).eq("status", "pending").select("id");
+      if (done?.length) {
+        // só libera se ESTE webhook flipou pending->cancelled (evita double-release)
+        await releaseSeats(svc, payment.orderId);
+        await releaseCouponForOrder(svc, payment.orderId); // A-1
+      }
     }
 
     return NextResponse.json({ received: true });

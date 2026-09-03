@@ -6,7 +6,7 @@ import { getAuth } from "@/lib/auth";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { getPaymentProvider } from "@/lib/payments";
 import { mpDeclineMessage, mpErrorMessage } from "@/lib/payments/mp-messages";
-import { markOrderPaid, claimSeats, refundOrder } from "@/lib/orders-helpers";
+import { markOrderPaid, claimSeats, refundOrder, releaseSeats, releaseCouponForOrder } from "@/lib/orders-helpers";
 import { feeUnit, round2, DEFAULT_FEE_PCT } from "@/lib/fees";
 import { isValidCPF } from "@/lib/cpf";
 import { allowHit, clientIp } from "@/lib/rate-limit";
@@ -256,6 +256,23 @@ async function claimOrFail(svc: Svc, orderId: string, items: PricedItem[]): Prom
   return null;
 }
 
+/** A-1: reserva o uso do cupom (atômico, respeita max_uses) para um pedido pendente
+ *  já criado, ANTES de cobrar. Se o cupom esgotou nesse instante (corrida entre
+ *  pedidos pendentes), desfaz o pedido (cancela + libera assentos) e devolve o erro.
+ *  A liberação do uso reservado acontece em cancelamento/expiração/estorno. */
+async function reserveCouponOrUndo(
+  svc: Svc,
+  orderId: string,
+  coupon: { discount: number; code: string } | null
+): Promise<string | null> {
+  if (!coupon || coupon.discount <= 0) return null;
+  const { data: ok } = await svc.rpc("increment_coupon_use", { p_code: coupon.code });
+  if (ok) return null;
+  await releaseSeats(svc, orderId);
+  await svc.from("orders").update({ status: "cancelled" }).eq("id", orderId).eq("status", "pending");
+  return "Esse cupom acabou de esgotar. Recarregue a página e finalize sem ele.";
+}
+
 async function currentUserId() {
   const {
     data: { user },
@@ -315,6 +332,8 @@ export async function createOrder(input: z.input<typeof BaseSchema>): Promise<Cr
     if ("error" in prep) return { ok: false, error: prep.error };
     const seatErr = await claimOrFail(svc, prep.orderId, priced.items);
     if (seatErr) return { ok: false, error: seatErr };
+    const cErr = await reserveCouponOrUndo(svc, prep.orderId, coupon);
+    if (cErr) return { ok: false, error: cErr };
     const mp = await markOrderPaid(svc, prep.orderId);
     if (!mp.ok) return { ok: false, error: "Esse ingresso esgotou agora. Nada foi cobrado." };
     return { ok: true, orderId: prep.orderId, paid: true };
@@ -333,6 +352,8 @@ export async function createOrder(input: z.input<typeof BaseSchema>): Promise<Cr
   if ("error" in prep) return { ok: false, error: prep.error };
   const seatErr = await claimOrFail(svc, prep.orderId, priced.items);
   if (seatErr) return { ok: false, error: seatErr };
+  const couponErr = await reserveCouponOrUndo(svc, prep.orderId, coupon);
+  if (couponErr) return { ok: false, error: couponErr };
 
   if (!configured) {
     const mp = await markOrderPaid(svc, prep.orderId);
@@ -364,6 +385,7 @@ export async function createOrder(input: z.input<typeof BaseSchema>): Promise<Cr
     }).eq("id", prep.orderId);
     return { ok: true, orderId: prep.orderId, paid: false, pix: { qrBase64: pix.qrBase64, copyPaste: pix.copyPaste }, total: prep.total, expiresAt: exp.iso };
   } catch (e) {
+    await releaseCouponForOrder(svc, prep.orderId); // A-1: devolve o uso reservado
     await svc.from("order_items").delete().eq("order_id", prep.orderId);
     await svc.from("orders").delete().eq("id", prep.orderId);
     return { ok: false, error: e instanceof Error ? e.message : "Falha ao gerar o Pix" };
@@ -428,6 +450,8 @@ export async function createCardOrder(input: z.input<typeof CardSchema>): Promis
   if ("error" in prep) return { ok: false, error: prep.error };
   const seatErr = await claimOrFail(svc, prep.orderId, priced.items);
   if (seatErr) return { ok: false, error: seatErr };
+  const cardCouponErr = await reserveCouponOrUndo(svc, prep.orderId, coupon);
+  if (cardCouponErr) return { ok: false, error: cardCouponErr };
 
   try {
     const res = await provider.createCardCharge({
@@ -453,9 +477,11 @@ export async function createCardOrder(input: z.input<typeof CardSchema>): Promis
       return { ok: true, orderId: prep.orderId, pending: true };
     }
     // rejeitado
+    await releaseCouponForOrder(svc, prep.orderId); // A-1
     await svc.from("orders").update({ status: "cancelled" }).eq("id", prep.orderId);
     return { ok: false, error: mpDeclineMessage(res.detail) };
   } catch (e) {
+    await releaseCouponForOrder(svc, prep.orderId); // A-1
     await svc.from("orders").update({ status: "cancelled" }).eq("id", prep.orderId);
     // O SDK do Mercado Pago lança ApiError (não Error nativo) — extrai o motivo real
     // pra registrar no log e dar um retorno menos opaco ao comprador.
