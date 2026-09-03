@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { LogoElleva } from "@/components/elleva/logo";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { useCart } from "@/lib/cart";
@@ -149,7 +150,7 @@ export default function EventoNoite({
 
       <nav className="top" id="eevnav">
         <div className="nav-in">
-          <Link className="brand" href="/" aria-label="Elleva Tickets"><img src="/logo-elleva.png" alt="Elleva Tickets" /></Link>
+          <Link className="brand" href="/" aria-label="Elleva Tickets"><LogoElleva /></Link>
           <Link className="nav-back" href="/agenda">← Agenda</Link>
           <div className="nav-right">
             <Link className="entrar" href={loggedIn ? "/conta" : "/login"}>{loggedIn ? "Minha conta" : "Entrar"}</Link>
@@ -258,7 +259,7 @@ export default function EventoNoite({
       <footer>
         <div className="wrap">
           <div className="foot-grid">
-            <div className="foot-brand"><img src="/logo-elleva.png" alt="Elleva Tickets" /></div>
+            <div className="foot-brand"><LogoElleva /></div>
             <div className="foot-col"><h5>Elleva</h5><Link href="/agenda">Agenda</Link><Link href="/produtores">Produtores</Link><Link href="/ajuda">Central de ajuda</Link></div>
             <div className="foot-col"><h5>Legal</h5><Link href="/terms">Política de compras</Link><Link href="/privacy">Privacidade</Link></div>
             <div className="foot-col"><h5>Contato</h5><a href="mailto:contato@ellevaeventos.com.br">contato@ellevaeventos.com.br</a></div>

@@ -1,5 +1,6 @@
 import "./checkout.css";
 import Link from "next/link";
+import { LogoElleva } from "@/components/elleva/logo";
 import { CartProvider } from "@/lib/cart";
 
 // Checkout com cromo escuro próprio (nav minimalista, foco na compra).
@@ -10,7 +11,7 @@ export default function CheckoutLayout({ children }: { children: React.ReactNode
       <div className="echk">
         <div className="amb" aria-hidden />
         <header className="echk-nav">
-          <Link href="/" aria-label="Elleva Tickets"><img src="/logo-elleva.png" alt="Elleva Tickets" /></Link>
+          <Link href="/" aria-label="Elleva Tickets"><LogoElleva /></Link>
           <span className="safe">Compra segura</span>
         </header>
         <div className="ck-body">{children}</div>

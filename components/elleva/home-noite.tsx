@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { LogoElleva } from "@/components/elleva/logo";
 import { useRouter } from "next/navigation";
 import type { EventItem } from "@/lib/events";
 
@@ -195,7 +196,7 @@ export default function HomeNoite({
 
       <nav className="top" id="ehnav">
         <div className="nav-in">
-          <Link className="brand" href="/" aria-label="Elleva Tickets"><img src="/logo-elleva.png" alt="Elleva Tickets" /></Link>
+          <Link className="brand" href="/" aria-label="Elleva Tickets"><LogoElleva /></Link>
           <div className="nav-links">
             <Link href="/agenda">Agenda</Link>
             <Link href="/produtores">Produtores</Link>
@@ -300,7 +301,7 @@ export default function HomeNoite({
       <footer>
         <div className="wrap">
           <div className="foot-grid">
-            <div className="foot-brand"><img src="/logo-elleva.png" alt="Elleva Tickets" /></div>
+            <div className="foot-brand"><LogoElleva /></div>
             <div className="foot-col"><h5>Elleva</h5><Link href="/agenda">Agenda</Link><Link href="/produtores">Produtores</Link><a href="#como">Como funciona</a><Link href="/ajuda">Central de ajuda</Link></div>
             <div className="foot-col"><h5>Legal</h5><Link href="/terms">Política de compras</Link><Link href="/privacy">Privacidade</Link></div>
             <div className="foot-col"><h5>Contato</h5><a href="mailto:contato@ellevaeventos.com.br">contato@ellevaeventos.com.br</a></div>

@@ -40,7 +40,7 @@
 .ehome nav.top{position:fixed;top:0;left:0;right:0;z-index:40;transition:background .3s,border-color .3s;border-bottom:1px solid transparent}
 .ehome nav.top.solid{background:rgba(8,7,10,.7);backdrop-filter:blur(16px);border-bottom:1px solid var(--line)}
 .ehome .nav-in{max-width:1240px;margin:0 auto;padding:0 30px;height:74px;display:flex;align-items:center;gap:28px}
-.ehome .brand img{height:44px;display:block;filter:drop-shadow(0 0 18px rgba(255,120,60,.30)) brightness(1.07) contrast(1.05)}
+.ehome .brand{--elv-logo-size:26px;color:#F6F1E9;filter:drop-shadow(0 0 14px rgba(255,120,60,.22))}
 .ehome .nav-links{display:flex;gap:28px;margin-left:8px}
 .ehome .nav-links a{font-size:14px;font-weight:600;color:var(--muted);position:relative}
 .ehome .nav-links a::after{content:"";position:absolute;left:0;bottom:-6px;height:2px;width:0;background:var(--warm);transition:width .25s ease}
@@ -140,7 +140,7 @@
 /* FOOTER */
 .ehome footer{position:relative;z-index:3;border-top:1px solid var(--line);margin-top:90px;padding:60px 0 74px}
 .ehome .foot-grid{display:flex;justify-content:space-between;gap:44px;flex-wrap:wrap}
-.ehome .foot-brand img{height:52px;margin-bottom:16px;filter:drop-shadow(0 0 20px rgba(255,120,60,.26)) brightness(1.07) contrast(1.05)}
+.ehome .foot-brand{--elv-logo-size:32px;color:#F6F1E9;margin-bottom:14px;display:inline-block;filter:drop-shadow(0 0 13px rgba(255,120,60,.2))}
 .ehome .foot-brand p{max-width:32ch;color:var(--muted);font-size:14px;margin:0}
 .ehome .foot-col h5{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);margin:0 0 14px}
 .ehome .foot-col a{display:block;color:var(--muted);font-size:14px;margin-bottom:10px;width:fit-content}

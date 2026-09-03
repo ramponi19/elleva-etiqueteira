@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="Elleva">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FF9E63"/>
+      <stop offset="1" stop-color="#E8481F"/>
+    </linearGradient>
+  </defs>
+  <rect x="8" y="8" width="104" height="104" rx="28" fill="url(#g)"/>
+  <g fill="#FBF2E6">
+    <rect x="40" y="34" width="13" height="52" rx="3"/>
+    <rect x="40" y="34" width="38" height="13" rx="3"/>
+    <rect x="40" y="53" width="28" height="13" rx="3"/>
+    <rect x="40" y="73" width="38" height="13" rx="3"/>
+  </g>
+</svg>

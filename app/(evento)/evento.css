@@ -30,7 +30,7 @@
 .eev nav.top{position:fixed;top:0;left:0;right:0;z-index:40;transition:background .3s,border-color .3s;border-bottom:1px solid transparent}
 .eev nav.top.solid{background:rgba(8,7,10,.78);backdrop-filter:blur(16px);border-bottom:1px solid var(--line)}
 .eev .nav-in{max-width:1180px;margin:0 auto;padding:0 26px;height:72px;display:flex;align-items:center;gap:22px}
-.eev .brand img{height:40px;display:block;filter:drop-shadow(0 0 18px rgba(255,120,60,.3)) brightness(1.07) contrast(1.05)}
+.eev .brand{--elv-logo-size:24px;color:#F6F1E9;filter:drop-shadow(0 0 14px rgba(255,120,60,.22))}
 .eev .nav-back{font-size:13px;font-weight:600;color:var(--muted)}
 .eev .nav-back:hover{color:var(--ink)}
 .eev .nav-right{margin-left:auto;display:flex;align-items:center;gap:16px}
@@ -135,7 +135,7 @@
 /* footer */
 .eev footer{border-top:1px solid var(--line);padding:48px 0 60px;position:relative;z-index:3}
 .eev .foot-grid{display:flex;justify-content:space-between;gap:40px;flex-wrap:wrap}
-.eev .foot-brand img{height:44px;margin-bottom:14px;filter:drop-shadow(0 0 18px rgba(255,120,60,.26))}
+.eev .foot-brand{--elv-logo-size:28px;color:#F6F1E9;margin-bottom:14px;display:inline-block;filter:drop-shadow(0 0 13px rgba(255,120,60,.2))}
 .eev .foot-brand p{max-width:32ch;color:var(--muted);font-size:14px;margin:0}
 .eev .foot-col h5{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);margin:0 0 12px}
 .eev .foot-col a{display:block;color:var(--muted);font-size:14px;margin-bottom:9px}
