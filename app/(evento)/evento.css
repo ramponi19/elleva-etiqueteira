@@ -112,13 +112,16 @@
 .eev .step button:hover:not(:disabled){border-color:var(--ink)}
 .eev .step button:disabled{opacity:.3;cursor:default}
 .eev .step .q{width:18px;text-align:center;font-weight:700;font-variant-numeric:tabular-nums}
+.eev .buy .bsum{padding:14px 22px 0}
+.eev .buy .bsum .brow{display:flex;justify-content:space-between;align-items:baseline;padding:6px 0;font-size:13px;color:var(--muted);border-bottom:1px dashed rgba(246,241,233,.1)}
+.eev .buy .bsum .brow span:last-child{color:#F6F1E9;font-weight:600;font-variant-numeric:tabular-nums}
 .eev .buy .btot{padding:18px 22px;display:flex;justify-content:space-between;align-items:baseline}
+.eev .buy .bsum .btot{padding:14px 0 16px}
 .eev .buy .btot .tl{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
 .eev .buy .btot .tv{font-size:28px;font-weight:700;letter-spacing:-.02em}
 .eev .buy .parc{padding:0 22px;margin-top:-6px;font-size:12px;color:var(--muted)}
 .eev .buy .bfoot{padding:16px 22px 22px}
 .eev .buy .bfoot .btn{width:100%}
-.eev .buy .bfoot .re{text-align:center;color:var(--muted);font-size:12px;margin-top:12px}
 .eev .buy .closed{padding:26px 22px;text-align:center}
 .eev .buy .closed b{display:block;font-size:15px;text-transform:uppercase;letter-spacing:.04em}
 .eev .buy .closed span{color:var(--muted);font-size:13px}

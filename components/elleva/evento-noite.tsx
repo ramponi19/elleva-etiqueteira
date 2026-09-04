@@ -66,9 +66,9 @@ export default function EventoNoite({
 
   const selec = tiers.filter((t) => (qty[t.id] || 0) > 0);
   const count = selec.reduce((a, t) => a + qty[t.id], 0);
-  const total = round2(
-    selec.reduce((a, t) => a + qty[t.id] * (t.price + (absorve ? 0 : feeUnit(t.price, event.feePct))), 0)
-  );
+  const subtotal = round2(selec.reduce((a, t) => a + qty[t.id] * t.price, 0));
+  const taxa = absorve ? 0 : round2(selec.reduce((a, t) => a + qty[t.id] * feeUnit(t.price, event.feePct), 0));
+  const total = round2(subtotal + taxa);
 
   function proceed() {
     addItems(
@@ -106,10 +106,7 @@ export default function EventoNoite({
             {esgotado && <span className="badge">Esgotado</span>}
             {!esgotado && poucos && <span className="badge hot">Últimas</span>}
           </div>
-          <div className="tp">
-            {fmt2(t.price)}{" "}
-            {absorve ? "(taxa inclusa)" : `+ ${fmt2(feeUnit(t.price, event.feePct))} taxa`}
-          </div>
+          <div className="tp">{fmt2(t.price)}</div>
           {t.desc && <div className="td">{t.desc}</div>}
         </div>
         {!esgotado && (
@@ -131,11 +128,14 @@ export default function EventoNoite({
         {ingressos.map(tierRow)}
         {adicionais.length > 0 && adicionais.map(tierRow)}
       </div>
-      <div className="btot"><span className="tl">Total com taxa</span><span className="tv">{fmt2(total)}</span></div>
+      <div className="bsum">
+        <div className="brow"><span>Subtotal</span><span>{fmt2(subtotal)}</span></div>
+        <div className="brow"><span>Taxa</span><span>{absorve ? "inclusa" : fmt2(taxa)}</span></div>
+        <div className="btot"><span className="tl">Total</span><span className="tv">{fmt2(total)}</span></div>
+      </div>
       {total > 0 && maxParcelas > 1 && <div className="parc">ou em até {maxParcelas}x no cartão</div>}
       <div className="bfoot">
         <button type="button" className="btn btn-warm" disabled={count === 0} onClick={prosseguir}>Garantir ingresso →</button>
-        <div className="re">Pix aprovado na hora · ingresso no WhatsApp e na conta</div>
       </div>
     </>
   );
@@ -173,7 +173,6 @@ export default function EventoNoite({
           <div className="meta">
             <div className="mi"><b>{event.dateFull}</b><span>{event.time}{event.endsAtISO ? " · até o fim da noite" : ""}</span></div>
             <div className="mi"><b>{event.venueCity}</b><span>{event.endereco?.cidade ?? ""}</span></div>
-            <div className="mi"><b>A partir de {fmt(event.priceFrom)}</b><span>+ taxa · parcele em {maxParcelas}x</span></div>
           </div>
         </div>
       </header>
