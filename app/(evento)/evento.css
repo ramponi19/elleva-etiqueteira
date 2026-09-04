@@ -19,7 +19,7 @@
   radial-gradient(52% 34% at 12% 74%,rgba(255,90,31,.07),transparent 60%),
   radial-gradient(60% 40% at 88% 88%,rgba(156,75,255,.07),transparent 60%)}
 /* cards descolam do fundo com sombra leve */
-.eev .info,.eev .buy,.eev .org,.eev .mapc{box-shadow:0 12px 34px rgba(0,0,0,.3)}
+.eev .buy,.eev .mapc{box-shadow:0 12px 34px rgba(0,0,0,.3)}
 .eev .grain{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.045;mix-blend-mode:overlay;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E")}
 .eev .btn{display:inline-flex;align-items:center;justify-content:center;gap:.55em;font-weight:700;font-size:15px;padding:16px 26px;border-radius:2px;border:0;cursor:pointer;transition:transform .16s,box-shadow .25s,background .2s;text-transform:uppercase;font-family:inherit}
@@ -83,15 +83,7 @@
 .eev .mapc .minfo b{font-size:16px;font-weight:700}
 .eev .mapc .minfo span{color:var(--muted);font-size:13px}
 
-.eev .info-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
-.eev .info{border:1px solid var(--line);border-radius:10px;padding:16px 18px}
-.eev .info .k{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600}
-.eev .info .v{font-weight:700;font-size:15px;margin-top:4px}
 
-.eev .org{display:flex;gap:16px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:20px;background:var(--card)}
-.eev .org .av{width:56px;height:56px;border-radius:50%;flex:none;background:linear-gradient(135deg,var(--warm),var(--cool));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:20px;color:#fff}
-.eev .org .oi b{font-size:16px}
-.eev .org .oi span{color:var(--muted);font-size:13px;display:block;margin-top:2px}
 
 /* BUY sticky */
 .eev .buy{position:sticky;top:92px;align-self:start;border:1px solid var(--line);border-radius:14px;background:var(--card);overflow:hidden}
@@ -168,7 +160,6 @@
 }
 @media (max-width:560px){
   .eev .rel-grid{grid-template-columns:1fr}
-  .eev .info-grid{grid-template-columns:1fr}
   .eev .cover .meta{gap:18px}
   .eev .nav-right .entrar{display:none}
   /* nav compacta: logo menor, sem "← Agenda", CTA numa linha só */

@@ -213,26 +213,6 @@ export default function EventoNoite({
               </div>
             </div>
 
-            <div className="sec-block">
-              <h2>Informações</h2>
-              <div className="info-grid">
-                <div className="info"><div className="k">Abertura dos portões</div><div className="v">1h antes do início</div></div>
-                <div className="info"><div className="k">Formas de pagamento</div><div className="v">Pix na hora · cartão em {maxParcelas}x</div></div>
-                <div className="info"><div className="k">Entrada</div><div className="v">QR no WhatsApp e na conta</div></div>
-                <div className="info"><div className="k">CPF</div><div className="v">Conferido na portaria</div></div>
-              </div>
-            </div>
-
-            <div className="sec-block">
-              <h2>Organização</h2>
-              <div className="org">
-                <div className="av">{(event.produtorNome ?? "Elleva").slice(0, 2).toUpperCase()}</div>
-                <div className="oi">
-                  <b>{event.produtorNome ?? "Produção local"}</b>
-                  <span>{event.produtorBio ?? "Vendido pela Elleva — a bilheteria do interior."}</span>
-                </div>
-              </div>
-            </div>
           </div>
 
           <aside className="buy" id="buy">{buyInner}</aside>
