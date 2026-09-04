@@ -1,0 +1,17 @@
+{
+  "//": "Segunda checagem estática, complementar ao ESLint. Rodar: npm run lint:deno. Nome proposital (não deno.json) pra extensão do Deno no VS Code não ativar modo Deno neste projeto Next.",
+  "lint": {
+    "include": ["app/", "components/", "lib/", "middleware.ts", "next.config.ts"],
+    "exclude": ["node_modules/", ".next/", ".agents/", ".claude/", "supabase/", "public/"],
+    "rules": {
+      "tags": ["recommended"],
+      "exclude": [
+        "no-sloppy-imports",
+        "no-window",
+        "no-window-prefix",
+        "require-await",
+        "jsx-curly-braces"
+      ]
+    }
+  }
+}
