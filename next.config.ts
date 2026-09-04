@@ -26,7 +26,7 @@ const CSP = [
   "img-src 'self' data: blob: https:",
   // api.iconify.design/simplesvg/unisvg: o @iconify/react baixa os SVGs dos
   // ícones em runtime — sem estes hosts a CSP deixaria o site sem ícone nenhum.
-  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.mercadopago.com https://*.mercadopago.com https://www.google-analytics.com https://*.facebook.com https://*.ingest.us.sentry.io https://api.iconify.design https://api.simplesvg.com https://api.unisvg.com",
+  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.mercadopago.com https://*.mercadopago.com https://www.google-analytics.com https://*.facebook.com https://*.ingest.us.sentry.io https://api.iconify.design https://api.simplesvg.com https://api.unisvg.com https://viacep.com.br",
   "frame-src 'self' https://*.mercadopago.com https://www.google.com https://maps.google.com",
   "worker-src 'self' blob:",
   "object-src 'none'",

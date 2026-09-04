@@ -4,6 +4,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import { archivo, arimo } from "./fonts";
 import { SITE_URL } from "@/lib/site";
 import CookieConsent from "@/components/elleva/cookie-consent";
+import { CompletarCadastroGate } from "@/components/elleva/completar-cadastro";
 import "./globals.css";
 
 export const viewport: Viewport = {
@@ -53,6 +54,7 @@ export default function RootLayout({
       <body className="min-h-screen flex flex-col">
         {children}
         <CookieConsent gtmId={process.env.NEXT_PUBLIC_GTM_ID} />
+        <CompletarCadastroGate />
         <Analytics />
         <SpeedInsights />
       </body>

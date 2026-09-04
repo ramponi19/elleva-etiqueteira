@@ -5,6 +5,7 @@ import Icon from "@/components/shared/icon";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { emailHasAccount } from "@/lib/actions/auth";
+import { CADASTRO_NOVO_KEY } from "@/components/elleva/completar-cadastro";
 
 // Modal de login/cadastro sobre a tela de seleção (fluxo estilo Ingresse).
 // Reusa as mesmas chamadas Supabase do /login e /signup — visual Cartaz de Show.
@@ -83,6 +84,9 @@ export default function AuthModal({
         );
         return;
       }
+      // Conta nova → o portão global abre "Complete seu cadastro" (CPF etc.) assim
+      // que a sessão existir (agora, ou depois da confirmação por e-mail).
+      try { sessionStorage.setItem(CADASTRO_NOVO_KEY, "1"); } catch { /* ignore */ }
       if (data.session) onSuccess();
       else setInfo(compra ? "Conta criada! Confirme seu email para concluir a compra." : "Conta criada! Confirme seu email para entrar.");
     }

@@ -44,6 +44,7 @@ export default function Footer() {
                   <Link
                     key={l.label}
                     href={l.href}
+                    prefetch={false}
                     className="text-[13.5px] text-papel/70 hover:text-papel"
                   >
                     {l.label}

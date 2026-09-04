@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Icon from "@/components/shared/icon";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
+import { CADASTRO_NOVO_KEY } from "@/components/elleva/completar-cadastro";
 
 const input =
   "w-full rounded-[10px] border-[1.5px] border-tinta bg-white px-3.5 py-2.5 text-[16px] text-tinta outline-none placeholder:text-tinta-35 focus:border-sol";
@@ -38,6 +39,8 @@ export function SignupForm({ defaultEmail = "" }: { defaultEmail?: string }) {
       );
       return;
     }
+    // Conta nova → o portão global abre "Complete seu cadastro" (CPF etc.).
+    try { sessionStorage.setItem(CADASTRO_NOVO_KEY, "1"); } catch { /* ignore */ }
     if (data.session) {
       router.push("/");
       router.refresh();
