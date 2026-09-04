@@ -10,10 +10,10 @@ const input =
   "w-full rounded-[10px] border-[1.5px] border-tinta bg-white px-3.5 py-2.5 text-[16px] text-tinta outline-none placeholder:text-tinta-35 focus:border-sol";
 const label = "mb-1.5 block text-[12px] font-semibold uppercase tracking-wider text-tinta-60";
 
-export function SignupForm() {
+export function SignupForm({ defaultEmail = "" }: { defaultEmail?: string }) {
   const router = useRouter();
   const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(defaultEmail);
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

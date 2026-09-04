@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { LogoElleva } from "@/components/elleva/logo";
+import { EntrarModal } from "@/components/elleva/entrar-modal";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { useCart } from "@/lib/cart";
@@ -149,7 +150,7 @@ export default function EventoNoite({
           <Link className="brand" href="/" aria-label="Elleva Tickets"><LogoElleva /></Link>
           <Link className="nav-back" href="/agenda">← Agenda</Link>
           <div className="nav-right">
-            <Link className="entrar" href={loggedIn ? "/conta" : "/login"}>{loggedIn ? "Minha conta" : "Entrar"}</Link>
+            {loggedIn ? <Link className="entrar" href="/conta">Minha conta</Link> : <EntrarModal className="entrar" />}
             {!saleClosed && <a className="mini" href="#buy">Garantir ingresso</a>}
           </div>
         </div>

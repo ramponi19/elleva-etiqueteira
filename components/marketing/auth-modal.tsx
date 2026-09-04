@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Icon from "@/components/shared/icon";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
+import { emailHasAccount } from "@/lib/actions/auth";
 
 // Modal de login/cadastro sobre a tela de seleção (fluxo estilo Ingresse).
 // Reusa as mesmas chamadas Supabase do /login e /signup — visual Cartaz de Show.
@@ -21,6 +22,7 @@ export default function AuthModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
+  const [semConta, setSemConta] = useState(false);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -43,11 +45,24 @@ export default function AuthModal({
 
     if (mode === "login") {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-      setLoading(false);
       if (error || !data.user) {
-        setError("Email ou senha incorretos.");
+        // Decisão de produto: distinguir "não tem conta" de "senha errada" e
+        // oferecer o cadastro (checagem server-side, rate-limitada por IP).
+        const chk = await emailHasAccount(email);
+        setLoading(false);
+        if ("exists" in chk && !chk.exists) {
+          setSemConta(true);
+          setError("Não encontramos uma conta com esse e-mail.");
+        } else if ("exists" in chk && chk.exists) {
+          setSemConta(false);
+          setError("Senha incorreta.");
+        } else {
+          setSemConta(false);
+          setError("Email ou senha incorretos.");
+        }
         return;
       }
+      setLoading(false);
       onSuccess();
     } else {
       const { data, error } = await supabase.auth.signUp({
@@ -134,10 +149,10 @@ export default function AuthModal({
                 // preenchido. Sem revelar se o e-mail existe (anti-enumeração).
                 <button
                   type="button"
-                  onClick={() => { setMode("signup"); setError(null); setInfo(null); }}
+                  onClick={() => { setMode("signup"); setError(null); setInfo(null); setSemConta(false); }}
                   className="mt-1.5 block cursor-pointer border-0 bg-transparent p-0 text-[13px] font-semibold text-tinta underline underline-offset-2 hover:text-sol-escuro"
                 >
-                  Ainda não tem conta? Criar conta →
+                  {semConta ? "Deseja se cadastrar? Criar conta →" : "Ainda não tem conta? Criar conta →"}
                 </button>
               )}
             </div>

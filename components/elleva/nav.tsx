@@ -3,11 +3,15 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import Icon from "@/components/shared/icon";
 import { LogoElleva } from "@/components/elleva/logo";
 import { Button } from "@/components/ui/button";
 import { becomeProducerAndGo } from "@/lib/actions/producer";
 import type { Role } from "@/lib/auth";
+
+// Login em modal na própria página (sem ir pra /login). Carregado sob demanda.
+const AuthModal = dynamic(() => import("@/components/marketing/auth-modal"), { ssr: false });
 
 // Navbar do sistema Cartaz (spec 8.1): papel, borda inferior tinta 1.5px,
 // logo · Agenda · Produtores à esquerda; à direita, Entrar (deslogado) ou
@@ -36,6 +40,7 @@ export default function Nav({
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const [navOpen, setNavOpen] = useState(false);
+  const [authOpen, setAuthOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const navRef = useRef<HTMLDivElement>(null);
 
@@ -178,7 +183,7 @@ export default function Nav({
             </div>
           ) : (
             <>
-              <Button href="/login" className="hidden sm:inline-flex">Entrar</Button>
+              <Button type="button" onClick={() => setAuthOpen(true)} className="hidden sm:inline-flex">Entrar</Button>
 
               {/* mobile deslogado — hambúrguer com descoberta + acesso */}
               <div ref={navRef} className="relative md:hidden">
@@ -201,9 +206,9 @@ export default function Nav({
                       ))}
                     </div>
                     <div className="flex flex-col gap-0.5 pt-2">
-                      <Link href="/login" className={itemCls} onClick={() => setNavOpen(false)}>
+                      <button type="button" className={itemCls} onClick={() => { setNavOpen(false); setAuthOpen(true); }}>
                         <Icon icon="lucide:log-in" style={{ fontSize: 17 }} /> Entrar
-                      </Link>
+                      </button>
                       <Link href="/signup" className={itemCls} onClick={() => setNavOpen(false)}>
                         <Icon icon="lucide:user-plus" style={{ fontSize: 17 }} /> Criar conta
                       </Link>
@@ -211,6 +216,13 @@ export default function Nav({
                   </div>
                 )}
               </div>
+
+              {authOpen && (
+                <AuthModal
+                  onClose={() => setAuthOpen(false)}
+                  onSuccess={() => { setAuthOpen(false); router.refresh(); }}
+                />
+              )}
             </>
           )}
         </div>

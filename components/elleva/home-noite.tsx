@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { LogoElleva } from "@/components/elleva/logo";
+import { EntrarModal } from "@/components/elleva/entrar-modal";
 import { useRouter } from "next/navigation";
 import type { EventItem } from "@/lib/events";
 
@@ -191,7 +192,7 @@ export default function HomeNoite({
             <a href="#como">Como funciona</a>
           </div>
           <div className="nav-right">
-            <Link className="entrar" href={loggedIn ? "/conta" : "/login"}>{loggedIn ? "Minha conta" : "Entrar"}</Link>
+            {loggedIn ? <Link className="entrar" href="/conta">Minha conta</Link> : <EntrarModal className="entrar" />}
             <a className="mini" href="#cartaz">Ver eventos</a>
           </div>
         </div>

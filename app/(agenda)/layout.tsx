@@ -2,6 +2,7 @@ import "./agenda.css";
 import Link from "next/link";
 import { getAuth } from "@/lib/auth";
 import { LogoElleva } from "@/components/elleva/logo";
+import { EntrarModal } from "@/components/elleva/entrar-modal";
 
 export default async function AgendaLayout({ children }: { children: React.ReactNode }) {
   const { user } = await getAuth();
@@ -17,7 +18,7 @@ export default async function AgendaLayout({ children }: { children: React.React
             <Link href="/#como">Como funciona</Link>
           </div>
           <div className="nav-right">
-            <Link className="entrar" href={user ? "/conta" : "/login"}>{user ? "Minha conta" : "Entrar"}</Link>
+            {user ? <Link className="entrar" href="/conta">Minha conta</Link> : <EntrarModal className="entrar" />}
           </div>
         </div>
       </nav>

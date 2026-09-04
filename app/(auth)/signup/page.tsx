@@ -4,12 +4,19 @@ import { SignupForm } from "./signup-form";
 
 export const metadata: Metadata = { title: "Criar conta" };
 
-export default function SignupPage() {
+export default async function SignupPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ email?: string }>;
+}) {
+  // Vindo do login ("não possui cadastro → criar conta"), já chega com o e-mail.
+  const { email } = await searchParams;
+  const defaultEmail = typeof email === "string" ? email.slice(0, 254) : "";
   return (
     <div className="rounded-[var(--radius-card)] border-[1.5px] border-tinta bg-white p-7 shadow-[4px_4px_0_var(--color-tinta)]">
       <h1 className="text-[26px] font-extrabold leading-tight text-tinta">Criar conta</h1>
       <p className="corpo-suave mb-5 mt-1">É rápido — leva menos de um minuto.</p>
-      <SignupForm />
+      <SignupForm defaultEmail={defaultEmail} />
       <p className="corpo-suave mt-5 text-center">
         Já tem conta?{" "}
         <Link href="/login" className="font-medium text-sol-escuro underline underline-offset-2">
