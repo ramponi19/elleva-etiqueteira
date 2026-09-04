@@ -79,7 +79,7 @@ export default function AuthModal({
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-[rgb(20_18_16/0.55)] p-5"
+      className="eauth fixed inset-0 z-[100] flex items-center justify-center bg-[rgb(8_7_10/0.72)] p-5"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
@@ -127,7 +127,20 @@ export default function AuthModal({
           </div>
 
           {error && (
-            <p className="m-0 rounded-[10px] border-[1.5px] border-sol bg-[rgb(232_72_31/0.08)] px-3 py-2 text-[13px] text-sol-escuro">{error}</p>
+            <div className="rounded-[10px] border-[1.5px] border-sol bg-[rgb(232_72_31/0.08)] px-3 py-2 text-[13px]">
+              <p className="m-0 text-sol-escuro">{error}</p>
+              {mode === "login" && (
+                // Atalho pra quem não tem conta: pula pro cadastro com o e-mail já
+                // preenchido. Sem revelar se o e-mail existe (anti-enumeração).
+                <button
+                  type="button"
+                  onClick={() => { setMode("signup"); setError(null); setInfo(null); }}
+                  className="mt-1.5 block cursor-pointer border-0 bg-transparent p-0 text-[13px] font-semibold text-tinta underline underline-offset-2 hover:text-sol-escuro"
+                >
+                  Ainda não tem conta? Criar conta →
+                </button>
+              )}
+            </div>
           )}
           {info && (
             <p className="m-0 rounded-[10px] border-[1.5px] border-dashed border-tinta bg-papel-2 px-3 py-2 text-[13px] text-tinta">{info}</p>

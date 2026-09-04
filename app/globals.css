@@ -209,3 +209,23 @@ html.lenis, html.lenis body { height: auto; }
 .lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
 .lenis.lenis-stopped { overflow: hidden; }
 .lenis.lenis-smooth iframe { pointer-events: none; }
+
+/* ============================================================
+   MODAL DE LOGIN/CADASTRO "A NOITE" (escopo .eauth)
+   O modal abre sobre páginas escuras (evento/checkout/mapa) mas usava os
+   tokens claros globais (bg-papel/border-tinta) — ficava um card claro.
+   Mesmo swap escopado do /login (.eau): papel<->tinta, inputs escuros,
+   sombra suave em vez do offset, bordas em hairline.
+   ============================================================ */
+.eauth{
+  --color-papel:#181320; --color-papel-2:#2a2338; --color-tinta:#F6F1E9;
+  --color-tinta-60:rgb(246 241 233 / 0.62); --color-tinta-35:rgb(246 241 233 / 0.40);
+  --color-sol-escuro:#FF7A45;
+  --cor-texto:#F6F1E9; --cor-texto-suave:rgb(246 241 233 / 0.60);
+}
+.eauth .bg-white{background-color:#221c2e !important}
+.eauth input{background:#221c2e !important;color:#F6F1E9}
+.eauth input::placeholder{color:rgb(246 241 233 / 0.32)}
+.eauth [class*="bg-sol"]{color:#180a03}
+.eauth [class*="shadow-"]{box-shadow:0 24px 70px rgba(0,0,0,.55) !important}
+.eauth [class*="border-tinta"]{border-color:rgb(246 241 233 / 0.14)}
