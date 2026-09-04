@@ -21,7 +21,6 @@ function genreOf(label: string) {
   if (/corp|congresso|curso|palestra|summit/.test(l)) return { key: "Corp", cls: "g-corp" };
   return { key: "Show", cls: "g-show" };
 }
-const fmt = (n: number) => "R$ " + n.toLocaleString("pt-BR", { minimumFractionDigits: 0 });
 const fmt2 = (n: number) => "R$ " + n.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 export default function EventoNoite({
@@ -273,15 +272,6 @@ export default function EventoNoite({
           <div className="foot-base">© 2026 Elleva Tickets</div>
         </div>
       </footer>
-
-      {!saleClosed && (
-        <div className="mbuy">
-          <div className="mf"><span>{total > 0 ? "Total" : "A partir de"}</span><b>{total > 0 ? fmt2(total) : fmt(event.priceFrom)}</b></div>
-          <button type="button" className="btn btn-warm" onClick={() => { if (count > 0) prosseguir(); else document.getElementById("buy")?.scrollIntoView({ behavior: "smooth" }); }}>
-            {count > 0 ? "Garantir →" : "Ver ingressos"}
-          </button>
-        </div>
-      )}
 
       {showAuth && <AuthModal onClose={() => setShowAuth(false)} onSuccess={proceed} />}
     </div>

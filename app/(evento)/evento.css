@@ -150,10 +150,6 @@
 .eev .foot-base{margin-top:40px;padding-top:20px;border-top:1px solid var(--line);color:var(--dim);font-size:12px}
 
 /* mobile buy bar */
-.eev .mbuy{position:fixed;left:0;right:0;bottom:0;z-index:50;display:none;padding:14px 18px;background:rgba(11,9,13,.94);backdrop-filter:blur(14px);border-top:1px solid var(--line);align-items:center;gap:14px}
-.eev .mbuy .mf span{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:block}
-.eev .mbuy .mf b{font-size:18px}
-.eev .mbuy .btn{margin-left:auto}
 
 .eev :focus-visible{outline:2px solid var(--warm);outline-offset:3px}
 
@@ -168,9 +164,7 @@
   .eev .body{grid-template-columns:1fr;gap:0}
   .eev .buy{position:static;top:auto;margin-top:36px}
   .eev .rel-grid{grid-template-columns:1fr 1fr}
-  .eev .mbuy{display:flex}
   .eev .cover .acts{top:82px}
-  body:has(.eev){padding-bottom:76px}
 }
 @media (max-width:560px){
   .eev .rel-grid{grid-template-columns:1fr}
