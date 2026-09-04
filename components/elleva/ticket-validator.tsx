@@ -47,7 +47,7 @@ export function TicketValidatorElleva({ token }: { token?: string } = {}) {
     e.preventDefault();
     setOpErr(null);
     const clean = pin.trim();
-    if (clean.length < 4) return setOpErr("Digite o PIN (4 dígitos).");
+    if (!/^\d{6}$/.test(clean)) return setOpErr("Digite o PIN de 6 dígitos.");
     setChecking(true);
     const op = await resolveGateOperator(token!, clean);
     setChecking(false);
@@ -98,6 +98,14 @@ export function TicketValidatorElleva({ token }: { token?: string } = {}) {
     setLoading(false);
     setResult(res);
     if (res.ok) setCode("");
+    // PIN revogado/regenerado pelo organizador enquanto este aparelho estava
+    // logado → volta pra tela de PIN em vez de travar em "inválido" a cada leitura.
+    if (!res.ok && res.reason === "forbidden" && operator?.pin && /inválido ou revogado/.test(res.message)) {
+      setOperator(null);
+      setPin("");
+      setOpErr("Seu PIN foi trocado ou revogado. Peça o novo ao organizador.");
+      try { localStorage.removeItem(OP_KEY); } catch { /* ignore */ }
+    }
   }
 
   const input =
@@ -116,13 +124,13 @@ export function TicketValidatorElleva({ token }: { token?: string } = {}) {
         <div className="max-w-[460px]">
           <p className="rotulo text-sol-escuro">PIN do operador</p>
           <p className="corpo-suave mb-3 mt-1">
-            Digite seu PIN (os 4 primeiros dígitos do seu CPF) para liberar entradas.
+            Digite o PIN de 6 dígitos que o organizador te passou para liberar entradas.
           </p>
           <form onSubmit={entrarComPin} className="flex gap-2">
             <input
               className={inputTexto}
               inputMode="numeric"
-              maxLength={4}
+              maxLength={6}
               placeholder="PIN"
               value={pin}
               onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}

@@ -161,8 +161,8 @@ export async function validateByToken(token: string, rawCode: string, operator?:
   if ((operadoresAtivos ?? 0) > 0) {
     const pin = operator?.pin?.trim();
     if (!pin) return { ok: false, reason: "forbidden", message: "Informe o PIN do operador para liberar entradas." };
-    // A7 + M4: o PIN tem só 4 dígitos (10 mil combinações). Sem freio, dá pra
-    // varrer todos e liberar entradas no nome de um operador inocente. Contamos
+    // A7 + M4 (+ M-5: PIN aleatório de 6 dígitos, 1 milhão de combinações). Sem
+    // freio, dava pra varrer e liberar entradas no nome de um operador inocente. Contamos
     // só as FALHAS por (evento, ip): a portaria legítima acerta o PIN e nunca é
     // limitada; quem erra 10 vezes em 5 min é bloqueado por essa janela.
     const ip = await clientIp();

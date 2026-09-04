@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Icon from "@/components/shared/icon";
 import { Button } from "@/components/ui/button";
-import { createGateOperator, setGateOperatorActive, deleteGateOperator } from "@/lib/actions/operators";
+import { createGateOperator, setGateOperatorActive, deleteGateOperator, regenerateGateOperatorPin } from "@/lib/actions/operators";
 import { formatCPF } from "@/lib/cpf";
 
 export interface OperadorView {
@@ -49,12 +49,21 @@ export function OperadoresPortaria({ initial }: { initial: OperadorView[] }) {
       await deleteGateOperator(id);
       router.refresh();
     });
+  const novoPin = (id: string, name: string) =>
+    start(async () => {
+      setErr(null);
+      setMsg(null);
+      const r = await regenerateGateOperatorPin(id);
+      if (!r.ok) return setErr(r.error);
+      setMsg(`Novo PIN de ${name}: ${r.pin}. O anterior parou de valer.`);
+      router.refresh();
+    });
 
   return (
     <div>
       <p className="corpo-suave mb-3">
-        Cadastre quem vai validar na porta. Cada um recebe um <strong>PIN</strong> (os 4 primeiros dígitos do CPF) — na
-        portaria digita o PIN e já entra identificado.
+        Cadastre quem vai validar na porta. Cada um recebe um <strong>PIN de 6 dígitos</strong>, gerado aleatoriamente —
+        passe o PIN só pra pessoa; na portaria ela digita e já entra identificada. Se vazar, gere um novo.
       </p>
       <form onSubmit={add} className="flex flex-col gap-2 sm:flex-row">
         <input className={input} placeholder="Nome do operador" value={nome} onChange={(e) => setNome(e.target.value)} />
@@ -80,6 +89,9 @@ export function OperadoresPortaria({ initial }: { initial: OperadorView[] }) {
               </p>
             </div>
             <div className="flex flex-shrink-0 items-center gap-3">
+              <button type="button" onClick={() => novoPin(op.id, op.name)} disabled={pending} className="text-[13px] text-sol-escuro underline underline-offset-2 disabled:opacity-50">
+                novo PIN
+              </button>
               <button type="button" onClick={() => toggle(op.id, !op.active)} disabled={pending} className="text-[13px] text-sol-escuro underline underline-offset-2 disabled:opacity-50">
                 {op.active ? "desativar" : "ativar"}
               </button>

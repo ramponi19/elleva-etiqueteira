@@ -1,5 +1,6 @@
 "use server";
 
+import { randomInt } from "crypto";
 import { revalidatePath } from "next/cache";
 import { getAuth } from "@/lib/auth";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
@@ -22,7 +23,14 @@ async function authorize() {
   return user;
 }
 
-/** Cadastra um operador de portaria. PIN = 4 primeiros dígitos do CPF. */
+/** PIN aleatório de 6 dígitos (M-5). Antes eram os 4 primeiros dígitos do CPF:
+ *  previsível pra quem conhece o CPF e só 10 mil combinações. Agora 1 milhão,
+ *  gerado com CSPRNG; somado ao freio `pinfail` (10 falhas / 5 min / IP), varrer
+ *  fica impraticável. */
+const gerarPin = () => String(randomInt(0, 1_000_000)).padStart(6, "0");
+const PIN_TENTATIVAS = 5; // colisão (producer_id, pin) é rara; retenta com outro PIN
+
+/** Cadastra um operador de portaria e devolve o PIN gerado. */
 export async function createGateOperator(
   name: string,
   doc: string
@@ -33,18 +41,44 @@ export async function createGateOperator(
   if (!isValidCPF(doc)) return { ok: false, error: "Esse CPF não bateu. Confere os números?" };
 
   const digits = onlyDigits(doc);
-  const pin = digits.slice(0, 4);
   const supabase = await createClient();
-  const { error } = await supabase
-    .from("gate_operators")
-    .insert({ producer_id: user.id, name: name.trim(), doc: digits, pin, active: true });
-  if (error) {
-    if (/duplicate|unique/i.test(error.message))
-      return { ok: false, error: "Já existe um operador com esse início de CPF. Use outro." };
-    return { ok: false, error: error.message };
+  let ultimoErro = "Não foi possível gerar o PIN. Tente de novo.";
+  for (let i = 0; i < PIN_TENTATIVAS; i++) {
+    const pin = gerarPin();
+    const { error } = await supabase
+      .from("gate_operators")
+      .insert({ producer_id: user.id, name: name.trim(), doc: digits, pin, active: true });
+    if (!error) {
+      revalidatePath("/produtor/validar");
+      return { ok: true, pin };
+    }
+    if (!/duplicate|unique/i.test(error.message)) return { ok: false, error: error.message };
+    ultimoErro = "Não foi possível gerar um PIN único. Tente de novo.";
   }
-  revalidatePath("/produtor/validar");
-  return { ok: true, pin };
+  return { ok: false, error: ultimoErro };
+}
+
+/** Gera um PIN novo pro operador (ex.: PIN vazou ou foi compartilhado). O antigo
+ *  para de valer na hora; quem estiver logado na portaria com ele cai pra tela de PIN. */
+export async function regenerateGateOperatorPin(
+  id: string
+): Promise<{ ok: true; pin: string } | { ok: false; error: string }> {
+  const user = await authorize();
+  if (!user) return { ok: false, error: "Sem permissão." };
+  const supabase = await createClient();
+  for (let i = 0; i < PIN_TENTATIVAS; i++) {
+    const pin = gerarPin();
+    // RLS garante que só o dono altera; .select() confirma que a linha existe.
+    const { data, error } = await supabase.from("gate_operators").update({ pin }).eq("id", id).select("id");
+    if (error) {
+      if (/duplicate|unique/i.test(error.message)) continue;
+      return { ok: false, error: error.message };
+    }
+    if (!data || data.length === 0) return { ok: false, error: "Operador não encontrado." };
+    revalidatePath("/produtor/validar");
+    return { ok: true, pin };
+  }
+  return { ok: false, error: "Não foi possível gerar um PIN único. Tente de novo." };
 }
 
 export async function setGateOperatorActive(id: string, active: boolean): Promise<{ ok: boolean; error?: string }> {
@@ -86,15 +120,15 @@ export async function gateRequiresPin(token: string): Promise<boolean> {
 }
 
 /** Resolve o operador pelo PIN (portaria). Devolve SÓ o nome — o CPF nunca sai
- *  do servidor (o PIN tem 10 mil combinações; devolver o documento permitiria
- *  varrer os PINs e extrair nome+CPF de toda a equipe). O CPF é resolvido de
- *  novo no servidor, pelo PIN, na hora de gravar a auditoria do check-in. */
+ *  do servidor (devolver o documento permitiria, num PIN adivinhado, extrair
+ *  nome+CPF da equipe). O CPF é resolvido de novo no servidor, pelo PIN, na hora
+ *  de gravar a auditoria do check-in. */
 export async function resolveGateOperator(
   token: string,
   pin: string
 ): Promise<{ name: string } | null> {
   const clean = (pin || "").trim();
-  if (!token || !clean) return null;
+  if (!token || !/^\d{6}$/.test(clean)) return null;
   try {
     const svc = await createServiceClient();
     const { data: ev } = await svc.from("events").select("id, producer_id").eq("checkin_token", token).single();
