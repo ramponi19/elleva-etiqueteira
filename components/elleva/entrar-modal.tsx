@@ -28,6 +28,7 @@ export function EntrarModal({
       </button>
       {open && (
         <AuthModal
+          contexto="geral"
           onClose={() => setOpen(false)}
           onSuccess={() => {
             setOpen(false);

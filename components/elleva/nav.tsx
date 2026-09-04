@@ -219,6 +219,7 @@ export default function Nav({
 
               {authOpen && (
                 <AuthModal
+                  contexto="geral"
                   onClose={() => setAuthOpen(false)}
                   onSuccess={() => { setAuthOpen(false); router.refresh(); }}
                 />

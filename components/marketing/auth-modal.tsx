@@ -11,10 +11,14 @@ import { emailHasAccount } from "@/lib/actions/auth";
 export default function AuthModal({
   onClose,
   onSuccess,
+  contexto = "compra",
 }: {
   onClose: () => void;
   onSuccess: () => void;
+  /** "compra" = dentro do fluxo de ingresso; "geral" = botão Entrar do cabeçalho */
+  contexto?: "compra" | "geral";
 }) {
+  const compra = contexto === "compra";
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -80,7 +84,7 @@ export default function AuthModal({
         return;
       }
       if (data.session) onSuccess();
-      else setInfo("Conta criada! Confirme seu email para concluir a compra.");
+      else setInfo(compra ? "Conta criada! Confirme seu email para concluir a compra." : "Conta criada! Confirme seu email para entrar.");
     }
   }
 
@@ -122,7 +126,9 @@ export default function AuthModal({
         </div>
 
         <p className="corpo-suave m-0 mb-5">
-          {mode === "login" ? "Entre para concluir sua compra." : "Crie sua conta para concluir a compra."}
+          {mode === "login"
+            ? compra ? "Entre para concluir sua compra." : "Entre na sua conta Elleva."
+            : compra ? "Crie sua conta para concluir a compra." : "Crie sua conta — leva menos de um minuto."}
         </p>
 
         <form onSubmit={submit} className="flex flex-col gap-3.5">
@@ -162,7 +168,11 @@ export default function AuthModal({
           )}
 
           <Button type="submit" variante="primario" disabled={loading} className="mt-1 w-full">
-            {loading ? "Aguarde..." : mode === "login" ? "Entrar e continuar" : "Criar conta e continuar"}
+            {loading
+              ? "Aguarde..."
+              : mode === "login"
+                ? compra ? "Entrar e continuar" : "Entrar"
+                : compra ? "Criar conta e continuar" : "Criar conta"}
           </Button>
         </form>
       </div>
