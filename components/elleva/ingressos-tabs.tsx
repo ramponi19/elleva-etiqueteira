@@ -108,14 +108,14 @@ export function IngressosTabs({ tickets, pendentes = [] }: { tickets: TicketView
 
   return (
     <div>
-      <div className="mb-6 flex gap-1 overflow-x-auto overflow-y-hidden border-b-[1.5px] border-tinta">
+      <div className="mb-6 flex flex-wrap gap-x-1 border-b-[1.5px] border-tinta">
         {TABS.map((t) => (
           <button
             key={t.key}
             type="button"
             onClick={() => setTab(t.key)}
             className={clsx(
-              "rotulo -mb-[1.5px] flex items-center gap-2 whitespace-nowrap border-b-[3px] px-4 py-3 transition-colors",
+              "rotulo -mb-[1.5px] flex items-center gap-2 whitespace-nowrap border-b-[3px] px-3 py-3 transition-colors sm:px-4",
               tab === t.key ? "border-sol text-tinta" : "border-transparent text-tinta-60 hover:text-tinta"
             )}
           >

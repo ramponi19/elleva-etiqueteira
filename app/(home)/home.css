@@ -213,4 +213,7 @@
   .ehome .wrap{padding:0 18px}.ehome .sec{padding:70px 0}
   .ehome .sec-head{flex-direction:column;align-items:flex-start;gap:10px}.ehome .sec-head .side{text-align:left}
   .ehome .prod{padding:38px 24px}
+  /* celular: navega por swipe; setas ficavam por cima do card */
+  .ehome .reel-nav{display:none}
+  .ehome .reel{gap:16px;padding:22px 0 30px}
 }

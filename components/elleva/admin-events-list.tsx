@@ -123,7 +123,7 @@ export function AdminEventsList({ events }: { events: AdminEvent[] }) {
 
   return (
     <div>
-      <div className="mb-5 flex gap-1 overflow-x-auto overflow-y-hidden border-b-[1.5px] border-tinta">
+      <div className="mb-5 flex flex-wrap gap-x-1 border-b-[1.5px] border-tinta">
         {TABS.map((t) => (
           <button
             key={t.key}

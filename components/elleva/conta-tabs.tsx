@@ -14,7 +14,7 @@ const TABS = [
 export function ContaTabs() {
   const pathname = usePathname();
   return (
-    <nav className="flex gap-1 overflow-x-auto overflow-y-hidden border-b-[1.5px] border-tinta">
+    <nav className="flex flex-wrap gap-x-1 border-b-[1.5px] border-tinta">
       {TABS.map((t) => {
         const active = pathname === t.href;
         return (
@@ -23,7 +23,7 @@ export function ContaTabs() {
             href={t.href}
             aria-current={active ? "page" : undefined}
             className={clsx(
-              "rotulo -mb-[1.5px] whitespace-nowrap border-b-[3px] px-4 py-3 transition-colors",
+              "rotulo -mb-[1.5px] whitespace-nowrap border-b-[3px] px-3 py-3 transition-colors sm:px-4",
               active
                 ? "border-sol text-tinta"
                 : "border-transparent text-tinta-60 hover:text-tinta"
