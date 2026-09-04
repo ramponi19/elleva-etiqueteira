@@ -40,7 +40,7 @@ export default function GlobalError({
             ingresso já pago continua em Meus ingressos.
           </p>
           <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap", marginTop: 22 }}>
-            <button
+            <button type="button"
               onClick={reset}
               style={{
                 minHeight: 44, padding: "0 22px", border: "none", borderRadius: 9999,

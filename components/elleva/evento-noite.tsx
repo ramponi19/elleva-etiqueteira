@@ -114,9 +114,9 @@ export default function EventoNoite({
         </div>
         {!esgotado && (
           <div className="step">
-            <button aria-label={`Tirar ${t.name}`} disabled={(qty[t.id] || 0) === 0} onClick={() => dec(t.id)}>−</button>
+            <button type="button" aria-label={`Tirar ${t.name}`} disabled={(qty[t.id] || 0) === 0} onClick={() => dec(t.id)}>−</button>
             <span className="q">{qty[t.id] || 0}</span>
-            <button aria-label={`Adicionar ${t.name}`} disabled={noMax} onClick={() => inc(t)}>+</button>
+            <button type="button" aria-label={`Adicionar ${t.name}`} disabled={noMax} onClick={() => inc(t)}>+</button>
           </div>
         )}
       </div>
@@ -134,7 +134,7 @@ export default function EventoNoite({
       <div className="btot"><span className="tl">Total com taxa</span><span className="tv">{fmt2(total)}</span></div>
       {total > 0 && maxParcelas > 1 && <div className="parc">ou em até {maxParcelas}x no cartão</div>}
       <div className="bfoot">
-        <button className="btn btn-warm" disabled={count === 0} onClick={prosseguir}>Garantir ingresso →</button>
+        <button type="button" className="btn btn-warm" disabled={count === 0} onClick={prosseguir}>Garantir ingresso →</button>
         <div className="re">Pix aprovado na hora · ingresso no WhatsApp e na conta</div>
       </div>
     </>
@@ -161,7 +161,7 @@ export default function EventoNoite({
         {!event.cover && <div className="ghost">{gen.key}</div>}
         <div className="scrim" />
         <div className="acts">
-          <button className={"iconbtn" + (fav ? " on" : "")} aria-label="Favoritar" onClick={() => setFav((v) => !v)}>{fav ? "♥" : "♡"}</button>
+          <button type="button" className={"iconbtn" + (fav ? " on" : "")} aria-label="Favoritar" onClick={() => setFav((v) => !v)}>{fav ? "♥" : "♡"}</button>
         </div>
         <div className="wrap inner">
           <div className="tags">
@@ -278,7 +278,7 @@ export default function EventoNoite({
       {!saleClosed && (
         <div className="mbuy">
           <div className="mf"><span>{total > 0 ? "Total" : "A partir de"}</span><b>{total > 0 ? fmt2(total) : fmt(event.priceFrom)}</b></div>
-          <button className="btn btn-warm" onClick={() => { if (count > 0) prosseguir(); else document.getElementById("buy")?.scrollIntoView({ behavior: "smooth" }); }}>
+          <button type="button" className="btn btn-warm" onClick={() => { if (count > 0) prosseguir(); else document.getElementById("buy")?.scrollIntoView({ behavior: "smooth" }); }}>
             {count > 0 ? "Garantir →" : "Ver ingressos"}
           </button>
         </div>

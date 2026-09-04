@@ -132,13 +132,12 @@ export default function HomeNoite({
     const x = c.getContext("2d");
     if (!x) return;
     const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
-    let W = 0, H = 0, DPR = 1, mx = 0.5, my = 0.3, scr = 0, alive = true;
+    let W = 0, H = 0, DPR = 1, scr = 0, alive = true;
     const rs = () => { DPR = Math.min(devicePixelRatio || 1, 1.25); W = c.width = innerWidth * DPR; H = c.height = innerHeight * DPR; c.style.width = innerWidth + "px"; c.style.height = innerHeight + "px"; };
     rs();
     const onR = () => rs();
-    const onP = (e: PointerEvent) => { mx = e.clientX / innerWidth; my = e.clientY / innerHeight; };
     const onS = () => { scr = Math.min(scrollY / innerHeight, 1.2); };
-    addEventListener("resize", onR); addEventListener("pointermove", onP, { passive: true }); addEventListener("scroll", onS, { passive: true });
+    addEventListener("resize", onR); addEventListener("scroll", onS, { passive: true });
     const beams = [
       { ox: 0.24, col: "255,90,31", sp: 0.00022, ph: 0, sway: 0.16, spread: 0.22 },
       { ox: 0.5, col: "255,159,90", sp: 0.00015, ph: 1.7, sway: 0.1, spread: 0.16 },
@@ -172,7 +171,7 @@ export default function HomeNoite({
       if (!reduce) requestAnimationFrame(frame);
     };
     if (reduce) frame(0); else requestAnimationFrame(frame);
-    return () => { alive = false; removeEventListener("resize", onR); removeEventListener("pointermove", onP); removeEventListener("scroll", onS); };
+    return () => { alive = false; removeEventListener("resize", onR); removeEventListener("scroll", onS); };
   }, []);
 
 
@@ -225,15 +224,15 @@ export default function HomeNoite({
               <div className="fsearch"><input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar evento, artista ou cidade…" aria-label="Buscar evento" /></div>
               <div className="fpills">
                 {PILLS.map((p) => (
-                  <button key={p.cat} className={"fp" + (cat === p.cat ? " on" : "")} onClick={() => setCat(p.cat)}>{p.label}</button>
+                  <button type="button" key={p.cat} className={"fp" + (cat === p.cat ? " on" : "")} onClick={() => setCat(p.cat)}>{p.label}</button>
                 ))}
               </div>
             </div>
             {visible.length === 0 && <p id="ehempty" style={{ display: "block" }}>Nenhum evento encontrado. Tenta outra busca ou categoria.</p>}
           </div>
           <div className="reel-wrap">
-            <button className="reel-nav prev" aria-label="Anterior" onClick={() => reelRef.current?.scrollBy({ left: -step(), behavior: "smooth" })}>‹</button>
-            <button className="reel-nav next" aria-label="Próximo" onClick={() => reelRef.current?.scrollBy({ left: step(), behavior: "smooth" })}>›</button>
+            <button type="button" className="reel-nav prev" aria-label="Anterior" onClick={() => reelRef.current?.scrollBy({ left: -step(), behavior: "smooth" })}>‹</button>
+            <button type="button" className="reel-nav next" aria-label="Próximo" onClick={() => reelRef.current?.scrollBy({ left: step(), behavior: "smooth" })}>›</button>
             <div className="reel" ref={reelRef}>
               <div style={{ flex: "1 0 30px" }} />
               {cards.map(({ e, cat: c }) => {

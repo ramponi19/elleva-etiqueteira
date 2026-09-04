@@ -11,7 +11,7 @@ const OPTS: sanitizeHtml.IOptions = {
   allowedAttributes: { a: ["href", "rel", "target"] },
   allowedSchemes: ["http", "https", "mailto"],
   transformTags: {
-    a: (tagName, attribs) => ({
+    a: (_tagName, attribs) => ({
       tagName: "a",
       attribs: { ...attribs, rel: "noopener noreferrer nofollow", target: "_blank" },
     }),
