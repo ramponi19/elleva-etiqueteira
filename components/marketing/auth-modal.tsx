@@ -5,6 +5,7 @@ import Icon from "@/components/shared/icon";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { emailHasAccount } from "@/lib/actions/auth";
+import { chamarAction } from "@/lib/action-client";
 import { CADASTRO_NOVO_KEY } from "@/components/elleva/completar-cadastro";
 
 // Modal de login/cadastro sobre a tela de seleção (fluxo estilo Ingresse).
@@ -53,9 +54,13 @@ export default function AuthModal({
       if (error || !data.user) {
         // Decisão de produto: distinguir "não tem conta" de "senha errada" e
         // oferecer o cadastro (checagem server-side, rate-limitada por IP).
-        const chk = await emailHasAccount(email);
+        const chk = await chamarAction(() => emailHasAccount(email));
         setLoading(false);
-        if ("exists" in chk && !chk.exists) {
+        if ("ok" in chk && chk.ok === false) {
+          // aba com build antigo (deploy skew) ou falha de rede: nunca travar em "Aguarde..."
+          setSemConta(false);
+          setError(chk.error);
+        } else if ("exists" in chk && !chk.exists) {
           setSemConta(true);
           setError("Não encontramos uma conta com esse e-mail.");
         } else if ("exists" in chk && chk.exists) {

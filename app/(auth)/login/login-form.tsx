@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { emailHasAccount } from "@/lib/actions/auth";
+import { chamarAction } from "@/lib/action-client";
 
 const input =
   "w-full rounded-[10px] border-[1.5px] border-tinta bg-white px-3.5 py-2.5 text-[16px] text-tinta outline-none placeholder:text-tinta-35 focus:border-sol";
@@ -32,8 +33,10 @@ export function LoginForm() {
       // Decisão de produto: distinguir "não tem conta" de "senha errada" e
       // oferecer o cadastro. A checagem é server-side e rate-limitada por IP;
       // se não der pra saber, cai na mensagem genérica.
-      const chk = await emailHasAccount(email);
-      if ("exists" in chk && !chk.exists) {
+      const chk = await chamarAction(() => emailHasAccount(email));
+      if ("ok" in chk && chk.ok === false) {
+        setError(chk.error); // deploy skew / rede — não travar o botão
+      } else if ("exists" in chk && !chk.exists) {
         setError("Não encontramos uma conta com esse e-mail.");
         setSemConta(true);
       } else if ("exists" in chk && chk.exists) {

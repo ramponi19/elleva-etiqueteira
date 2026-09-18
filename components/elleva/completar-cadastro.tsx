@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/client";
 import { isValidCPF, formatCPF } from "@/lib/cpf";
 import { maskPhone, maskCEP } from "@/lib/format";
 import { salvarDadosCompra, type DadosCompraInput } from "@/lib/actions/perfil";
+import { chamarAction, limparMarcaSkew } from "@/lib/action-client";
 
 /** Flags de sessão (só neste navegador/aba):
  *  - NOVO: setada na criação da conta → abre o modal assim que a sessão existir.
@@ -66,6 +67,8 @@ export function CompletarCadastroGate() {
   }, [pathname]);
 
   useEffect(() => {
+    // página carregou com o build atual → libera um futuro auto-reload por deploy skew
+    limparMarcaSkew();
     // fora do corpo do efeito (tick seguinte): a checagem é assíncrona e só
     // abre o modal depois de consultar sessão + perfil
     const t = setTimeout(() => void verificar(false), 0);
@@ -130,7 +133,7 @@ export function CompletarCadastroModal({
     if (!b.fullName.trim()) return setErr("Informe seu nome completo.");
     if (!isValidCPF(b.cpf)) return setErr("Esse CPF não bateu. Confere os números?");
     setSaving(true);
-    const r = await salvarDadosCompra(b);
+    const r = await chamarAction(() => salvarDadosCompra(b));
     setSaving(false);
     if (!r.ok) return setErr(r.error);
     onSaved();

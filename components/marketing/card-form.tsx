@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Icon from "@/components/shared/icon";
 import { Button } from "@/components/ui/button";
 import { createCardOrder } from "@/lib/actions/orders";
+import { chamarAction } from "@/lib/action-client";
 import { isValidCPF } from "@/lib/cpf";
 import { fmtBRL } from "@/lib/format";
 import type { CartItem } from "@/lib/cart";
@@ -146,7 +147,7 @@ export default function CardForm({
       const paymentMethodId = pm.results[0]?.id;
       if (!paymentMethodId) throw new Error("Cartão não reconhecido.");
 
-      const res = await createCardOrder({
+      const res = await chamarAction(() => createCardOrder({
         buyerName: buyer.name,
         buyerEmail: buyer.email,
         buyerCpf: buyer.cpf,
@@ -158,7 +159,7 @@ export default function CardForm({
           eventId: i.eventId, eventTitle: i.eventTitle, tierId: i.tierId,
           tierName: i.tierName, price: i.price, qty: i.qty,
         })),
-      });
+      }));
       setLoading(false);
       if (!res.ok) { setError(res.error); return; }
       if (res.pending) { setAnalise(true); return; } // em análise: NÃO é "garantido" ainda

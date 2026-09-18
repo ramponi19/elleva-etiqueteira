@@ -7,6 +7,7 @@ import { useCart } from "@/lib/cart";
 import { fmtBRL } from "@/lib/format";
 import { feeOf, round2 } from "@/lib/fees";
 import { createOrder, getOrderStatus, previewCoupon } from "@/lib/actions/orders";
+import { chamarAction } from "@/lib/action-client";
 import { isValidCPF } from "@/lib/cpf";
 import CardForm from "@/components/marketing/card-form";
 import { Barras } from "@/components/ui/barras";
@@ -66,7 +67,7 @@ export default function CheckoutPage() {
   async function applyCoupon() {
     setCouponMsg(null);
     if (!coupon.trim()) return;
-    const res = await previewCoupon(coupon, cartItems);
+    const res = await chamarAction(() => previewCoupon(coupon, cartItems));
     if (!res.ok) { setDiscount(0); setAppliedCode(""); setCouponMsg(res.error); return; }
     setDiscount(res.discount);
     setAppliedCode(coupon.trim());
@@ -100,7 +101,8 @@ export default function CheckoutPage() {
   useEffect(() => {
     if (!pix) return;
     const t = setInterval(async () => {
-      const status = await getOrderStatus(pix.orderId);
+      const status = await chamarAction(() => getOrderStatus(pix.orderId));
+      if (typeof status !== "string") return; // falha transitória / deploy skew (recarrega sozinho): tenta no próximo tick
       if (status === "paid") {
         clearInterval(t);
         confirmar();
@@ -140,14 +142,14 @@ export default function CheckoutPage() {
       return;
     }
     setLoading(true);
-    const res = await createOrder({
+    const res = await chamarAction(() => createOrder({
       buyerName: name,
       buyerEmail: email,
       buyerCpf: cpf,
       buyerWhatsapp: whatsapp,
       couponCode: appliedCode || undefined,
       items: cartItems,
-    });
+    }));
     setLoading(false);
     if (!res.ok) {
       setError(res.error);
