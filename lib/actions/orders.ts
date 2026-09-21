@@ -4,7 +4,7 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { getAuth } from "@/lib/auth";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
-import { getPaymentProvider } from "@/lib/payments";
+import { getPaymentProvider, credenciaisAtivas } from "@/lib/payments";
 import { mpDeclineMessage, mpErrorMessage } from "@/lib/payments/mp-messages";
 import { markOrderPaid, claimSeats, refundOrder, releaseSeats, releaseCouponForOrder } from "@/lib/orders-helpers";
 import { feeUnit, round2, DEFAULT_FEE_PCT } from "@/lib/fees";
@@ -339,7 +339,7 @@ export async function createOrder(input: z.input<typeof BaseSchema>): Promise<Cr
     return { ok: true, orderId: prep.orderId, paid: true };
   }
 
-  const provider = getPaymentProvider();
+  const provider = await getPaymentProvider();
   const configured = provider.isConfigured();
   if (!configured && !mockAllowed()) {
     return { ok: false, error: "Pagamento indisponível no momento. Tente novamente em instantes." };
@@ -417,7 +417,7 @@ export async function createCardOrder(input: z.input<typeof CardSchema>): Promis
     return { ok: false, error: "Muitas tentativas de pagamento. Aguarde alguns minutos e tente de novo." };
   }
 
-  const provider = getPaymentProvider();
+  const provider = await getPaymentProvider();
   if (!provider.isConfigured()) return { ok: false, error: "Pagamento por cartão indisponível." };
 
   let svc: Svc;
@@ -559,6 +559,19 @@ export async function getOrderStatus(orderId: string): Promise<string | null> {
       if (!user || user.id !== data.user_id) return null;
     }
     return (data.status as string) ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/** Chave pública do gateway pro SDK de cartão no navegador.
+ *  Não é segredo (ela é feita pra ir pro browser), mas sai daqui em vez de uma
+ *  env `NEXT_PUBLIC_*` porque env pública é assada no build: trocar a conta em
+ *  /admin/pagamentos precisa valer pro cartão SEM redeploy. */
+export async function chavePublicaCartao(): Promise<string | null> {
+  try {
+    const { creds } = await credenciaisAtivas();
+    return creds.publicKey ?? null;
   } catch {
     return null;
   }

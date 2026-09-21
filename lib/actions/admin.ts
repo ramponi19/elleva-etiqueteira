@@ -77,7 +77,7 @@ export async function cancelOrder(
 
   if (order.status === "paid") {
     // tenta reembolsar no provedor que processou o pedido
-    const provider = getPaymentProvider();
+    const provider = await getPaymentProvider();
     if (order.payment_id && order.payment_provider === provider.id) {
       try {
         await provider.refund(order.payment_id);

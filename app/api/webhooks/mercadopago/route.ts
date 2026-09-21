@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
-import { mercadoPagoProvider } from "@/lib/payments/mercadopago";
+import { getPaymentProvider } from "@/lib/payments";
 import { createServiceClient } from "@/lib/supabase/server";
 import { markOrderPaid, markOrderRefunded, releaseSeats, releaseCouponForOrder } from "@/lib/orders-helpers";
 
 // Webhook do Mercado Pago. A assinatura e a leitura do pagamento ficam no
-// adaptador (lib/payments/mercadopago). Outros provedores têm sua própria rota.
+// adaptador (lib/payments/mercadopago), que recebe o segredo da conta ATIVA
+// (/admin/pagamentos) — trocar de conta troca a chave que valida a assinatura
+// sem redeploy. Outros provedores têm sua própria rota.
 export async function POST(request: Request) {
   try {
     const url = new URL(request.url);
@@ -22,14 +24,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ ignored: true });
     }
 
+    const provider = await getPaymentProvider();
+
     // Verificação de assinatura (assina sobre o data.id da query)
-    if (!mercadoPagoProvider.verifyWebhookSignature(request, queryDataId ?? paymentId)) {
+    if (!provider.verifyWebhookSignature(request, queryDataId ?? paymentId)) {
       return NextResponse.json({ error: "invalid signature" }, { status: 401 });
     }
 
     if (!paymentId) return NextResponse.json({ ignored: true });
 
-    const payment = await mercadoPagoProvider.fetchWebhookPayment(paymentId);
+    const payment = await provider.fetchWebhookPayment(paymentId);
     if (!payment || !payment.orderId) return NextResponse.json({ ignored: true });
 
     if (payment.status === "approved") {

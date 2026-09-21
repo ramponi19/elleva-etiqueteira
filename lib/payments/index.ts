@@ -1,21 +1,50 @@
 // ============================================================
-// Seleção do provedor de pagamento (plugável via PAYMENT_PROVIDER)
+// Seleção do provedor de pagamento (a conta ativa manda)
 // ============================================================
-import { mercadoPagoProvider } from "./mercadopago";
-import type { PaymentProvider } from "./types";
+import { criarProvedorMercadoPago } from "./mercadopago";
+import { credenciaisAtivas } from "./accounts";
+import type { PaymentProvider, ProviderCredentials } from "./types";
 
-// Para adicionar uma instituição: implemente o adaptador em ./<nome>.ts
-// e registre aqui. Trocar em produção = setar PAYMENT_PROVIDER=<nome>.
-const PROVIDERS: Record<string, PaymentProvider> = {
-  mercadopago: mercadoPagoProvider,
-};
+/** Catálogo de instituições suportadas. Para adicionar uma: implemente o
+ *  adaptador em ./<nome>.ts e registre aqui — a opção aparece sozinha no
+ *  seletor de /admin/pagamentos. */
+export const INSTITUICOES = {
+  mercadopago: {
+    rotulo: "Mercado Pago",
+    /** rótulos dos campos que essa instituição pede, pra tela não ficar genérica */
+    campos: {
+      accessToken: "Access token",
+      publicKey: "Public key",
+      webhookSecret: "Assinatura do webhook",
+    },
+    ajuda: "Mercado Pago → Seu negócio → Configurações → Gestão e administração → Credenciais.",
+    criar: criarProvedorMercadoPago,
+  },
+} satisfies Record<
+  string,
+  {
+    rotulo: string;
+    campos: { accessToken: string; publicKey: string; webhookSecret: string };
+    ajuda: string;
+    criar: (creds: ProviderCredentials) => PaymentProvider;
+  }
+>;
 
-const DEFAULT_PROVIDER = "mercadopago";
+export type InstituicaoId = keyof typeof INSTITUICOES;
 
-/** Provedor ativo (segundo a env PAYMENT_PROVIDER; padrão Mercado Pago). */
-export function getPaymentProvider(): PaymentProvider {
-  const id = process.env.PAYMENT_PROVIDER || DEFAULT_PROVIDER;
-  return PROVIDERS[id] ?? mercadoPagoProvider;
+const PADRAO: InstituicaoId = "mercadopago";
+
+/** Provedor amarrado a credenciais específicas (usado pelo "testar conexão"). */
+export function provedorDe(id: string, creds: ProviderCredentials): PaymentProvider {
+  const inst = INSTITUICOES[id as InstituicaoId] ?? INSTITUICOES[PADRAO];
+  return inst.criar(creds);
 }
 
-export type { PaymentProvider } from "./types";
+/** Provedor ativo: conta cadastrada em /admin/pagamentos; na falta dela, as envs. */
+export async function getPaymentProvider(): Promise<PaymentProvider> {
+  const { providerId, creds } = await credenciaisAtivas();
+  return provedorDe(providerId, creds);
+}
+
+export type { PaymentProvider, ProviderCredentials } from "./types";
+export { credenciaisAtivas } from "./accounts";

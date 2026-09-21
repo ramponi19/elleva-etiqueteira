@@ -2,8 +2,18 @@
 // Camada de pagamento plugável — contrato do provedor
 // ============================================================
 // O checkout, o webhook e o reembolso falam SÓ com esta interface.
-// Trocar de instituição = novo adaptador + PAYMENT_PROVIDER na env,
-// sem tocar no fluxo de compra.
+// Trocar de instituição = novo adaptador + escolher a conta em
+// /admin/pagamentos (migration 0062): sem tocar no fluxo de compra e sem redeploy.
+
+/** Credenciais de UMA conta no gateway. Vêm do banco (payment_accounts, já
+ *  decifradas) ou, se nenhuma conta estiver cadastrada, das envs antigas. */
+export interface ProviderCredentials {
+  accessToken: string | null;
+  /** chave pública usada pelo SDK no navegador — não é segredo */
+  publicKey: string | null;
+  webhookSecret: string | null;
+  environment: "sandbox" | "production";
+}
 
 export interface Buyer {
   email: string;

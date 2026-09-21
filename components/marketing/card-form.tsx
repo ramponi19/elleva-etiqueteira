@@ -3,13 +3,16 @@
 import { useEffect, useRef, useState } from "react";
 import Icon from "@/components/shared/icon";
 import { Button } from "@/components/ui/button";
-import { createCardOrder } from "@/lib/actions/orders";
+import { createCardOrder, chavePublicaCartao } from "@/lib/actions/orders";
 import { chamarAction } from "@/lib/action-client";
 import { isValidCPF } from "@/lib/cpf";
 import { fmtBRL } from "@/lib/format";
 import type { CartItem } from "@/lib/cart";
 
-const PUBLIC_KEY = process.env.NEXT_PUBLIC_MP_PUBLIC_KEY;
+// Fallback de build: vale enquanto nenhuma conta foi cadastrada em
+// /admin/pagamentos. A chave da conta ATIVA vem do servidor (ver efeito abaixo)
+// justamente pra trocar de conta sem redeploy.
+const PUBLIC_KEY_ENV = process.env.NEXT_PUBLIC_MP_PUBLIC_KEY ?? null;
 
 // MP SDK injetado em window
 interface MpInstance {
@@ -43,6 +46,8 @@ export default function CardForm({
 }) {
   const mpRef = useRef<MpInstance | null>(null);
   const [ready, setReady] = useState(false);
+  // undefined = ainda perguntando ao servidor; null = não há chave configurada
+  const [publicKey, setPublicKey] = useState<string | null | undefined>(undefined);
   const [number, setNumber] = useState("");
   const [holder, setHolder] = useState("");
   const [exp, setExp] = useState("");
@@ -56,11 +61,20 @@ export default function CardForm({
   const [error, setError] = useState<string | null>(null);
   const [analise, setAnalise] = useState(false);
 
+  // Qual conta está valendo? Quem responde é o servidor (banco → env).
   useEffect(() => {
-    if (!PUBLIC_KEY) return;
+    let cancel = false;
+    chavePublicaCartao()
+      .then((k) => { if (!cancel) setPublicKey(k ?? PUBLIC_KEY_ENV); })
+      .catch(() => { if (!cancel) setPublicKey(PUBLIC_KEY_ENV); });
+    return () => { cancel = true; };
+  }, []);
+
+  useEffect(() => {
+    if (!publicKey) return;
     const init = () => {
       if (window.MercadoPago) {
-        mpRef.current = new window.MercadoPago(PUBLIC_KEY, { locale: "pt-BR" });
+        mpRef.current = new window.MercadoPago(publicKey, { locale: "pt-BR" });
         setReady(true);
       }
     };
@@ -74,7 +88,7 @@ export default function CardForm({
     s.src = "https://sdk.mercadopago.com/js/v2";
     s.onload = init;
     document.body.appendChild(s);
-  }, []);
+  }, [publicKey]);
 
   // F6: com o BIN (6 dígitos) e o valor, pergunta ao MP as parcelas REAIS.
   // Debounce pra não consultar a cada tecla; limpa se o cartão encolher.
@@ -103,10 +117,14 @@ export default function CardForm({
     return () => { cancel = true; clearTimeout(t); };
   }, [number, ready, total, maxInstallments]);
 
-  if (!PUBLIC_KEY) {
+  if (publicKey === undefined) {
+    return <p className="text-[13px] text-tinta-60">Carregando pagamento por cartão...</p>;
+  }
+
+  if (!publicKey) {
     return (
       <p className="text-[13px] text-tinta-60">
-        Pagamento por cartão indisponível (configure NEXT_PUBLIC_MP_PUBLIC_KEY).
+        Pagamento por cartão indisponível no momento.
       </p>
     );
   }

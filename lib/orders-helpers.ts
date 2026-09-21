@@ -87,7 +87,7 @@ async function reserveStock(svc: Svc, orderId: string): Promise<boolean> {
 async function refundOversold(svc: Svc, orderId: string) {
   const { data: o } = await svc.from("orders").select("payment_id").eq("id", orderId).single();
   try {
-    if (o?.payment_id) await getPaymentProvider().refund(o.payment_id);
+    if (o?.payment_id) await (await getPaymentProvider()).refund(o.payment_id);
   } catch {
     /* estorno pode ser retentado pelo admin; segue cancelando */
   }
@@ -437,7 +437,7 @@ export async function refundOrder(svc: Svc, orderId: string): Promise<{ action: 
     return { action: "cancelled_pending" };
   }
   // paid: estorna no provedor que processou ANTES de reverter localmente
-  const provider = getPaymentProvider();
+  const provider = await getPaymentProvider();
   if (o.payment_id && o.payment_provider === provider.id) {
     try {
       await provider.refund(o.payment_id as string);

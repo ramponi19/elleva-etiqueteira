@@ -8,6 +8,7 @@ const NAV = [
   { href: "/admin/clientes", label: "Clientes", icon: "lucide:users" },
   { href: "/admin/cupons", label: "Cupons", icon: "lucide:badge-percent" },
   { href: "/admin/financeiro", label: "Financeiro", icon: "lucide:wallet" },
+  { href: "/admin/pagamentos", label: "Pagamentos", icon: "lucide:landmark" },
   { href: "/admin/validar", label: "Validar ingresso", icon: "lucide:qr-code" },
   { href: "/admin/checkin", label: "Check-in", icon: "lucide:clipboard-list" },
   { href: "/admin/auditoria", label: "Auditoria", icon: "lucide:history" },
