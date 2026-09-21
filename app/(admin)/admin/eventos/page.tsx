@@ -1,10 +1,15 @@
 import type { Metadata } from "next";
+import { requireRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { AdminEventsList, type AdminEvent } from "@/components/elleva/admin-events-list";
 
 export const metadata: Metadata = { title: "Eventos · Admin" };
 
 export default async function AdminEventos() {
+  // Layout NÃO protege página: no App Router as duas renderizam em paralelo,
+  // então o redirect do layout não impede esta consulta de rodar (docs do Next:
+  // "A layout also does not control whether the rest of the route renders").
+  await requireRole(["admin"]);
   const supabase = await createClient();
   const { data: events } = await supabase
     .from("events")

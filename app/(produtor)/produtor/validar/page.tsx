@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getAuth } from "@/lib/auth";
+import { requireAuth } from "@/lib/auth";
 import { createServiceClient } from "@/lib/supabase/server";
 import { TicketValidatorElleva } from "@/components/elleva/ticket-validator";
 import { CheckinLinks } from "@/components/elleva/checkin-links";
@@ -8,14 +8,14 @@ import { OperadoresPortaria, type OperadorView } from "@/components/elleva/opera
 export const metadata: Metadata = { title: "Validar ingresso · Produtor" };
 
 export default async function ProdutorValidar() {
-  const { user, role } = await getAuth();
+  const { user, role } = await requireAuth();
 
   // Tokens de check-in são segredo (só service_role lê a coluna).
   let list: { id: string; title: string; token: string }[] = [];
   try {
     const svc = await createServiceClient();
     let q = svc.from("events").select("id, title, checkin_token").order("starts_at", { ascending: false });
-    if (role !== "admin") q = q.eq("producer_id", user!.id);
+    if (role !== "admin") q = q.eq("producer_id", user.id);
     const { data } = await q;
     list = (data ?? []).map((e) => ({ id: e.id, title: e.title, token: e.checkin_token as string }));
   } catch {
@@ -29,7 +29,7 @@ export default async function ProdutorValidar() {
     const { data } = await svc
       .from("gate_operators")
       .select("id, name, doc, pin, active")
-      .eq("producer_id", user!.id)
+      .eq("producer_id", user.id)
       .order("created_at", { ascending: true });
     operators = (data ?? []) as OperadorView[];
   } catch {

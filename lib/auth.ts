@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
@@ -6,8 +7,13 @@ import { createClient } from "@/lib/supabase/server";
 // em `user` (migration 0052).
 export type Role = "user" | "admin";
 
-/** Usuário atual + papel (lê profiles.role). */
-export async function getAuth() {
+/** Usuário atual + papel (lê profiles.role).
+ *
+ *  Memoizado com o `cache()` do React (padrão de DAL recomendado pelos docs do
+ *  Next 16): layout e página renderizam em PARALELO e as duas precisam checar
+ *  sessão, então sem isso cada request pagaria `auth.getUser()` + consulta a
+ *  `profiles` duas vezes. Com o cache, pôr a guarda na página sai de graça. */
+export const getAuth = cache(async () => {
   const supabase = await createClient();
   const {
     data: { user },
@@ -26,7 +32,7 @@ export async function getAuth() {
     fullName: (data?.full_name as string | null) ?? null,
     avatarUrl: (data?.avatar_url as string | null) ?? null,
   };
-}
+});
 
 /** Área inicial após login. Como no mercado (Sympla/Eventbrite), toda conta é
  *  comprador E organizador — só o admin (Elleva) tem área à parte. */

@@ -20,7 +20,7 @@ export default async function AdminLayout({
 }) {
   const { fullName, user } = await requireRole(["admin"]);
   return (
-    <DashShell area="Administração" items={NAV} userName={fullName ?? user!.email ?? "Admin"}>
+    <DashShell area="Administração" items={NAV} userName={fullName ?? user.email ?? "Admin"}>
       {children}
     </DashShell>
   );

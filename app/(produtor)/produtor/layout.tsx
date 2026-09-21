@@ -20,7 +20,7 @@ export default async function ProdutorLayout({
   const { fullName, user } = await requireAuth();
   return (
     <div className="eprd">
-      <DashShell area="Área do produtor" items={NAV} userName={fullName ?? user!.email ?? "Produtor"}>
+      <DashShell area="Área do produtor" items={NAV} userName={fullName ?? user.email ?? "Produtor"}>
         {children}
       </DashShell>
     </div>

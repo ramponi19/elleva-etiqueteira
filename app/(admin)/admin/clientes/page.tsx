@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { requireRole } from "@/lib/auth";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import ClientsAdmin, { type AdminUser } from "@/components/app/clients-admin";
 import type { Role } from "@/lib/actions/admin";
@@ -8,6 +9,10 @@ export const metadata: Metadata = { title: "Clientes · Admin" };
 const LIMITE = 1000;
 
 export default async function AdminClientes() {
+  // Layout NÃO protege página: no App Router as duas renderizam em paralelo,
+  // então o redirect do layout não impede esta consulta de rodar (docs do Next:
+  // "A layout also does not control whether the rest of the route renders").
+  await requireRole(["admin"]);
   const supabase = await createClient();
   const { data: users } = await supabase
     .from("profiles")

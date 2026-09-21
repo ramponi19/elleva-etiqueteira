@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { requireRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { fmtBRL } from "@/lib/format";
 import CouponForm from "@/components/app/coupon-form";
@@ -7,6 +8,10 @@ import { CouponToggle } from "@/components/app/coupon-toggle";
 export const metadata: Metadata = { title: "Cupons · Admin" };
 
 export default async function AdminCupons() {
+  // Layout NÃO protege página: no App Router as duas renderizam em paralelo,
+  // então o redirect do layout não impede esta consulta de rodar (docs do Next:
+  // "A layout also does not control whether the rest of the route renders").
+  await requireRole(["admin"]);
   const supabase = await createClient();
   const { data: coupons } = await supabase
     .from("coupons")

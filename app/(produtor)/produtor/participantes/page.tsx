@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
-import { getAuth } from "@/lib/auth";
+import { requireAuth } from "@/lib/auth";
 import { EmBreve } from "@/components/elleva/em-breve";
 import { ParticipantesList, type Participante } from "@/components/elleva/participantes-list";
 
@@ -19,11 +19,11 @@ type Row = {
 const buyer = (r: Row) => (Array.isArray(r.orders) ? r.orders[0] : r.orders);
 
 export default async function ProdutorParticipantes() {
-  const { user, role } = await getAuth();
+  const { user, role } = await requireAuth();
   const supabase = await createClient();
 
   let evq = supabase.from("events").select("id, title").order("starts_at", { ascending: false });
-  if (role !== "admin") evq = evq.eq("producer_id", user!.id);
+  if (role !== "admin") evq = evq.eq("producer_id", user.id);
   const { data: events } = await evq;
   const eventos = events ?? [];
   const ids = eventos.map((e) => e.id);

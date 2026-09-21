@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { requireAuth } from "@/lib/auth";
 import QRCode from "qrcode";
 import { createClient } from "@/lib/supabase/server";
 import { IngressosTabs, type TicketView, type PendingOrder } from "@/components/elleva/ingressos-tabs";
@@ -48,6 +49,10 @@ type PendingRow = {
 };
 
 export default async function ContaOverview() {
+  // Layout NÃO protege página: no App Router as duas renderizam em paralelo
+  // (docs do Next: "A layout also does not control whether the rest of the
+  // route renders"), então a guarda tem que estar aqui também.
+  await requireAuth();
   const supabase = await createClient();
 
   const [{ data: tickets }, { data: pend }] = await Promise.all([

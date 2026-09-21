@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { requireRole } from "@/lib/auth";
 import { createServiceClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Auditoria · Admin" };
@@ -23,6 +24,10 @@ const fmtDT = (iso: string) =>
   }).format(new Date(iso));
 
 export default async function AdminAuditoria() {
+  // Layout NÃO protege página: no App Router as duas renderizam em paralelo,
+  // então o redirect do layout não impede esta consulta de rodar (docs do Next:
+  // "A layout also does not control whether the rest of the route renders").
+  await requireRole(["admin"]);
   const svc = await createServiceClient();
   const { data: linhas } = await svc
     .from("audit_log")

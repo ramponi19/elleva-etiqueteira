@@ -29,10 +29,10 @@ export default async function ContaLayout({
       <Nav
         loggedIn={!!user}
         role={role}
-        name={fullName ?? user!.email ?? "Você"}
-        email={user!.email ?? ""}
+        name={fullName ?? user.email ?? "Você"}
+        email={user.email ?? ""}
         avatarUrl={avatarUrl}
-        initials={initialsFrom(fullName ?? null, user!.email ?? null)}
+        initials={initialsFrom(fullName ?? null, user.email ?? null)}
       />
       <main className="min-h-[70vh]">
         <div className="mx-auto max-w-[1100px] px-5 py-10 sm:px-10">

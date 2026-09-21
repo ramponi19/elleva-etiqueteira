@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
-import { getAuth } from "@/lib/auth";
+import { requireAuth } from "@/lib/auth";
 import { fmtBRL } from "@/lib/format";
 import Icon from "@/components/shared/icon";
 import { Button } from "@/components/ui/button";
@@ -24,14 +24,14 @@ function saudacao(): string {
 }
 
 export default async function ProdutorInicio() {
-  const { user, role, fullName } = await getAuth();
+  const { user, role, fullName } = await requireAuth();
   const supabase = await createClient();
 
   let q = supabase
     .from("events")
     .select("id, title, category, city, starts_at, status")
     .order("starts_at", { ascending: true });
-  if (role !== "admin") q = q.eq("producer_id", user!.id);
+  if (role !== "admin") q = q.eq("producer_id", user.id);
   const { data: events } = await q;
 
   // Agregado em SQL e restrito aos eventos DESTE produtor. Antes a query pegava
@@ -39,7 +39,7 @@ export default async function ProdutorInicio() {
   // produtor COMPROU de outros eventos, que entravam como "receita" dele — e
   // ainda truncava em max-rows (1000) sem erro.
   const svc = await createServiceClient();
-  const { data: totais } = await svc.rpc("finance_event_totals", { p_producers: role === "admin" ? null : [user!.id] });
+  const { data: totais } = await svc.rpc("finance_event_totals", { p_producers: role === "admin" ? null : [user.id] });
   const revenue = ((totais ?? []) as { bruto: number }[]).reduce((a, r) => a + Number(r.bruto), 0);
   const sold = ((totais ?? []) as { vendidos: number }[]).reduce((a, r) => a + Number(r.vendidos), 0);
 

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { requireRole } from "@/lib/auth";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { fmtBRL } from "@/lib/format";
 import Icon from "@/components/shared/icon";
@@ -14,6 +15,10 @@ const ORDER_TOM: Record<string, "sol" | "papel" | "tinta" | "cartaz"> = {
 };
 
 export default async function AdminOverview() {
+  // Layout NÃO protege página: no App Router as duas renderizam em paralelo,
+  // então o redirect do layout não impede esta consulta de rodar (docs do Next:
+  // "A layout also does not control whether the rest of the route renders").
+  await requireRole(["admin"]);
   const supabase = await createClient();
   // Receita/pedidos vêm de agregação em SQL: somar linha por linha aqui parava
   // de crescer no pedido ~1000 (corte silencioso do PostgREST).

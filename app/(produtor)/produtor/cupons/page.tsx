@@ -1,17 +1,17 @@
 import type { Metadata } from "next";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
-import { getAuth } from "@/lib/auth";
+import { requireAuth } from "@/lib/auth";
 import { EmBreve } from "@/components/elleva/em-breve";
 import { CuponsProdutor, type CupomView } from "@/components/elleva/cupons-produtor";
 
 export const metadata: Metadata = { title: "Cupons · Produtor" };
 
 export default async function ProdutorCupons() {
-  const { user, role } = await getAuth();
+  const { user, role } = await requireAuth();
   const supabase = await createClient();
 
   let evq = supabase.from("events").select("id, title").order("starts_at", { ascending: false });
-  if (role !== "admin") evq = evq.eq("producer_id", user!.id);
+  if (role !== "admin") evq = evq.eq("producer_id", user.id);
   const { data: events } = await evq;
   const eventos = events ?? [];
   const titleById = new Map(eventos.map((e) => [e.id, e.title]));
@@ -22,7 +22,7 @@ export default async function ProdutorCupons() {
     .from("coupons")
     .select("code, discount_type, discount_value, max_uses, used_count, active, event_id")
     .order("created_at", { ascending: false });
-  if (role !== "admin") cq = cq.eq("producer_id", user!.id);
+  if (role !== "admin") cq = cq.eq("producer_id", user.id);
   else cq = cq.not("event_id", "is", null); // admin vê os de evento
   const { data: cData } = await cq;
 

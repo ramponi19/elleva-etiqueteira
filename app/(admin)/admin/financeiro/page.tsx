@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { requireRole } from "@/lib/auth";
 import { createServiceClient } from "@/lib/supabase/server";
 import { computePlatformFinance } from "@/lib/finance";
 import { FinanceiroAdmin, type RequestRow, type LedgerRow } from "@/components/elleva/financeiro-admin";
@@ -12,6 +13,10 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 export default async function AdminFinanceiro() {
+  // Layout NÃO protege página: no App Router as duas renderizam em paralelo,
+  // então o redirect do layout não impede esta consulta de rodar (docs do Next:
+  // "A layout also does not control whether the rest of the route renders").
+  await requireRole(["admin"]);
   const svc = await createServiceClient();
   const plat = await computePlatformFinance(svc);
 

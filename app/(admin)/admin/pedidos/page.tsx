@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { requireRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import OrdersAdmin, { type AdminOrder } from "@/components/app/orders-admin";
 
@@ -15,6 +16,10 @@ const fmtDT = (iso: string) =>
   }).format(new Date(iso));
 
 export default async function AdminPedidos() {
+  // Layout NÃO protege página: no App Router as duas renderizam em paralelo,
+  // então o redirect do layout não impede esta consulta de rodar (docs do Next:
+  // "A layout also does not control whether the rest of the route renders").
+  await requireRole(["admin"]);
   const supabase = await createClient();
   const { data: orders } = await supabase
     .from("orders")
