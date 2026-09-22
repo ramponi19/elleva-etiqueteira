@@ -31,16 +31,20 @@ export async function proxy(request: NextRequest) {
     },
   });
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Roda em TODA requisição. Além de dizer quem está logado, é esta chamada
+  // que renova o token vencido e regrava os cookies (getClaims() chama
+  // getSession() por dentro) — não remover, senão o usuário é deslogado à toa.
+  // getClaims() e não getUser(): com a chave ES256 do projeto a assinatura é
+  // verificada aqui, sem ida ao servidor de Auth por request (ver lib/auth.ts).
+  const { data: claimsData } = await supabase.auth.getClaims();
+  const userId = claimsData?.claims?.sub ?? null;
 
   // Usuário logado não precisa ver login/signup — manda pra área do papel dele.
-  if (user && AUTH_ROUTES.includes(request.nextUrl.pathname)) {
+  if (userId && AUTH_ROUTES.includes(request.nextUrl.pathname)) {
     const { data: profile } = await supabase
       .from("profiles")
       .select("role")
-      .eq("id", user.id)
+      .eq("id", userId)
       .single();
     const role = (profile?.role as string) ?? "user";
     const dest = role === "admin" ? "/admin" : "/conta";
@@ -53,8 +57,6 @@ export async function proxy(request: NextRequest) {
   return supabaseResponse;
 }
 
-//  sai do matcher: e o tunel do Sentry — relatorio de erro nao
-// deve pagar consulta de auth no Supabase nem depender de sessao pra passar.
 // `monitoring` está fora do matcher: é o túnel do Sentry — relatório de erro
 // não deve pagar consulta de auth no Supabase nem depender de sessão pra passar.
 export const config = {
