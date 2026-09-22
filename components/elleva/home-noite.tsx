@@ -133,7 +133,13 @@ export default function HomeNoite({
     if (!x) return;
     const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
     let W = 0, H = 0, DPR = 1, scr = 0, alive = true;
-    const rs = () => { DPR = Math.min(devicePixelRatio || 1, 1.25); W = c.width = innerWidth * DPR; H = c.height = innerHeight * DPR; c.style.width = innerWidth + "px"; c.style.height = innerHeight + "px"; };
+    // Celular: resolução interna de 0,5x. São luzes difusas — o upscale do CSS
+    // não aparece — e o raster cai 6,25x (de 1,25x). Medido em celular emulado
+    // com CPU 4x mais lenta: este canvas deixava a thread principal 99,5%
+    // ocupada, com a home travada em 42 fps; /agenda, mesmo visual sem canvas,
+    // fica em 6%. Era ELE, não o backdrop-filter da nav.
+    const escala = () => (innerWidth < 768 ? 0.5 : Math.min(devicePixelRatio || 1, 1.25));
+    const rs = () => { DPR = escala(); W = c.width = Math.round(innerWidth * DPR); H = c.height = Math.round(innerHeight * DPR); c.style.width = innerWidth + "px"; c.style.height = innerHeight + "px"; };
     rs();
     const onR = () => rs();
     const onS = () => { scr = Math.min(scrollY / innerHeight, 1.2); };
@@ -159,16 +165,28 @@ export default function HomeNoite({
       x.moveTo(ox + px * w0, oy + py * w0); x.lineTo(ox + dx * len + px * w1, oy + dy * len + py * w1);
       x.lineTo(ox + dx * len - px * w1, oy + dy * len - py * w1); x.lineTo(ox - px * w0, oy - py * w0); x.closePath(); x.fill();
     };
+    // 30 fps: o movimento é lento de propósito, então é visualmente igual a 60 —
+    // e num celular de 120 Hz o rAF chamaria 4x mais. O -1 é folga pra um
+    // display de 60 Hz desenhar 1 frame sim, 1 não (16,7 + 16,7 = 33,3 ≥ 32,3).
+    const FRAME_MS = 1000 / 30;
+    let last = -Infinity;
     const frame = (t: number) => {
       if (!alive) return;
+      if (!reduce) requestAnimationFrame(frame);
+      const dt = t - last;
+      if (dt < FRAME_MS - 1) return;
+      // As brasas sobem um tanto POR FRAME; pulando frames, subiriam na metade
+      // da velocidade. `passo` devolve o ritmo de 60 fps. Teto de 100 ms pra
+      // não darem um salto ao voltar de outra aba (o rAF fica parado lá).
+      const passo = last === -Infinity ? 1 : Math.min(dt, 100) / (1000 / 60);
+      last = t;
       const base = x.createLinearGradient(0, 0, 0, H);
       base.addColorStop(0, "#160b0a"); base.addColorStop(0.55, "#08070A"); base.addColorStop(1, "#040305");
       x.fillStyle = base; x.fillRect(0, 0, W, H);
       x.globalCompositeOperation = "lighter";
       for (const b of beams) beam(b, t);
-      for (const e of emb) { e.y -= e.v; if (e.y < -0.05) { e.y = 1.05; e.x = Math.random(); } const ex = e.x * W + Math.sin(t * 0.0004 + e.y * 18) * 8 * DPR; glow(ex, e.y * H, e.s * 80 * DPR, "255,170,90", 0.05); }
+      for (const e of emb) { e.y -= e.v * passo; if (e.y < -0.05) { e.y = 1.05; e.x = Math.random(); } const ex = e.x * W + Math.sin(t * 0.0004 + e.y * 18) * 8 * DPR; glow(ex, e.y * H, e.s * 80 * DPR, "255,170,90", 0.05); }
       x.globalCompositeOperation = "source-over";
-      if (!reduce) requestAnimationFrame(frame);
     };
     if (reduce) frame(0); else requestAnimationFrame(frame);
     return () => { alive = false; removeEventListener("resize", onR); removeEventListener("scroll", onS); };
