@@ -147,13 +147,17 @@ export function ContaPerfilForm({
         <h2 className="mb-5 text-[22px] font-medium text-tinta">Dados da Conta</h2>
 
         {completion < 100 && (
-          <div className="mb-6 rounded-[var(--radius-card)] bg-tinta p-4 text-papel">
+          // Era bg-tinta + text-papel NO MESMO div: no tema escuro (.ect) a regra que
+          // clareia text-papel só pega FILHOS de bg-tinta, então o texto ficava
+          // #181320 sobre #141013 (contraste 1,04:1, invisível) e a barra também.
+          // Tokens de card + texto: legível no escuro e no claro. Auditoria 2026-09-25.
+          <div className="mb-6 rounded-[var(--radius-card)] border-[1.5px] border-tinta bg-papel-2 p-4 text-tinta">
             <p className="m-0 text-[13.5px] leading-snug">
               Complete seus dados para garantir mais segurança no acesso à sua conta!
             </p>
             <div className="mt-3 flex items-center gap-2">
-              <div className="h-2 flex-1 overflow-hidden rounded-full bg-white/20">
-                <div className="h-full rounded-full bg-papel" style={{ width: `${completion}%` }} />
+              <div className="h-2 flex-1 overflow-hidden rounded-full bg-tinta/15">
+                <div className="h-full rounded-full bg-sol" style={{ width: `${completion}%` }} />
               </div>
               <span className="text-[12px] font-bold">{completion}%</span>
             </div>
