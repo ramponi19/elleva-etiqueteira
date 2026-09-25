@@ -281,7 +281,13 @@ export default function HomeNoite({
           </div>
         </section>
 
-        <section className="sec wrap" id="como" style={{ padding: "60px 0" }}>
+        {/* sec + div.wrap DENTRO, como as outras seções. Antes era
+            `className="sec wrap"` com `padding:60px 0` inline: o 0 zerava a
+            margem lateral do .wrap (e no celular a regra .sec, que vem depois
+            no CSS, também zera) → no celular a seção encostava na borda (0px,
+            o resto da página tem 18px) e no desktop ficava 30px desalinhada. */}
+        <section className="sec" id="como" style={{ paddingTop: 60, paddingBottom: 60 }}>
+          <div className="wrap">
           <div className="sec-head reveal" style={{ marginBottom: 30 }}>
             <div><div className="eyebrow">Como funciona</div><h2 style={{ fontSize: "clamp(28px,4vw,52px)" }}>Do palco pra sua mão</h2></div>
           </div>
@@ -301,6 +307,7 @@ export default function HomeNoite({
               <div><b>Ao vivo</b><span>Vendas e check-in em tempo real</span></div>
             </div>
             <Link className="btn btn-warm" href="/criar-evento">Publicar meu evento →</Link>
+          </div>
           </div>
         </section>
       </main>
