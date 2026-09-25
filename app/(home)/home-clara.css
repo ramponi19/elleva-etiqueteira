@@ -41,41 +41,33 @@
 .eclara .entrar{display:inline-flex;align-items:center;height:42px;padding:0 20px!important;border:1.5px solid var(--ink)!important;border-radius:999px;font-size:14px;font-weight:600;color:var(--ink)}
 .eclara .entrar:hover{background:var(--ink)!important;color:#fff}
 
-/* OUTDOOR */
-/* Medida do Lucas (a da Seo Ingresso): largura 100%, até 1920px, até 535px de
-   altura — proporção 1920×535 (~3,59:1), colado no cabeçalho. Acima de 1920
-   (ultrawide) fica centralizado. A capa do evento é 1600×838 (~1,91:1): vai
-   INTEIRA no centro e as laterais recebem a mesma imagem desfocada. */
-.eclara .outdoor{position:relative;max-width:1920px;margin:0 auto}
-.eclara .faixa{position:relative;width:100%;height:clamp(260px,calc(min(100vw,1920px) / 3.589),535px);background:#1B1512;overflow:hidden;isolation:isolate}
-.eclara .trilho{display:flex;height:100%;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain}
-.eclara .trilho::-webkit-scrollbar{display:none}
-.eclara .slide{position:relative;flex:0 0 100%;height:100%;scroll-snap-align:start;scroll-snap-stop:always;overflow:hidden;display:flex}
-/* com capa: painel (cor da borda da capa, lida no navegador) + arte inteira à direita */
-.eclara .slide.com-capa{background:var(--cor);transition:background-color .4s ease}
-.eclara .painel{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:8px;padding:28px 36px 28px max(30px,calc((min(100vw,1920px) - 1540px) / 2))}
-.eclara .txt-claro{color:#fff}.eclara .txt-escuro{color:#17110D}
-.eclara .p-cat{font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;opacity:.85}
-.eclara .p-titulo{font-size:clamp(26px,2.7vw,52px);font-weight:900;line-height:1.02;letter-spacing:-.02em;max-width:16ch;text-wrap:balance;margin-bottom:4px}
-.eclara .p-info{font-size:clamp(14px,1.05vw,17px);font-weight:600;opacity:.9}
-.eclara .p-btn{margin-top:14px;display:inline-flex;align-items:center;height:48px;padding:0 26px;border-radius:999px;font-size:15px;font-weight:700;transition:transform .15s}
-.eclara .txt-claro .p-btn{background:#fff;color:#17110D}.eclara .txt-escuro .p-btn{background:#17110D;color:#fff}
-.eclara .slide:hover .p-btn{transform:translateY(-1px)}
-.eclara .arte{position:relative;display:block;flex:0 0 auto;height:100%;aspect-ratio:1600/838;max-width:100%}
-.eclara .arte img{object-fit:cover}
-/* emenda: a cor do painel entra um pouco por cima da borda da arte */
-.eclara .com-capa .arte::before{content:"";position:absolute;inset:0 auto 0 0;width:16%;z-index:1;pointer-events:none;background:linear-gradient(90deg,var(--cor),transparent)}
-.eclara .arte-gerada{display:flex;flex-direction:column;justify-content:flex-end;gap:8px;padding:clamp(18px,4vw,44px) max(30px,calc(50% - 770px));color:#fff;width:100%;max-width:none;aspect-ratio:auto}
+/* OUTDOOR — vitrine estilo Sympla (escolha do Lucas, 25/09)
+   Faixa de até 1920×535, colada no cabeçalho. Só imagens de eventos: a capa do
+   evento atual (1600×838, ~1,91:1) fica INTEIRA no centro, na altura toda, e
+   as laterais mostram as capas do anterior e do próximo, um pouco apagadas e
+   menores. Cada capa fica numa posição (--k: -2..2) em relação ao centro; ao
+   trocar, o transform desliza. -2 e +2 ficam fora da tela (entram sem piscar). */
+.eclara .outdoor{position:relative;max-width:1920px;margin:0 auto;padding-top:20px}
+.eclara .faixa{--h:clamp(260px,calc(min(100vw,1920px) / 3.589),535px);--w:calc(var(--h) * 1.909);--gap:16px;
+  position:relative;width:100%;height:var(--h);overflow:hidden;touch-action:pan-y;user-select:none}
+.eclara .slide{position:absolute;top:0;left:50%;width:var(--w);height:100%;border-radius:14px;overflow:hidden;display:block;background:#EEE;
+  transform:translateX(calc(-50% + var(--k) * (var(--w) * .95 + var(--gap)))) scale(.9);filter:brightness(.62) saturate(.85);
+  transition:transform .65s cubic-bezier(.2,.8,.2,1),filter .65s ease}
+.eclara .slide.centro{transform:translateX(-50%);filter:none;z-index:1}
+.eclara .slide:not(.centro){cursor:pointer}
+.eclara .slide:not(.centro):hover{filter:brightness(.78) saturate(.9)}
+.eclara .slide img{object-fit:cover;-webkit-user-drag:none}
+.eclara .arte-gerada{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;gap:8px;padding:clamp(18px,3vw,40px);color:#fff}
 .eclara .ag-cat{font-size:clamp(11px,1.1vw,13px);font-weight:700;letter-spacing:.14em;text-transform:uppercase;opacity:.85}
-.eclara .ag-titulo{font-size:clamp(26px,4.4vw,60px);font-weight:900;line-height:1;letter-spacing:-.02em;max-width:18ch;text-wrap:balance}
-.eclara .ag-quando{font-size:clamp(14px,1.4vw,18px);font-weight:600;opacity:.9}
+.eclara .ag-titulo{font-size:clamp(24px,3.4vw,54px);font-weight:900;line-height:1;letter-spacing:-.02em;max-width:18ch;text-wrap:balance}
+.eclara .ag-quando{font-size:clamp(14px,1.3vw,18px);font-weight:600;opacity:.9}
 /* setas embaixo do outdoor, junto das bolinhas: em cima da faixa cobriam o texto da arte do produtor */
 .eclara .seta{width:40px;height:40px;margin-left:6px;border-radius:50%;border:1px solid #DDD6CB;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:border-color .15s,background .15s}
 .eclara .seta:hover{border-color:#17110D;background:#FAF8F5}
 .eclara .seta svg{width:20px;height:20px;fill:none;stroke:var(--ink);stroke-width:2.2}
 .eclara .seta.ant{margin-left:14px}
 .eclara .rodape-outdoor{max-width:var(--largura);margin:0 auto;padding:14px 30px 0;display:flex;align-items:center;justify-content:space-between;gap:16px}
-.eclara .legenda{margin:0;display:none;flex-wrap:wrap;align-items:baseline;gap:4px 12px;min-width:0}
+.eclara .legenda{margin:0;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;min-width:0}
 .eclara .legenda strong{font-size:17px;font-weight:700}
 .eclara .legenda span{font-size:14px;color:var(--texto-2)}
 .eclara .pontos{display:flex;align-items:center;gap:2px;flex-shrink:0;margin-left:auto}
@@ -148,7 +140,7 @@
 
 @media (prefers-reduced-motion:reduce){
   .eclara *{transition-duration:.001s!important}
-  .eclara .trilho{scroll-behavior:auto}
+  .eclara .slide{transition:none}
 }
 @media (max-width:1024px){
   .eclara .grade{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -163,18 +155,13 @@
   .eclara .busca input{font-size:16px} /* 16px: o iOS não dá zoom ao focar */
   .eclara .entrar{height:40px;padding:0 16px!important}
   .eclara .wrap{padding:0 16px}
-  /* celular: 1920×535 daria ~110px de altura — fica na proporção da capa,
-     de ponta a ponta, e a arte ocupa tudo */
-  .eclara .faixa{height:calc(100vw / 1.909)}
+  /* celular: a capa do centro ocupa quase a largura toda (a do lado aparece na borda) */
+  .eclara .faixa{--w:calc(100vw - 48px);--h:calc(var(--w) / 1.909);--gap:8px}
+  .eclara .slide{border-radius:12px}
   .eclara .rodape-outdoor{padding:12px 16px 0}
   .eclara .legenda strong{font-size:16px}
   .eclara .seta{display:none} /* celular: arrasta com o dedo */
-  .eclara .arte-gerada{padding:20px 18px}
-  /* celular: sem painel — a capa ocupa a faixa toda e o nome vai na legenda */
-  .eclara .painel{display:none}
-  .eclara .arte{width:100%;aspect-ratio:auto}
-  .eclara .com-capa .arte::before{display:none}
-  .eclara .legenda{display:flex}
+  .eclara .arte-gerada{padding:18px}
   .eclara .categorias{margin:28px -16px 0;padding:0 16px 2px;gap:8px}
   .eclara .cat{flex:0 0 auto;height:44px;padding:0 16px 0 6px;border-radius:999px;font-size:14px;gap:8px}
   .eclara .cat-ico{width:32px;height:32px;border-radius:999px;font-size:15px}
