@@ -15,8 +15,9 @@ import { Outdoor, type SlideOutdoor } from "@/components/elleva/outdoor";
 import type { ContaResumo } from "@/lib/auth";
 import type { EventItem } from "@/lib/events";
 
-// O outdoor mostra até 4 eventos
-const MAX_OUTDOOR = 4;
+// O outdoor mostra até 7 eventos: 1 no centro + até 3 cartões empilhados de
+// cada lado, sem repetir evento (menos eventos = pilha menor)
+const MAX_OUTDOOR = 7;
 
 function cidadeDe(venueCity: string) {
   const partes = venueCity.split(" · ");

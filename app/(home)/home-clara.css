@@ -41,39 +41,44 @@
 .eclara .entrar{display:inline-flex;align-items:center;height:42px;padding:0 20px!important;border:1.5px solid var(--ink)!important;border-radius:999px;font-size:14px;font-weight:600;color:var(--ink)}
 .eclara .entrar:hover{background:var(--ink)!important;color:#fff}
 
-/* OUTDOOR — vitrine estilo Sympla (escolha do Lucas, 25/09)
-   Faixa de até 1920×535, colada no cabeçalho. Só imagens de eventos: a capa do
-   evento atual (1600×838, ~1,91:1) fica INTEIRA no centro, na altura toda, e
-   as laterais mostram as capas do anterior e do próximo, um pouco apagadas e
-   menores. Cada capa fica numa posição (--k: -2..2) em relação ao centro; ao
-   trocar, o transform desliza. -2 e +2 ficam fora da tela (entram sem piscar). */
-.eclara .outdoor{position:relative;max-width:1920px;margin:0 auto;padding-top:20px}
-.eclara .faixa{--h:clamp(260px,calc(min(100vw,1920px) / 3.589),535px);--w:calc(var(--h) * 1.909);--gap:16px;
+/* OUTDOOR — vitrine estilo Sympla (print que o Lucas mandou, 25/09)
+   Pilha de cartões: a capa do evento atual (1600×838, inteira) grande no
+   centro; atrás dela, dos dois lados, as capas vizinhas empilhadas — cada nível
+   menor (--s) e mais pra fora (--step), aparecendo só uma fatia, com sombra.
+   Posição de cada cartão: --k (com sinal) / --a (distância ao centro).
+   Medidas tiradas do print: centro 480 de altura; níveis a 88%, 77% e 67%;
+   fatia visível ~14% da largura do centro. */
+.eclara .outdoor{position:relative;max-width:1920px;margin:0 auto;padding-top:28px}
+.eclara .faixa{--h:clamp(220px,26vw,480px);--w:calc(var(--h) * 1.909);--step:calc(var(--w) * .14);
   position:relative;width:100%;height:var(--h);overflow:hidden;touch-action:pan-y;user-select:none}
-.eclara .slide{position:absolute;top:0;left:50%;width:var(--w);height:100%;border-radius:14px;overflow:hidden;display:block;background:#EEE;
-  transform:translateX(calc(-50% + var(--k) * (var(--w) * .95 + var(--gap)))) scale(.9);filter:brightness(.62) saturate(.85);
-  transition:transform .65s cubic-bezier(.2,.8,.2,1),filter .65s ease}
-.eclara .slide.centro{transform:translateX(-50%);filter:none;z-index:1}
+.eclara .slide{--s:calc(1 - var(--a) * .115);position:absolute;top:0;left:50%;width:var(--w);height:100%;border-radius:14px;overflow:hidden;display:block;background:#EEE;
+  box-shadow:0 10px 28px rgba(23,17,13,.22);
+  transform:translateX(calc(-50% + var(--dir) * (var(--w) / 2 + var(--a) * var(--step) - var(--s) * var(--w) / 2))) scale(var(--s));
+  transition:transform .6s cubic-bezier(.2,.8,.2,1),opacity .6s ease}
 .eclara .slide:not(.centro){cursor:pointer}
-.eclara .slide:not(.centro):hover{filter:brightness(.78) saturate(.9)}
+.eclara .slide.fora{opacity:0;pointer-events:none}
 .eclara .slide img{object-fit:cover;-webkit-user-drag:none}
 .eclara .arte-gerada{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;gap:8px;padding:clamp(18px,3vw,40px);color:#fff}
 .eclara .ag-cat{font-size:clamp(11px,1.1vw,13px);font-weight:700;letter-spacing:.14em;text-transform:uppercase;opacity:.85}
-.eclara .ag-titulo{font-size:clamp(24px,3.4vw,54px);font-weight:900;line-height:1;letter-spacing:-.02em;max-width:18ch;text-wrap:balance}
-.eclara .ag-quando{font-size:clamp(14px,1.3vw,18px);font-weight:600;opacity:.9}
-/* setas embaixo do outdoor, junto das bolinhas: em cima da faixa cobriam o texto da arte do produtor */
-.eclara .seta{width:40px;height:40px;margin-left:6px;border-radius:50%;border:1px solid #DDD6CB;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:border-color .15s,background .15s}
-.eclara .seta:hover{border-color:#17110D;background:#FAF8F5}
-.eclara .seta svg{width:20px;height:20px;fill:none;stroke:var(--ink);stroke-width:2.2}
-.eclara .seta.ant{margin-left:14px}
-.eclara .rodape-outdoor{max-width:var(--largura);margin:0 auto;padding:14px 30px 0;display:flex;align-items:center;justify-content:space-between;gap:16px}
-.eclara .legenda{margin:0;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;min-width:0}
-.eclara .legenda strong{font-size:17px;font-weight:700}
-.eclara .legenda span{font-size:14px;color:var(--texto-2)}
-.eclara .pontos{display:flex;align-items:center;gap:2px;flex-shrink:0;margin-left:auto}
-.eclara .pontos button:not(.seta){width:24px;height:24px;border:0;background:transparent;padding:0;cursor:pointer;display:flex;align-items:center;justify-content:center}
-.eclara .pontos button:not(.seta)::after{content:"";width:8px;height:8px;border-radius:999px;background:#D8D1C6;transition:width .2s,background .2s}
-.eclara .pontos button.on:not(.seta)::after{width:22px;background:var(--sol-btn)}
+.eclara .ag-titulo{font-size:clamp(22px,2.8vw,46px);font-weight:900;line-height:1;letter-spacing:-.02em;max-width:18ch;text-wrap:balance}
+.eclara .ag-quando{font-size:clamp(14px,1.2vw,17px);font-weight:600;opacity:.9}
+/* setas brancas em cima dos cartões laterais, logo fora da capa do centro (não cobrem a arte dela) */
+.eclara .seta{position:absolute;top:50%;z-index:20;width:44px;height:44px;margin-top:-22px;border-radius:50%;border:0;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .15s}
+.eclara .seta:hover{transform:scale(1.06)}
+.eclara .seta svg{width:20px;height:20px;fill:none;stroke:var(--sol-texto);stroke-width:2.4}
+.eclara .seta.ant{right:calc(50% + var(--w) / 2 + 30px)}
+.eclara .seta.prox{left:calc(50% + var(--w) / 2 + 30px)}
+/* embaixo: bolinhas e, centralizados, nome, cidade e data (como na Sympla) */
+.eclara .rodape-outdoor{max-width:var(--largura);margin:0 auto;padding:16px 30px 0;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center}
+.eclara .legenda{margin:0;display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0}
+.eclara .legenda strong{font-size:22px;font-weight:800;text-transform:uppercase;letter-spacing:.01em;line-height:1.2}
+.eclara .legenda .meta{display:flex;flex-wrap:wrap;justify-content:center;gap:4px 18px;font-size:14px;color:var(--texto-2)}
+.eclara .legenda .meta span{display:inline-flex;align-items:center;gap:6px}
+.eclara .legenda svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2}
+.eclara .pontos{display:flex;align-items:center;gap:2px}
+.eclara .pontos button{width:24px;height:24px;border:0;background:transparent;padding:0;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.eclara .pontos button::after{content:"";width:8px;height:8px;border-radius:999px;background:#D8D1C6;transition:width .2s,background .2s}
+.eclara .pontos button.on::after{width:22px;background:var(--sol-btn)}
 
 /* CATEGORIAS */
 .eclara .categorias{display:flex;gap:12px;margin-top:36px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
@@ -156,10 +161,12 @@
   .eclara .entrar{height:40px;padding:0 16px!important}
   .eclara .wrap{padding:0 16px}
   /* celular: a capa do centro ocupa quase a largura toda (a do lado aparece na borda) */
-  .eclara .faixa{--w:calc(100vw - 48px);--h:calc(var(--w) / 1.909);--gap:8px}
+  /* celular: capa do centro quase na largura toda, 1 nível de cada lado aparecendo na borda */
+  .eclara .outdoor{padding-top:16px}
+  .eclara .faixa{--w:calc(100vw - 64px);--h:calc(var(--w) / 1.909);--step:22px}
   .eclara .slide{border-radius:12px}
   .eclara .rodape-outdoor{padding:12px 16px 0}
-  .eclara .legenda strong{font-size:16px}
+  .eclara .legenda strong{font-size:18px}
   .eclara .seta{display:none} /* celular: arrasta com o dedo */
   .eclara .arte-gerada{padding:18px}
   .eclara .categorias{margin:28px -16px 0;padding:0 16px 2px;gap:8px}

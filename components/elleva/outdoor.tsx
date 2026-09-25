@@ -1,19 +1,20 @@
 "use client";
 
 // ============================================================
-// Outdoor da home (clara) — vitrine estilo Sympla (escolha do Lucas, 25/09)
+// Outdoor da home (clara) — vitrine estilo Sympla (print do Lucas, 25/09)
 // ============================================================
 // Só imagens de eventos, sem painel nem fundo desfocado. A capa do evento atual
 // (a mesma 1600×838 de sempre — o produtor não sobe arte extra) fica INTEIRA no
-// centro da faixa de até 1920×535; nas laterais aparecem as capas do anterior e
-// do próximo, menores e apagadas. Clicar numa lateral traz ela pro centro;
-// clicar no centro abre o evento. Roda sozinho, em loop.
+// centro; atrás dela, dos dois lados, as capas vizinhas empilhadas como
+// cartões, cada nível menor e mais pra fora (só uma fatia aparece). Clicar num
+// cartão lateral traz ele pro centro; clicar no centro abre o evento. Loop.
 //
-// Em vez de rolagem nativa, cada capa recebe uma posição --k (-2..2) em relação
+// Em vez de rolagem nativa, cada capa recebe uma posição --k (-N..N) em relação
 // ao centro e o CSS desliza pelo transform. A chave de cada elemento é o índice
 // "virtual" (pos + k, sem módulo): ao avançar, o React mantém os mesmos
-// elementos e só o --k muda, então a troca anima; o que entra nasce em ±2, fora
-// da tela. Com 2 eventos, as duas laterais mostram o outro evento.
+// elementos e só o --k muda, então a troca anima; o que entra nasce invisível
+// um nível além do último. Níveis por lado: até 3, sem repetir evento na pilha
+// (com 2 eventos, 1 nível: os dois lados mostram o outro evento).
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -56,8 +57,9 @@ export function Outdoor({ slides }: { slides: SlideOutdoor[] }) {
 
   if (n === 0) return null;
   const legenda = slides[atual];
-  // com 1 evento não há laterais (seria a mesma capa repetida)
-  const posicoes = n === 1 ? [0] : [-2, -1, 0, 1, 2];
+  const niveis = n <= 1 ? 0 : n === 2 ? 1 : Math.max(1, Math.min(3, Math.floor((n - 1) / 2)));
+  const posicoes: number[] = [];
+  for (let k = -(niveis + 1); k <= niveis + 1; k++) if (n > 1 || k === 0) posicoes.push(k);
 
   // arraste (dedo ou mouse): passou de 40px na horizontal, troca
   const onPointerDown = (e: React.PointerEvent) => { arraste.current = { x: e.clientX, y: e.clientY, moveu: false }; };
@@ -83,12 +85,14 @@ export function Outdoor({ slides }: { slides: SlideOutdoor[] }) {
           const vi = pos + k;
           const s = slides[mod(vi, n)];
           const centro = k === 0;
+          const a = Math.abs(k);
+          const fora = a > niveis;
           return (
             <Link
               key={vi}
               href={`/evento/${s.id}`}
-              className={"slide" + (centro ? " centro" : "")}
-              style={{ "--k": k } as React.CSSProperties}
+              className={"slide" + (centro ? " centro" : "") + (fora ? " fora" : "")}
+              style={{ "--a": a, "--dir": Math.sign(k), zIndex: 10 - a } as React.CSSProperties}
               draggable={false}
               tabIndex={centro ? undefined : -1}
               aria-hidden={centro ? undefined : true}
@@ -119,13 +123,19 @@ export function Outdoor({ slides }: { slides: SlideOutdoor[] }) {
             </Link>
           );
         })}
+        {n > 1 && (
+          <>
+            <button type="button" className="seta ant" aria-label="Destaque anterior" onClick={() => andar(-1)}>
+              <svg viewBox="0 0 24 24" aria-hidden><path d="m15 6-6 6 6 6" /></svg>
+            </button>
+            <button type="button" className="seta prox" aria-label="Próximo destaque" onClick={() => andar(1)}>
+              <svg viewBox="0 0 24 24" aria-hidden><path d="m9 6 6 6-6 6" /></svg>
+            </button>
+          </>
+        )}
       </div>
 
       <div className="rodape-outdoor">
-        <p className="legenda" aria-live="polite">
-          <strong>{legenda.title}</strong>
-          <span>{legenda.quando} · {legenda.cidade}</span>
-        </p>
         {n > 1 && (
           <div className="pontos">
             {slides.map((s, i) => (
@@ -143,14 +153,15 @@ export function Outdoor({ slides }: { slides: SlideOutdoor[] }) {
                 }}
               />
             ))}
-            <button type="button" className="seta ant" aria-label="Destaque anterior" onClick={() => andar(-1)}>
-              <svg viewBox="0 0 24 24" aria-hidden><path d="m15 6-6 6 6 6" /></svg>
-            </button>
-            <button type="button" className="seta prox" aria-label="Próximo destaque" onClick={() => andar(1)}>
-              <svg viewBox="0 0 24 24" aria-hidden><path d="m9 6 6 6-6 6" /></svg>
-            </button>
           </div>
         )}
+        <p className="legenda" aria-live="polite">
+          <strong>{legenda.title}</strong>
+          <span className="meta">
+            <span><svg viewBox="0 0 24 24" aria-hidden><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z" /><circle cx="12" cy="9.5" r="2.5" /></svg>{legenda.local}</span>
+            <span><svg viewBox="0 0 24 24" aria-hidden><rect x="3.5" y="5" width="17" height="15" rx="2" /><path d="M3.5 10h17M8 3v4M16 3v4" /></svg>{legenda.quando}</span>
+          </span>
+        </p>
       </div>
     </section>
   );
