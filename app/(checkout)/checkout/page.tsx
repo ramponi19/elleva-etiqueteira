@@ -264,7 +264,10 @@ export default function CheckoutPage() {
                       type="button"
                       aria-label={`Remover ${item.eventTitle}`}
                       onClick={() => removeItem(idx)}
-                      className="flex cursor-pointer text-tinta-35 hover:text-sol-escuro"
+                      // área de toque 41px (era 17px, o tamanho do ícone) — ação destrutiva,
+                      // errar o dedo apagava o ingresso do carrinho. -m-3 compensa o p-3:
+                      // o ícone e o layout não se mexem.
+                      className="-m-3 flex cursor-pointer rounded-[10px] p-3 text-tinta-35 hover:text-sol-escuro"
                     >
                       <Icon icon="lucide:trash-2" style={{ fontSize: 17 }} />
                     </button>
