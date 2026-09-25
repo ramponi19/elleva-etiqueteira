@@ -101,7 +101,7 @@ export function Outdoor({ slides }: { slides: SlideOutdoor[] }) {
                       src={s.cover}
                       alt=""
                       fill
-                      sizes="(max-width: 1660px) calc(100vw - 60px), 1540px"
+                      sizes="(max-width: 760px) 100vw, 1022px"
                       loading={i === 0 ? "eager" : "lazy"}
                       fetchPriority={i === 0 ? "high" : "auto"}
                     />
