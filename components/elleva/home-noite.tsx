@@ -212,7 +212,7 @@ export default function HomeNoite({
           </div>
           <div className="nav-right">
             {conta ? <MenuConta conta={conta} /> : <EntrarModal className="entrar" />}
-            <a className="mini" href="#cartaz">Ver eventos</a>
+            <a className="mini" href="#cartaz"><span className="rot-lg">Ver eventos</span><span className="rot-sm">Eventos</span></a>
           </div>
         </div>
       </nav>

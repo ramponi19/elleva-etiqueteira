@@ -153,7 +153,7 @@ export default function EventoNoite({
           <Link className="nav-back" href="/agenda">← Agenda</Link>
           <div className="nav-right">
             {conta ? <MenuConta conta={conta} /> : <EntrarModal className="entrar" />}
-            {!saleClosed && <a className="mini" href="#buy">Garantir ingresso</a>}
+            {!saleClosed && <a className="mini" href="#buy"><span className="rot-lg">Garantir ingresso</span><span className="rot-sm">Ingressos</span></a>}
           </div>
         </div>
       </nav>

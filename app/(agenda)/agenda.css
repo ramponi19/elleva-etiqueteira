@@ -88,3 +88,5 @@
 .eag :focus-visible{outline:2px solid var(--warm);outline-offset:3px}
 @media (max-width:900px){.eag .nav-links{display:none}.eag .grid{grid-template-columns:1fr 1fr}}
 @media (max-width:560px){.eag .grid{grid-template-columns:1fr}.eag .wrap{padding:0 18px}.eag .filters{flex-direction:column;align-items:stretch}}
+/* celular: "Entrar" com 44px de área de toque, igual home e evento */
+@media (max-width:760px){.eag .nav-right .entrar{min-height:44px;display:inline-flex;align-items:center}}

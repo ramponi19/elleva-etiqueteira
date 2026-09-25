@@ -50,3 +50,5 @@
 
 .einst :focus-visible{outline:2px solid #FF5A1F;outline-offset:3px}
 @media (max-width:760px){.einst .nav-links{display:none}}
+/* celular: "Entrar" com 44px de área de toque, igual home e evento */
+@media (max-width:760px){.einst .nav-right .entrar{min-height:44px;display:inline-flex;align-items:center}}

@@ -47,6 +47,7 @@
 .ehome .nav-links a:hover{color:var(--ink)}.ehome .nav-links a:hover::after{width:100%}
 .ehome .nav-right{margin-left:auto;display:flex;align-items:center;gap:20px}
 .ehome .nav-right .entrar{font-size:14px;font-weight:600}
+.ehome .mini .rot-sm{display:none}
 .ehome .mini{display:inline-flex;align-items:center;gap:.55em;font-weight:700;font-size:13px;padding:11px 18px;border-radius:2px;background:var(--warm);color:#180a03;text-transform:uppercase;letter-spacing:.02em}
 
 /* HERO */
@@ -208,8 +209,13 @@
   .ehome .ov-art{min-height:210px}.ehome .ov-buy{box-shadow:none}.ehome .ov-seam{display:none}.ehome .ov-panel::after{display:none}
 }
 @media (max-width:600px){
-  .ehome .nav-in{gap:12px;padding:0 18px}.ehome .nav-right{gap:12px}.ehome .nav-right .entrar{display:none}
-  .ehome .mini{white-space:nowrap;padding:10px 15px;font-size:12px}
+  /* nav compacta no celular: logo no tamanho da página de evento, CTA mais enxuto,
+     "Entrar" com 44px de área de toque. Sem isso a barra não encolhia (logo em 26px)
+     e o botão laranja era cortado pelo overflow-x:hidden abaixo de ~400px. */
+  .ehome .nav-in{gap:10px;padding:0 18px}.ehome .nav-right{gap:10px}
+  .ehome .brand{--elv-logo-size:20px}
+  .ehome .nav-right .entrar{min-height:44px;display:inline-flex;align-items:center}
+  .ehome .mini{white-space:nowrap;padding:9px 12px;font-size:11.5px}
   .ehome .wrap{padding:0 18px}.ehome .sec{padding:70px 0}
   .ehome .sec-head{flex-direction:column;align-items:flex-start;gap:10px}.ehome .sec-head .side{text-align:left}
   .ehome .prod{padding:38px 24px}
@@ -217,3 +223,4 @@
   .ehome .reel-nav{display:none}
   .ehome .reel{gap:16px;padding:22px 0 30px}
 }
+@media (max-width:380px){.ehome .mini .rot-lg{display:none}.ehome .mini .rot-sm{display:inline}}

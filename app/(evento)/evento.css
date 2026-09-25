@@ -38,6 +38,7 @@
 .eev .nav-back:hover{color:var(--ink)}
 .eev .nav-right{margin-left:auto;display:flex;align-items:center;gap:16px}
 .eev .nav-right .entrar{font-size:14px;font-weight:600}
+.eev .mini .rot-sm{display:none}
 .eev .mini{display:inline-flex;align-items:center;gap:.5em;font-weight:700;font-size:13px;padding:11px 18px;border-radius:2px;background:var(--warm);color:#180a03;text-transform:uppercase;letter-spacing:.02em}
 
 /* COVER */
@@ -161,13 +162,13 @@
 @media (max-width:560px){
   .eev .rel-grid{grid-template-columns:1fr}
   .eev .cover .meta{gap:18px}
-  .eev .nav-right .entrar{display:none}
   /* nav compacta: logo menor, sem "← Agenda", CTA numa linha só */
   .eev .nav-in{padding:0 18px;gap:12px;height:64px}
   .eev .brand{--elv-logo-size:20px}
   .eev .nav-back{display:none}
   .eev .nav-right{gap:10px}
-  .eev .mini{white-space:nowrap;padding:10px 14px;font-size:12px}
+  .eev .nav-right .entrar{min-height:44px;display:inline-flex;align-items:center}
+  .eev .mini{white-space:nowrap;padding:9px 12px;font-size:11.5px}
   .eev .wrap{padding:0 18px}
   .eev .cover .inner{padding:0 18px 40px}
   .eev .cover{min-height:64vh}
@@ -175,3 +176,5 @@
   .eev .cover h1{font-size:clamp(34px,10vw,44px)}
   .eev .body{padding:40px 0 32px}
 }
+/* telas bem estreitas: "Garantir ingresso" (162px) não cabe ao lado de logo + Entrar */
+@media (max-width:380px){.eev .mini .rot-lg{display:none}.eev .mini .rot-sm{display:inline}.eev .brand{--elv-logo-size:18px}}
