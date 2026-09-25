@@ -28,14 +28,16 @@ const ASSUNTOS: { value: string; label: string }[] = [
 ];
 
 function Req() {
-  return <span className="text-sol"> *</span>;
+  // text-sol-escuro (#FF7A45 nos temas escuros), não text-sol: #E8481F é a cor de
+  // FUNDO de botão e, como texto no card escuro, dava 4,22:1 (mín 4,5). Auditoria 2026-09-25.
+  return <span className="text-sol-escuro"> *</span>;
 }
 
 function SectionHead({ n, title, sub }: { n: number; title: string; sub?: string }) {
   return (
     <div className="mb-6">
       <h2 className="titulo-card text-tinta">
-        <span className="text-sol">{n}.</span> {title}
+        <span className="text-sol-escuro">{n}.</span> {title}
       </h2>
       {sub && <p className="corpo-suave mt-1">{sub}</p>}
     </div>
@@ -607,7 +609,8 @@ export function CriarEventoForm({
                     type="button"
                     onClick={() => rmTier(i)}
                     aria-label="Remover ingresso"
-                    className="text-tinta-60 hover:text-sol-escuro"
+                    // área de toque 42px (era 18px, o ícone): apaga o lote. -m-3 compensa o p-3.
+                    className="-m-3 flex rounded-[10px] p-3 text-tinta-60 hover:text-sol-escuro"
                   >
                     <Icon icon="lucide:trash-2" style={{ fontSize: 18 }} />
                   </button>
