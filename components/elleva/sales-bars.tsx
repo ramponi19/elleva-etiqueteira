@@ -35,7 +35,11 @@ export function SalesBars({ data }: { data: Point[] }) {
       </svg>
       <div className="mt-1.5 flex">
         {data.map((d, i) => (
-          <span key={i} className="flex-1 text-center font-mono text-[9px] text-tinta-60">
+          // min-w-0: cada fatia fica com 1/14 da largura mesmo que o rótulo seja
+          // maior. Sem isso o flex não encolhe abaixo do texto, a linha estourava
+          // a tela no celular e a página ganhava rolagem lateral. Só metade das
+          // fatias tem rótulo, então o texto transborda pra vizinha vazia.
+          <span key={i} className="min-w-0 flex-1 whitespace-nowrap text-center font-mono text-[9px] text-tinta-60">
             {i % 2 === 0 ? d.label : ""}
           </span>
         ))}
