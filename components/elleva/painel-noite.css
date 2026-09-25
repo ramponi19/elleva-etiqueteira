@@ -1,13 +1,14 @@
 /* ===========================================================
-   PAINEL DO PRODUTOR "A NOITE" (escopo .eprd)
-   Dashboard escuro: início, vendas, financeiro, participantes,
-   cupons, validar, check-in, editar evento. Swap escopado + ajustes.
-   Não toca no DashShell (admin segue claro).
+   PAINÉIS "A NOITE" — produtor (/produtor) E admin (/admin) — escopo .epainel
+   Dashboard escuro: troca escopada das variáveis de cor + ajustes.
+   Nasceu como produtor.css (.eprd, 28/08) com o admin de fora, claro.
+   Em 2026-09-25 (pedido do Lucas) virou o tema dos DOIS painéis: um
+   arquivo só, pra não voltarem a divergir. Importado nos dois layouts.
    =========================================================== */
 /* Camadas subidas (não "breu chapado"): base < conteúdo < cards, com brilho
    ambiente sutil no conteúdo e bordas em hairline (não branco puro). */
-:root:has(.eprd),body:has(.eprd){background:#120f19}
-.eprd{
+:root:has(.epainel),body:has(.epainel){background:#120f19}
+.epainel{
   --color-papel:#181320; --color-papel-2:#2a2338; --color-tinta:#F6F1E9;
   --color-tinta-60:rgb(246 241 233 / 0.62); --color-tinta-35:rgb(246 241 233 / 0.40);
   --color-tinta-70:rgb(246 241 233 / 0.70);
@@ -20,25 +21,25 @@
 }
 
 /* brilho ambiente sutil no conteúdo (o painel não tinha, ficava sem vida) */
-.eprd main{background:
+.epainel main{background:
   radial-gradient(70% 38% at 80% 0%, rgba(255,90,31,.06), transparent 58%),
   radial-gradient(55% 40% at 6% 6%, rgba(156,75,255,.05), transparent 60%)}
 
 /* superfícies (sidebar, cards, inputs): descoladas do fundo + sombra leve */
-.eprd .bg-white{background-color:#221c2e !important}
-.eprd .bg-white:not(input):not(textarea):not(select){box-shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 34px rgba(0,0,0,.32)}
-.eprd input,.eprd textarea,.eprd select{background:#221c2e}
-.eprd input::placeholder,.eprd textarea::placeholder{color:rgb(246 241 233 / 0.32)}
-.eprd [class*="shadow-"]{box-shadow:0 18px 50px rgba(0,0,0,.5) !important}
+.epainel .bg-white{background-color:#221c2e !important}
+.epainel .bg-white:not(input):not(textarea):not(select){box-shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 34px rgba(0,0,0,.32)}
+.epainel input,.epainel textarea,.epainel select{background:#221c2e}
+.epainel input::placeholder,.epainel textarea::placeholder{color:rgb(246 241 233 / 0.32)}
+.epainel [class*="shadow-"]{box-shadow:0 18px 50px rgba(0,0,0,.5) !important}
 /* bordas branco puro -> hairline elegante */
-.eprd [class*="border-tinta"]{border-color:rgb(246 241 233 / 0.12)}
+.epainel [class*="border-tinta"]{border-color:rgb(246 241 233 / 0.12)}
 
 /* laranja: texto escuro em cima de bg-sol (botões/badges) */
-.eprd [class*="bg-sol"]{color:#180a03}
+.epainel [class*="bg-sol"]{color:#180a03}
 /* bandas de contraste bg-tinta em superfície escura (não ilha clara) */
-.eprd footer[class*="bg-tinta"],.eprd section[class*="bg-tinta"],.eprd div[class*="bg-tinta"]{background:#141013 !important}
-.eprd [class*="bg-tinta"] [class*="text-papel"]{color:rgb(246 241 233 / 0.80)}
+.epainel footer[class*="bg-tinta"],.epainel section[class*="bg-tinta"],.epainel div[class*="bg-tinta"]{background:#141013 !important}
+.epainel [class*="bg-tinta"] [class*="text-papel"]{color:rgb(246 241 233 / 0.80)}
 /* botões/links tinta (ex.: item de menu ativo) -> laranja com texto escuro */
-.eprd button[class*="bg-tinta"],.eprd a[class*="bg-tinta"]{background:var(--color-sol) !important;color:#180a03 !important;border:0 !important}
+.epainel button[class*="bg-tinta"],.epainel a[class*="bg-tinta"]{background:var(--color-sol) !important;color:#180a03 !important;border:0 !important}
 
-.eprd :focus-visible{outline:2px solid #FF5A1F;outline-offset:2px}
+.epainel :focus-visible{outline:2px solid #FF5A1F;outline-offset:2px}

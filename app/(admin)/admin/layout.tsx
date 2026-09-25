@@ -1,3 +1,4 @@
+import "@/components/elleva/painel-noite.css";
 import { requireRole } from "@/lib/auth";
 import { DashShell } from "@/components/elleva/dash-shell";
 
@@ -21,8 +22,11 @@ export default async function AdminLayout({
 }) {
   const { fullName, user } = await requireRole(["admin"]);
   return (
-    <DashShell area="Administração" items={NAV} userName={fullName ?? user.email ?? "Admin"}>
-      {children}
-    </DashShell>
+    // mesmo tema escuro do painel do produtor (components/elleva/painel-noite.css)
+    <div className="epainel">
+      <DashShell area="Administração" items={NAV} userName={fullName ?? user.email ?? "Admin"}>
+        {children}
+      </DashShell>
+    </div>
   );
 }

@@ -1,4 +1,4 @@
-import "./produtor.css";
+import "@/components/elleva/painel-noite.css";
 import { requireAuth } from "@/lib/auth";
 import { DashShell } from "@/components/elleva/dash-shell";
 
@@ -19,7 +19,7 @@ export default async function ProdutorLayout({
 }) {
   const { fullName, user } = await requireAuth();
   return (
-    <div className="eprd">
+    <div className="epainel">
       <DashShell area="Área do produtor" items={NAV} userName={fullName ?? user.email ?? "Produtor"}>
         {children}
       </DashShell>
