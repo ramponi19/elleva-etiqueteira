@@ -1,3 +1,4 @@
+import { useId } from "react";
 import { clsx } from "clsx";
 
 // Marca "A Noite" (2026-09): ícone-ingresso (bilhete laranja com E, picote e
@@ -13,14 +14,23 @@ export function MarkElleva({
   className?: string;
   style?: React.CSSProperties;
 }) {
+  // ids ÚNICOS por instância. Com ids fixos ("elvSol"/"elvTk") e dois logos na
+  // página, url(#elvSol) resolve pro PRIMEIRO do documento — e se ele estiver
+  // num pai com display:none (a sidebar do DashShell no celular), o gradiente e
+  // a máscara não pintam e o bilhete some, sobrando só o E e o código de barras.
+  // useId é estável entre servidor e cliente (sem erro de hidratação) e o React
+  // 19 o libera em Server Components. Limpa pra sobrar só [A-Za-z0-9_-].
+  const uid = useId().replace(/[^A-Za-z0-9_-]/g, "");
+  const sol = `elvSol-${uid}`;
+  const tk = `elvTk-${uid}`;
   return (
     <svg viewBox="0 0 150 100" aria-hidden className={className} style={style}>
       <defs>
-        <linearGradient id="elvSol" x1="0" y1="0" x2="0" y2="1">
+        <linearGradient id={sol} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stopColor="#FF9455" />
           <stop offset="1" stopColor="#EE4E14" />
         </linearGradient>
-        <mask id="elvTk">
+        <mask id={tk}>
           <rect x="14" y="22" width="122" height="56" rx="11" fill="#fff" />
           <circle cx="14" cy="30" r="5" fill="#000" />
           <circle cx="14" cy="41" r="5" fill="#000" />
@@ -30,7 +40,7 @@ export function MarkElleva({
         </mask>
       </defs>
       {/* bilhete + serrilha */}
-      <rect x="14" y="22" width="122" height="56" rx="11" fill="url(#elvSol)" mask="url(#elvTk)" />
+      <rect x="14" y="22" width="122" height="56" rx="11" fill={`url(#${sol})`} mask={`url(#${tk})`} />
       {/* E */}
       <g fill="#FBF2E6">
         <rect x="34" y="34" width="11" height="32" rx="2.5" />
