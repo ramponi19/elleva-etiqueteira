@@ -31,6 +31,9 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: "cancelados", label: "Cancelados" },
 ];
 
+// rótulo em português (a Badge mostrava o valor cru do banco: "PUBLISHED"). Mesmos
+// termos do painel do produtor. Auditoria visual 2026-09-25.
+const STATUS_LABEL: Record<string, string> = { published: "Publicado", sold_out: "Esgotado", draft: "Rascunho", cancelled: "Cancelado" };
 const STATUS_TOM: Record<string, "sol" | "papel" | "tinta" | "cartaz"> = {
   published: "sol",
   sold_out: "cartaz",
@@ -161,9 +164,12 @@ export function AdminEventsList({ events }: { events: AdminEvent[] }) {
               <p className="m-0 truncate text-[14px] font-medium text-tinta">{e.title}</p>
               <p className="corpo-suave m-0">{e.city} · {e.starts_label}</p>
             </div>
-            <div className="flex flex-shrink-0 flex-wrap items-center gap-2">
+            {/* max-w-full (era flex-shrink-0): com shrink-0 o grupo ficava da largura
+                de todos os botões numa linha só e o flex-wrap nunca quebrava — no
+                celular a linha ia a 826px e a página rolava pro lado. */}
+            <div className="flex min-w-0 max-w-full flex-wrap items-center gap-2">
               <Badge tom="papel">{e.category}</Badge>
-              <Badge tom={STATUS_TOM[e.status] ?? "papel"}>{e.status}</Badge>
+              <Badge tom={STATUS_TOM[e.status] ?? "papel"}>{STATUS_LABEL[e.status] ?? e.status}</Badge>
               <button
                 type="button"
                 onClick={() => setFeeTarget(e)}

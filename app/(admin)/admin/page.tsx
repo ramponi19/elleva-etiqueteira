@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge";
 
 export const metadata: Metadata = { title: "Admin" };
 
+// rótulo em português (mostrava o valor cru do banco: "PAID"). Auditoria 2026-09-25.
+const ORDER_LABEL: Record<string, string> = { paid: "Pago", pending: "Pendente", cancelled: "Cancelado", refunded: "Reembolsado" };
 const ORDER_TOM: Record<string, "sol" | "papel" | "tinta" | "cartaz"> = {
   paid: "sol",
   pending: "cartaz",
@@ -88,7 +90,7 @@ export default async function AdminOverview() {
                 <p className="corpo-suave m-0 truncate">{o.buyer_email}</p>
               </div>
               <div className="flex flex-shrink-0 items-center gap-3">
-                <Badge tom={ORDER_TOM[o.status] ?? "papel"}>{o.status}</Badge>
+                <Badge tom={ORDER_TOM[o.status] ?? "papel"}>{ORDER_LABEL[o.status] ?? o.status}</Badge>
                 <span className="numero text-[15px] text-tinta">{fmtBRL(Number(o.total))}</span>
               </div>
             </div>

@@ -26,6 +26,10 @@ export interface AdminOrder {
   items: AdminOrderItem[];
 }
 
+// rótulos em português (as Badges mostravam o valor cru: "PAID", "CARD"). Mesmos
+// termos dos filtros abaixo. Auditoria visual 2026-09-25.
+const STATUS_LABEL: Record<string, string> = { paid: "Pago", pending: "Pendente", cancelled: "Cancelado", refunded: "Reembolsado" };
+const METODO_LABEL: Record<string, string> = { pix: "Pix", card: "Cartão", free: "Grátis" };
 const TOM: Record<string, "sol" | "papel" | "tinta" | "cartaz"> = {
   paid: "sol", pending: "cartaz", cancelled: "tinta", refunded: "tinta",
 };
@@ -113,15 +117,18 @@ export default function OrdersAdmin({ orders, truncated }: { orders: AdminOrder[
               <button
                 type="button"
                 onClick={() => setOpenId(openId === o.id ? null : o.id)}
-                className="min-w-0 flex-1 text-left"
+                // base 220px (era flex-1 = base 0): com base 0 a linha nunca quebrava,
+                // o grupo da direita ocupava tudo e o nome/e-mail do cliente encolhia
+                // a 0px no celular. Agora, sem espaço, o grupo desce pra linha de baixo.
+                className="min-w-0 flex-[1_1_220px] text-left"
                 aria-expanded={openId === o.id}
               >
                 <p className="m-0 truncate text-[14px] font-medium text-tinta">{o.buyer_name}</p>
                 <p className="corpo-suave m-0 truncate">{o.buyer_email} · {o.created_label}</p>
               </button>
               <div className="flex flex-shrink-0 items-center gap-2">
-                <Badge tom="papel">{o.payment_method}</Badge>
-                <Badge tom={TOM[o.status] ?? "papel"}>{o.status}</Badge>
+                <Badge tom="papel">{METODO_LABEL[o.payment_method] ?? o.payment_method}</Badge>
+                <Badge tom={TOM[o.status] ?? "papel"}>{STATUS_LABEL[o.status] ?? o.status}</Badge>
                 <span className="numero min-w-[86px] text-right text-[15px] text-tinta">{fmtBRL(o.total)}</span>
                 <OrderCancelButton orderId={o.id} status={o.status} />
               </div>
