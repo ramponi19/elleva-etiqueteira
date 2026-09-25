@@ -58,7 +58,8 @@ export default function Nav({
     // import dinâmico: supabase-js fica fora do bundle de toda página
     const { createClient } = await import("@/lib/supabase/client");
     const supabase = createClient();
-    await supabase.auth.signOut();
+    // scope local: sai SÓ deste aparelho. O padrão do supabase-js é "global" (derruba a sessão em todos os aparelhos — sair no celular deslogava o computador); a própria doc recomenda local pra maioria dos apps.
+    await supabase.auth.signOut({ scope: "local" });
     setMenuOpen(false);
     router.push("/");
     router.refresh();

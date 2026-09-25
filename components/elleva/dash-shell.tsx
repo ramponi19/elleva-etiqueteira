@@ -35,7 +35,8 @@ export function DashShell({
 
   async function signOut() {
     const { createClient } = await import("@/lib/supabase/client");
-    await createClient().auth.signOut();
+    // scope local: sai SÓ deste aparelho. O padrão do supabase-js é "global" (derruba a sessão em todos os aparelhos — sair no celular deslogava o computador); a própria doc recomenda local pra maioria dos apps.
+    await createClient().auth.signOut({ scope: "local" });
     router.push("/");
     router.refresh();
   }
