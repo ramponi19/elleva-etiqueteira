@@ -39,8 +39,9 @@
 .eclara .entrar:hover{background:var(--ink)!important;color:#fff}
 
 /* OUTDOOR */
-.eclara .outdoor{position:relative}
-.eclara .faixa{position:relative;height:clamp(180px,calc(100vw / 1.909),440px);background:#1B1512;overflow:hidden}
+/* dentro da largura da página (1240 − 30px de cada lado), alinhado com o logo e a grade */
+.eclara .outdoor{position:relative;max-width:1240px;margin:0 auto;padding:24px 30px 0}
+.eclara .faixa{position:relative;height:clamp(170px,calc((min(100vw,1240px) - 60px) / 1.909),440px);border-radius:16px;background:#1B1512;overflow:hidden;isolation:isolate}
 .eclara .trilho{display:flex;height:100%;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain}
 .eclara .trilho::-webkit-scrollbar{display:none}
 .eclara .slide{position:relative;flex:0 0 100%;height:100%;scroll-snap-align:start;scroll-snap-stop:always;overflow:hidden;display:block}
@@ -48,16 +49,16 @@
 .eclara .fundo-desfocado img{object-fit:cover}
 .eclara .arte{position:relative;display:block;height:100%;aspect-ratio:1600/838;max-width:100%;margin:0 auto}
 .eclara .arte img{object-fit:cover}
-.eclara .arte-gerada{display:flex;flex-direction:column;justify-content:flex-end;gap:8px;padding:clamp(18px,4vw,44px) calc(max(16px,50vw - 600px) + 76px);color:#fff;width:100%;max-width:none;aspect-ratio:auto}
+.eclara .arte-gerada{display:flex;flex-direction:column;justify-content:flex-end;gap:8px;padding:clamp(18px,4vw,44px) 88px;color:#fff;width:100%;max-width:none;aspect-ratio:auto}
 .eclara .ag-cat{font-size:clamp(11px,1.1vw,13px);font-weight:700;letter-spacing:.14em;text-transform:uppercase;opacity:.85}
 .eclara .ag-titulo{font-size:clamp(26px,4.4vw,60px);font-weight:900;line-height:1;letter-spacing:-.02em;max-width:18ch;text-wrap:balance}
 .eclara .ag-quando{font-size:clamp(14px,1.4vw,18px);font-weight:600;opacity:.9}
 .eclara .seta{position:absolute;top:50%;transform:translateY(-50%);width:48px;height:48px;border-radius:50%;border:0;background:rgba(255,255,255,.92);box-shadow:0 2px 12px rgba(0,0,0,.2);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s}
 .eclara .seta:hover{background:#fff}
 .eclara .seta svg{width:22px;height:22px;fill:none;stroke:var(--ink);stroke-width:2.2}
-.eclara .seta.ant{left:max(16px,calc(50vw - 600px))}
-.eclara .seta.prox{right:max(16px,calc(50vw - 600px))}
-.eclara .rodape-outdoor{max-width:1240px;margin:0 auto;padding:14px 30px 0;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.eclara .seta.ant{left:16px}
+.eclara .seta.prox{right:16px}
+.eclara .rodape-outdoor{padding:14px 0 0;display:flex;align-items:center;justify-content:space-between;gap:16px}
 .eclara .legenda{margin:0;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;min-width:0}
 .eclara .legenda strong{font-size:17px;font-weight:700}
 .eclara .legenda span{font-size:14px;color:var(--texto-2)}
@@ -146,7 +147,9 @@
   .eclara .busca input{font-size:16px} /* 16px: o iOS não dá zoom ao focar */
   .eclara .entrar{height:40px;padding:0 16px!important}
   .eclara .wrap{padding:0 16px}
-  .eclara .rodape-outdoor{padding:12px 16px 0}
+  .eclara .outdoor{padding:14px 16px 0}
+  .eclara .faixa{height:calc((100vw - 32px) / 1.909);border-radius:14px}
+  .eclara .rodape-outdoor{padding:12px 0 0}
   .eclara .legenda strong{font-size:16px}
   .eclara .seta{display:none} /* celular: arrasta com o dedo */
   .eclara .arte-gerada{padding:20px 18px}

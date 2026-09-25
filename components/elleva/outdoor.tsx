@@ -1,7 +1,7 @@
 "use client";
 
 // ============================================================
-// Outdoor da home (clara) — faixa de largura total logo abaixo do cabeçalho,
+// Outdoor da home (clara) — banner na largura da página, logo abaixo do cabeçalho,
 // no molde da Seo Ingresso: um banner por evento, clicável, que leva à página
 // do evento e roda sozinho para o lado.
 // ============================================================
@@ -9,6 +9,8 @@
 // mais larga que isso, então a arte fica INTEIRA no centro (sem cortar o texto
 // que o produtor põe na arte) e as laterais recebem a mesma imagem desfocada.
 // No celular a faixa já tem a proporção da capa e a arte ocupa tudo.
+// (Começou de ponta a ponta como na Seo Ingresso; o Lucas preferiu dentro
+// dos limites da página, alinhado com o logo e a grade.)
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
