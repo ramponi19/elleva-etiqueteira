@@ -99,7 +99,9 @@
 .eev .tier .badge{font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;padding:3px 7px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
 .eev .tier .badge.hot{background:var(--warm);color:#180a03;border-color:var(--warm)}
 .eev .tier .tp{font-size:12.5px;color:var(--muted);margin-top:2px}
-.eev .tier .td{font-size:12px;color:var(--dim);margin-top:2px}
+/* descrição do lote: era var(--dim) #635a4f = contraste 2,6:1 (ilegível onde a pessoa decide
+   o que comprar). --muted #9A9082 é o secundário legível do próprio visual: ~5,5:1 (mínimo p/ texto 4,5:1). */
+.eev .tier .td{font-size:12px;color:var(--muted);margin-top:2px}
 .eev .step{display:flex;align-items:center;gap:9px;flex:none}
 .eev .step button{width:32px;height:32px;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--ink);font-size:16px;cursor:pointer;line-height:1;font-family:inherit;transition:.15s}
 .eev .step button:hover:not(:disabled){border-color:var(--ink)}
