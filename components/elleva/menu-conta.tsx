@@ -25,7 +25,8 @@ function iniciais(nome: string, email: string): string {
 
 const primeiroNome = (nome: string) => (nome.includes("@") ? nome.split("@")[0] : nome.trim().split(/\s+/)[0]);
 
-export function MenuConta({ conta }: { conta: ContaResumo }) {
+/** `claro`: gatilho e painel para barras de fundo branco (home clara). */
+export function MenuConta({ conta, claro = false }: { conta: ContaResumo; claro?: boolean }) {
   const router = useRouter();
   const pathname = usePathname();
   // Guarda EM QUE PÁGINA foi aberto: navegou (inclusive voltar/avançar do
@@ -83,7 +84,7 @@ export function MenuConta({ conta }: { conta: ContaResumo }) {
   const fechar = () => setAberto(false);
 
   return (
-    <div className={s.root} ref={raiz}>
+    <div className={claro ? `${s.root} ${s.claro}` : s.root} ref={raiz}>
       <button
         ref={gatilho}
         type="button"

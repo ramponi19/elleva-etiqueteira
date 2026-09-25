@@ -2,7 +2,7 @@ import { getEvents } from "@/lib/events";
 import { getContaResumo } from "@/lib/auth";
 import { JsonLd } from "@/components/seo/json-ld";
 import { SITE_URL } from "@/lib/site";
-import HomeNoite from "@/components/elleva/home-noite";
+import HomeClara from "@/components/elleva/home-clara";
 
 export const revalidate = 300;
 
@@ -26,7 +26,7 @@ export default async function HomePage() {
   return (
     <>
       <JsonLd data={JSONLD_SITE} />
-      <HomeNoite events={events} conta={conta} />
+      <HomeClara events={events} conta={conta} />
     </>
   );
 }

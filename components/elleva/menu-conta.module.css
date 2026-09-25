@@ -142,6 +142,57 @@
   color: #ff9f5a;
 }
 
+/* Variante clara (home de fundo branco): mesmas medidas, cores invertidas. */
+.claro .gatilho {
+  border-color: #ddd6cb;
+  background: #fff;
+  color: #17110d;
+}
+.claro .gatilho:hover,
+.claro .gatilho[aria-expanded="true"] {
+  border-color: #17110d;
+  background: #faf8f5;
+}
+.claro .gatilho:focus-visible {
+  outline-color: #d63c12;
+}
+.claro .avatar {
+  background: #d63c12;
+  color: #fff;
+}
+.claro .seta {
+  color: #6b6258;
+}
+.claro .painel {
+  border-color: #e8e2d9;
+  background: #fff;
+  box-shadow: 0 18px 44px rgba(23, 17, 13, 0.16);
+  color: #17110d;
+}
+.claro .cabeca,
+.claro .grupo + .grupo {
+  border-color: #ece7df;
+}
+.claro .cabecaEmail {
+  color: #6b6258;
+}
+.claro .item {
+  color: #17110d;
+}
+.claro .item:hover,
+.claro .item:focus-visible {
+  background: #f6f3ee;
+}
+.claro .item svg {
+  color: #6b6258;
+}
+.claro .item:hover svg {
+  color: #c2380f;
+}
+.claro .sair {
+  color: #c2380f;
+}
+
 /* Celular: só o avatar — o nome não cabe ao lado de "Ver eventos". */
 @media (max-width: 640px) {
   .gatilho {
