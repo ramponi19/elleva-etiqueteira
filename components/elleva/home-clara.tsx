@@ -101,7 +101,7 @@ export default function HomeClara({ events, conta }: { events: EventItem[]; cont
                 <Link key={e.id} href={`/evento/${e.id}`} className="card">
                   <span className={"capa " + (e.cover ? "" : FUNDO[e.catLabel] ?? "g-show")}>
                     {e.cover ? (
-                      <Image src={e.cover} alt="" fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 300px" />
+                      <Image src={e.cover} alt="" fill sizes="(max-width: 760px) 100vw, (max-width: 1024px) 50vw, 400px" />
                     ) : (
                       <span className="capa-titulo" aria-hidden>{e.title}</span>
                     )}
