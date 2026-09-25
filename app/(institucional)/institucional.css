@@ -47,7 +47,10 @@
 .einst .foot-col h5{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#9A9082;margin:0 0 12px}
 .einst .foot-col a{display:block;color:rgb(246 241 233/.6);font-size:14px;margin-bottom:9px}
 .einst .foot-col a:hover{color:#F6F1E9}
-.einst .foot-base{max-width:1240px;margin:40px auto 0;padding:20px 30px 0;border-top:1px solid rgba(246,241,233,.12);color:#9A9082;font-size:12px}
+/* a borda tem a largura do CONTEÚDO do rodapé (como .foot-grid: 1240 − 2×30px),
+   não a do container: com o padding dentro da borda, a linha passava 30px pra
+   fora de cada lado das colunas (93..1333 contra 123..1303). */
+.einst .foot-base{width:calc(100% - 60px);max-width:1180px;margin:40px auto 0;padding:20px 0 0;border-top:1px solid rgba(246,241,233,.12);color:#9A9082;font-size:12px}
 
 .einst :focus-visible{outline:2px solid #FF5A1F;outline-offset:3px}
 @media (max-width:760px){.einst .nav-links{display:none}}

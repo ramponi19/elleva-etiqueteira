@@ -59,7 +59,11 @@ export default function ProdutoresPage() {
   return (
     <>
       {/* HERO */}
-      <section className="mx-auto max-w-[1320px] px-5 pb-4 pt-14 sm:px-10 sm:pt-20">
+      {/* containers no padrão do escopo .einst (nav-in e foot-grid: max-width 1240 +
+          padding 30px em todas as larguras). Eram max-w-[1320px] px-5/sm:px-10, do
+          sistema claro antigo: o conteúdo ficava 30px à esquerda da nav e do rodapé
+          no desktop (93 vs 123px) e 10px no celular. Auditoria visual 2026-09-25. */}
+      <section className="mx-auto max-w-[1240px] px-[30px] pb-4 pt-14 sm:pt-20">
         <p className="rotulo m-0 text-sol-escuro">Pra quem faz o evento</p>
         <h1 className="display-1 mt-4 max-w-[15ch]">
           Faça seu evento <span className="text-sol">lotar</span>
@@ -78,7 +82,7 @@ export default function ProdutoresPage() {
       </section>
 
       {/* COMO FUNCIONA */}
-      <section className="mx-auto max-w-[1320px] px-5 pb-6 pt-14 sm:px-10">
+      <section className="mx-auto max-w-[1240px] px-[30px] pb-6 pt-14">
         <h2 className="display-2" data-reveal>
           Como funciona
         </h2>
@@ -102,7 +106,7 @@ export default function ProdutoresPage() {
 
       {/* RECURSOS — bloco tinta full-width */}
       <section className="mt-16 bg-tinta py-16 sm:py-20">
-        <div className="mx-auto max-w-[1320px] px-5 sm:px-10">
+        <div className="mx-auto max-w-[1240px] px-[30px]">
           <h2 className="display-2 max-w-[18ch] text-papel" data-reveal>
             Ferramenta de <span className="text-cartaz">bilheteria completa</span>
           </h2>
@@ -123,7 +127,7 @@ export default function ProdutoresPage() {
       </section>
 
       {/* CTA FINAL */}
-      <section className="mx-auto flex max-w-[1320px] flex-col items-start gap-6 px-5 py-16 sm:px-10 sm:py-20">
+      <section className="mx-auto flex max-w-[1240px] flex-col items-start gap-6 px-[30px] py-16 sm:py-20">
         <h2 className="display-2 max-w-[16ch]" data-reveal>
           Seu evento merece <span className="text-sol">casa cheia</span>
         </h2>
