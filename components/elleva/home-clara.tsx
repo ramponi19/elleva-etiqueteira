@@ -50,6 +50,7 @@ export default function HomeClara({ events, conta }: { events: EventItem[]; cont
     catLabel: ROTULO[e.catLabel] ?? e.catLabel,
     quando: `${e.dateFull} · ${e.time}`,
     cidade: cidadeDe(e.venueCity),
+    local: e.venueCity,
     fundo: FUNDO[e.catLabel] ?? "g-show",
   }));
 

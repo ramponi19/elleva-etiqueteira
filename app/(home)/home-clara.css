@@ -50,29 +50,38 @@
 .eclara .faixa{position:relative;width:100%;height:clamp(260px,calc(min(100vw,1920px) / 3.589),535px);background:#1B1512;overflow:hidden;isolation:isolate}
 .eclara .trilho{display:flex;height:100%;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain}
 .eclara .trilho::-webkit-scrollbar{display:none}
-.eclara .slide{position:relative;flex:0 0 100%;height:100%;scroll-snap-align:start;scroll-snap-stop:always;overflow:hidden;display:block}
-.eclara .fundo-desfocado{position:absolute;inset:-40px;filter:blur(28px) brightness(.6) saturate(1.2)}
-.eclara .fundo-desfocado img{object-fit:cover}
-.eclara .arte{position:relative;display:block;height:100%;aspect-ratio:1600/838;max-width:100%;margin:0 auto}
+.eclara .slide{position:relative;flex:0 0 100%;height:100%;scroll-snap-align:start;scroll-snap-stop:always;overflow:hidden;display:flex}
+/* com capa: painel (cor da borda da capa, lida no navegador) + arte inteira à direita */
+.eclara .slide.com-capa{background:var(--cor);transition:background-color .4s ease}
+.eclara .painel{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:8px;padding:28px 36px 28px max(30px,calc((min(100vw,1920px) - 1540px) / 2))}
+.eclara .txt-claro{color:#fff}.eclara .txt-escuro{color:#17110D}
+.eclara .p-cat{font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;opacity:.85}
+.eclara .p-titulo{font-size:clamp(26px,2.7vw,52px);font-weight:900;line-height:1.02;letter-spacing:-.02em;max-width:16ch;text-wrap:balance;margin-bottom:4px}
+.eclara .p-info{font-size:clamp(14px,1.05vw,17px);font-weight:600;opacity:.9}
+.eclara .p-btn{margin-top:14px;display:inline-flex;align-items:center;height:48px;padding:0 26px;border-radius:999px;font-size:15px;font-weight:700;transition:transform .15s}
+.eclara .txt-claro .p-btn{background:#fff;color:#17110D}.eclara .txt-escuro .p-btn{background:#17110D;color:#fff}
+.eclara .slide:hover .p-btn{transform:translateY(-1px)}
+.eclara .arte{position:relative;display:block;flex:0 0 auto;height:100%;aspect-ratio:1600/838;max-width:100%}
 .eclara .arte img{object-fit:cover}
-.eclara .arte-gerada{display:flex;flex-direction:column;justify-content:flex-end;gap:8px;padding:clamp(18px,4vw,44px) max(88px,calc(50% - 770px + 72px));color:#fff;width:100%;max-width:none;aspect-ratio:auto}
+/* emenda: a cor do painel entra um pouco por cima da borda da arte */
+.eclara .com-capa .arte::before{content:"";position:absolute;inset:0 auto 0 0;width:16%;z-index:1;pointer-events:none;background:linear-gradient(90deg,var(--cor),transparent)}
+.eclara .arte-gerada{display:flex;flex-direction:column;justify-content:flex-end;gap:8px;padding:clamp(18px,4vw,44px) max(30px,calc(50% - 770px));color:#fff;width:100%;max-width:none;aspect-ratio:auto}
 .eclara .ag-cat{font-size:clamp(11px,1.1vw,13px);font-weight:700;letter-spacing:.14em;text-transform:uppercase;opacity:.85}
 .eclara .ag-titulo{font-size:clamp(26px,4.4vw,60px);font-weight:900;line-height:1;letter-spacing:-.02em;max-width:18ch;text-wrap:balance}
 .eclara .ag-quando{font-size:clamp(14px,1.4vw,18px);font-weight:600;opacity:.9}
-.eclara .seta{position:absolute;top:50%;transform:translateY(-50%);width:48px;height:48px;border-radius:50%;border:0;background:rgba(255,255,255,.92);box-shadow:0 2px 12px rgba(0,0,0,.2);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s}
-.eclara .seta:hover{background:#fff}
-.eclara .seta svg{width:22px;height:22px;fill:none;stroke:var(--ink);stroke-width:2.2}
-/* setas na linha da página (1540 de conteúdo), não na borda da faixa */
-.eclara .seta.ant{left:max(16px,calc(50% - 770px))}
-.eclara .seta.prox{right:max(16px,calc(50% - 770px))}
+/* setas embaixo do outdoor, junto das bolinhas: em cima da faixa cobriam o texto da arte do produtor */
+.eclara .seta{width:40px;height:40px;margin-left:6px;border-radius:50%;border:1px solid #DDD6CB;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:border-color .15s,background .15s}
+.eclara .seta:hover{border-color:#17110D;background:#FAF8F5}
+.eclara .seta svg{width:20px;height:20px;fill:none;stroke:var(--ink);stroke-width:2.2}
+.eclara .seta.ant{margin-left:14px}
 .eclara .rodape-outdoor{max-width:var(--largura);margin:0 auto;padding:14px 30px 0;display:flex;align-items:center;justify-content:space-between;gap:16px}
-.eclara .legenda{margin:0;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;min-width:0}
+.eclara .legenda{margin:0;display:none;flex-wrap:wrap;align-items:baseline;gap:4px 12px;min-width:0}
 .eclara .legenda strong{font-size:17px;font-weight:700}
 .eclara .legenda span{font-size:14px;color:var(--texto-2)}
-.eclara .pontos{display:flex;gap:2px;flex-shrink:0}
-.eclara .pontos button{width:24px;height:24px;border:0;background:transparent;padding:0;cursor:pointer;display:flex;align-items:center;justify-content:center}
-.eclara .pontos button::after{content:"";width:8px;height:8px;border-radius:999px;background:#D8D1C6;transition:width .2s,background .2s}
-.eclara .pontos button.on::after{width:22px;background:var(--sol-btn)}
+.eclara .pontos{display:flex;align-items:center;gap:2px;flex-shrink:0;margin-left:auto}
+.eclara .pontos button:not(.seta){width:24px;height:24px;border:0;background:transparent;padding:0;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.eclara .pontos button:not(.seta)::after{content:"";width:8px;height:8px;border-radius:999px;background:#D8D1C6;transition:width .2s,background .2s}
+.eclara .pontos button.on:not(.seta)::after{width:22px;background:var(--sol-btn)}
 
 /* CATEGORIAS */
 .eclara .categorias{display:flex;gap:12px;margin-top:36px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
@@ -161,6 +170,11 @@
   .eclara .legenda strong{font-size:16px}
   .eclara .seta{display:none} /* celular: arrasta com o dedo */
   .eclara .arte-gerada{padding:20px 18px}
+  /* celular: sem painel — a capa ocupa a faixa toda e o nome vai na legenda */
+  .eclara .painel{display:none}
+  .eclara .arte{width:100%;aspect-ratio:auto}
+  .eclara .com-capa .arte::before{display:none}
+  .eclara .legenda{display:flex}
   .eclara .categorias{margin:28px -16px 0;padding:0 16px 2px;gap:8px}
   .eclara .cat{flex:0 0 auto;height:44px;padding:0 16px 0 6px;border-radius:999px;font-size:14px;gap:8px}
   .eclara .cat-ico{width:32px;height:32px;border-radius:999px;font-size:15px}
