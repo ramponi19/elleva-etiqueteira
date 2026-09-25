@@ -51,6 +51,21 @@ export const getAuth = cache(async () => {
   };
 });
 
+/** O mínimo que o menu da conta nas barras do site precisa. */
+export interface ContaResumo {
+  nome: string;
+  email: string;
+  papel: Role | null;
+}
+
+/** Resumo pro menu da conta (null = deslogado). Sai de graça: o getAuth() é
+ *  memoizado por request, então página + layout chamando não repetem consulta. */
+export async function getContaResumo(): Promise<ContaResumo | null> {
+  const a = await getAuth();
+  if (!a.user) return null;
+  return { nome: a.fullName ?? a.user.email ?? "Você", email: a.user.email ?? "", papel: a.role };
+}
+
 /** Área inicial após login. Como no mercado (Sympla/Eventbrite), toda conta é
  *  comprador E organizador — só o admin (Elleva) tem área à parte. */
 export function homeForRole(role: Role | null): string {

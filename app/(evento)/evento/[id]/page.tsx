@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getEvent, getEventSlugs, getEvents } from "@/lib/events";
-import { getAuth } from "@/lib/auth";
+import { getContaResumo } from "@/lib/auth";
 import { cidadeDoEvento } from "@/lib/cidades";
 import { fmtBRL } from "@/lib/format";
 import { toPlainText } from "@/lib/sanitize";
@@ -34,7 +34,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
 export default async function EventoPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const [data, { user }, todos] = await Promise.all([getEvent(id), getAuth(), getEvents()]);
+  const [data, conta, todos] = await Promise.all([getEvent(id), getContaResumo(), getEvents()]);
   if (!data) notFound();
   const { event, tiers } = data;
   const saleClosed = data.saleClosed ?? false;
@@ -68,7 +68,7 @@ export default async function EventoPage({ params }: { params: Promise<{ id: str
     <>
       <JsonLd data={jsonLd} />
       <EventTracking metaPixel={event.trackingMetaPixel} ga={event.trackingGa} />
-      <EventoNoite event={event} tiers={tiers} loggedIn={!!user} relacionados={relacionados} saleClosed={saleClosed} />
+      <EventoNoite event={event} tiers={tiers} conta={conta} relacionados={relacionados} saleClosed={saleClosed} />
     </>
   );
 }

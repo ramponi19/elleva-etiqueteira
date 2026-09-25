@@ -4,6 +4,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { LogoElleva } from "@/components/elleva/logo";
 import { EntrarModal } from "@/components/elleva/entrar-modal";
+import { MenuConta } from "@/components/elleva/menu-conta";
+import type { ContaResumo } from "@/lib/auth";
 import { useRouter } from "next/navigation";
 import type { EventItem } from "@/lib/events";
 
@@ -28,10 +30,10 @@ const PILLS = [
 
 export default function HomeNoite({
   events,
-  loggedIn,
+  conta,
 }: {
   events: EventItem[];
-  loggedIn: boolean;
+  conta: ContaResumo | null;
 }) {
   const router = useRouter();
   const [cat, setCat] = useState("tudo");
@@ -209,7 +211,7 @@ export default function HomeNoite({
             <a href="#como">Como funciona</a>
           </div>
           <div className="nav-right">
-            {loggedIn ? <Link className="entrar" href="/conta">Minha conta</Link> : <EntrarModal className="entrar" />}
+            {conta ? <MenuConta conta={conta} /> : <EntrarModal className="entrar" />}
             <a className="mini" href="#cartaz">Ver eventos</a>
           </div>
         </div>

@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { LogoElleva } from "@/components/elleva/logo";
 import { EntrarModal } from "@/components/elleva/entrar-modal";
+import { MenuConta } from "@/components/elleva/menu-conta";
+import type { ContaResumo } from "@/lib/auth";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { useCart } from "@/lib/cart";
@@ -26,17 +28,18 @@ const fmt2 = (n: number) => "R$ " + n.toLocaleString("pt-BR", { minimumFractionD
 export default function EventoNoite({
   event,
   tiers,
-  loggedIn,
+  conta,
   relacionados,
   saleClosed,
 }: {
   event: EventItem;
   tiers: Tier[];
-  loggedIn: boolean;
+  conta: ContaResumo | null;
   relacionados: EventItem[];
   saleClosed: boolean;
 }) {
   const router = useRouter();
+  const loggedIn = !!conta;
   const { addItems } = useCart();
   const [qty, setQty] = useState<Record<string, number>>({});
   const [showAuth, setShowAuth] = useState(false);
@@ -149,7 +152,7 @@ export default function EventoNoite({
           <Link className="brand" href="/" aria-label="Elleva Tickets"><LogoElleva /></Link>
           <Link className="nav-back" href="/agenda">← Agenda</Link>
           <div className="nav-right">
-            {loggedIn ? <Link className="entrar" href="/conta">Minha conta</Link> : <EntrarModal className="entrar" />}
+            {conta ? <MenuConta conta={conta} /> : <EntrarModal className="entrar" />}
             {!saleClosed && <a className="mini" href="#buy">Garantir ingresso</a>}
           </div>
         </div>

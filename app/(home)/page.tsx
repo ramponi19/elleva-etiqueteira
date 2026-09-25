@@ -1,5 +1,5 @@
 import { getEvents } from "@/lib/events";
-import { getAuth } from "@/lib/auth";
+import { getContaResumo } from "@/lib/auth";
 import { JsonLd } from "@/components/seo/json-ld";
 import { SITE_URL } from "@/lib/site";
 import HomeNoite from "@/components/elleva/home-noite";
@@ -22,11 +22,11 @@ const JSONLD_SITE = {
 };
 
 export default async function HomePage() {
-  const [events, { user }] = await Promise.all([getEvents(), getAuth()]);
+  const [events, conta] = await Promise.all([getEvents(), getContaResumo()]);
   return (
     <>
       <JsonLd data={JSONLD_SITE} />
-      <HomeNoite events={events} loggedIn={!!user} />
+      <HomeNoite events={events} conta={conta} />
     </>
   );
 }

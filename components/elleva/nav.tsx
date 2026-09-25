@@ -150,7 +150,7 @@ export default function Nav({
                       <Icon icon="lucide:ticket" style={{ fontSize: 17 }} /> Meus ingressos
                     </Link>
                     <Link href="/conta/perfil" className={itemCls} onClick={() => setMenuOpen(false)}>
-                      <Icon icon="lucide:user-round" style={{ fontSize: 17 }} /> Minha conta
+                      <Icon icon="lucide:user-round" style={{ fontSize: 17 }} /> Meus dados
                     </Link>
                     <Link href="/conta/favoritos" className={itemCls} onClick={() => setMenuOpen(false)}>
                       <Icon icon="lucide:heart" style={{ fontSize: 17 }} /> Favoritos

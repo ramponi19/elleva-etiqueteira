@@ -1,11 +1,12 @@
 import "./institucional.css";
 import Link from "next/link";
-import { getAuth } from "@/lib/auth";
+import { getContaResumo } from "@/lib/auth";
 import { LogoElleva } from "@/components/elleva/logo";
 import { EntrarModal } from "@/components/elleva/entrar-modal";
+import { MenuConta } from "@/components/elleva/menu-conta";
 
 export default async function InstitucionalLayout({ children }: { children: React.ReactNode }) {
-  const { user } = await getAuth();
+  const conta = await getContaResumo();
   return (
     <div className="einst">
       <div className="amb" aria-hidden />
@@ -18,7 +19,7 @@ export default async function InstitucionalLayout({ children }: { children: Reac
             <Link href="/ajuda">Ajuda</Link>
           </div>
           <div className="nav-right">
-            {user ? <Link className="entrar" href="/conta">Minha conta</Link> : <EntrarModal className="entrar" />}
+            {conta ? <MenuConta conta={conta} /> : <EntrarModal className="entrar" />}
           </div>
         </div>
       </nav>
