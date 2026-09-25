@@ -11,7 +11,8 @@ import { salvarDadosCompra, type DadosCompraInput } from "@/lib/actions/perfil";
 import { chamarAction, limparMarcaSkew } from "@/lib/action-client";
 
 /** Flags de sessão (só neste navegador/aba):
- *  - NOVO: setada na criação da conta → abre o modal assim que a sessão existir.
+ *  - NOVO: setada na criação da conta → abre o modal na 1ª visita a /conta,
+ *    mesmo que ele já tenha sido adiado antes nesta sessão.
  *  - VISTO: já mostramos (ou o usuário adiou) nesta sessão → não insiste. */
 export const CADASTRO_NOVO_KEY = "elleva_cadastro_novo";
 const VISTO_KEY = "elleva_cadastro_visto";
@@ -29,23 +30,38 @@ function ss(fn: (s: Storage) => void) {
   try { fn(sessionStorage); } catch { /* storage bloqueado: segue sem persistir */ }
 }
 
-/** Portão global (montado no layout raiz): quando a conta é criada — ou quando um
- *  usuário logado ainda não tem CPF — abre o modal "Complete seu cadastro" uma vez
- *  por sessão. Sem custo no servidor para visitantes: só consulta o perfil quando
- *  há sessão no navegador. */
+/** Montado no layout raiz, mas só AGE dentro de "Minha conta" (/conta/*): se o
+ *  usuário ainda não tem CPF, abre o modal "Complete seu cadastro" uma vez por
+ *  sessão do navegador. Fora de /conta não faz nada (nem cria cliente Supabase).
+ *
+ *  Por que não abre mais em qualquer página: antes ele também reagia ao evento
+ *  `SIGNED_IN` do Supabase forçando a abertura. Só que o SIGNED_IN NÃO quer dizer
+ *  "acabou de logar" — o auth-js o emite toda vez que carrega uma sessão válida
+ *  do storage (_recoverAndRefresh): em cada carregamento de página e sempre que
+ *  a aba volta ao foco. Resultado: o modal pulava a cada clique. Decisão do
+ *  Lucas (2026-09-25): só em "Minha conta". O checkout já pede CPF no fluxo.
+ *
+ *  Continua no layout raiz por causa do `limparMarcaSkew()`, que precisa rodar
+ *  em TODA página (senão a proteção de deploy skew de lib/action-client só
+ *  recarrega a página uma vez por sessão e depois para de funcionar). */
 export function CompletarCadastroGate() {
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [initial, setInitial] = useState<DadosCompraInput>(vazio);
 
-  const verificar = useCallback(async (forcar: boolean) => {
-    // No checkout o CPF já é pedido no próprio fluxo; não empilhar modal.
-    if (pathname?.startsWith("/checkout") || pathname?.startsWith("/validar")) return;
+  const verificar = useCallback(async () => {
+    if (!pathname?.startsWith("/conta")) return;
+    // Na tela "Meus dados" o formulário completo já está aberto — o modal seria
+    // repetido. Passar por ela conta como "já mostramos" nesta sessão.
+    if (pathname.startsWith("/conta/perfil")) {
+      ss((s) => { s.setItem(VISTO_KEY, "1"); s.removeItem(CADASTRO_NOVO_KEY); });
+      return;
+    }
     let visto = false;
     let novo = false;
     ss((s) => { visto = s.getItem(VISTO_KEY) === "1"; novo = s.getItem(CADASTRO_NOVO_KEY) === "1"; });
-    if (!forcar && !novo && visto) return;
+    if (!novo && visto) return;
 
     const supabase = createClient();
     const { data: { session } } = await supabase.auth.getSession();
@@ -71,13 +87,8 @@ export function CompletarCadastroGate() {
     limparMarcaSkew();
     // fora do corpo do efeito (tick seguinte): a checagem é assíncrona e só
     // abre o modal depois de consultar sessão + perfil
-    const t = setTimeout(() => void verificar(false), 0);
-    const supabase = createClient();
-    const { data: sub } = supabase.auth.onAuthStateChange((ev) => {
-      // login/cadastro feito no modal da própria página (sem recarregar)
-      if (ev === "SIGNED_IN") setTimeout(() => void verificar(true), 400);
-    });
-    return () => { clearTimeout(t); sub.subscription.unsubscribe(); };
+    const t = setTimeout(() => void verificar(), 0);
+    return () => clearTimeout(t);
   }, [verificar]);
 
   if (!open) return null;
