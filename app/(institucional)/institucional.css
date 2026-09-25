@@ -43,10 +43,11 @@
 .einst footer{border-top:1px solid rgba(246,241,233,.12);margin-top:80px;padding:52px 0 64px;position:relative;z-index:3}
 .einst .foot-grid{display:flex;justify-content:space-between;gap:40px;flex-wrap:wrap;max-width:1240px;margin:0 auto;padding:0 30px}
 .einst .foot-brand{--elv-logo-size:28px;color:#F6F1E9;margin-bottom:14px;display:inline-block;filter:drop-shadow(0 0 13px rgba(255,120,60,.2))}
-.einst .foot-col h5{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:rgb(246 241 233/.4);margin:0 0 12px}
+/* rodapé: títulos e © eram branco a 40% (3,45:1, abaixo de 4,5:1). #9A9082 = o --muted dos outros escopos A Noite, pra o rodapé ficar idêntico em todas as páginas. */
+.einst .foot-col h5{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#9A9082;margin:0 0 12px}
 .einst .foot-col a{display:block;color:rgb(246 241 233/.6);font-size:14px;margin-bottom:9px}
 .einst .foot-col a:hover{color:#F6F1E9}
-.einst .foot-base{max-width:1240px;margin:40px auto 0;padding:20px 30px 0;border-top:1px solid rgba(246,241,233,.12);color:rgb(246 241 233/.4);font-size:12px}
+.einst .foot-base{max-width:1240px;margin:40px auto 0;padding:20px 30px 0;border-top:1px solid rgba(246,241,233,.12);color:#9A9082;font-size:12px}
 
 .einst :focus-visible{outline:2px solid #FF5A1F;outline-offset:3px}
 @media (max-width:760px){.einst .nav-links{display:none}}

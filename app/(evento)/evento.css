@@ -139,10 +139,11 @@
 .eev .foot-grid{display:flex;justify-content:space-between;gap:40px;flex-wrap:wrap}
 .eev .foot-brand{--elv-logo-size:28px;color:#F6F1E9;margin-bottom:14px;display:inline-block;filter:drop-shadow(0 0 13px rgba(255,120,60,.2))}
 .eev .foot-brand p{max-width:32ch;color:var(--muted);font-size:14px;margin:0}
-.eev .foot-col h5{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);margin:0 0 12px}
+/* rodapé: títulos das colunas e o © eram --dim #635a4f (≈2,9:1, abaixo do mínimo de 4,5:1 p/ texto). --muted #9A9082 = o secundário legível do visual, mesma cor da descrição dos lotes. */
+.eev .foot-col h5{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin:0 0 12px}
 .eev .foot-col a{display:block;color:var(--muted);font-size:14px;margin-bottom:9px}
 .eev .foot-col a:hover{color:var(--ink)}
-.eev .foot-base{margin-top:40px;padding-top:20px;border-top:1px solid var(--line);color:var(--dim);font-size:12px}
+.eev .foot-base{margin-top:40px;padding-top:20px;border-top:1px solid var(--line);color:var(--muted);font-size:12px}
 
 /* mobile buy bar */
 
