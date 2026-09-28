@@ -5,9 +5,11 @@
    corpo branco com a caixa de ingressos fixa à direita (estilo Sympla).
    =========================================================== */
 
-/* TOPO com a capa esmaecida — mesma altura do visual escuro (78% da tela no
+/* TOPO com a capa esmaecida — 68% da altura da tela no computador: o Lucas
+   mediu 23cm com 78% no monitor dele e pediu 20cm (28/09; 78 × 20/23 ≈ 68).
+   Antes: mesma altura do visual escuro (78% da tela no
    computador, 64% no celular): o Lucas achou fino com 58% (28/09) */
-.evc .evc-capa{position:relative;isolation:isolate;overflow:hidden;min-height:max(420px,78vh);display:flex;align-items:flex-end;background:#100D15;color:#fff}
+.evc .evc-capa{position:relative;isolation:isolate;overflow:hidden;min-height:max(420px,68vh);display:flex;align-items:flex-end;background:#100D15;color:#fff}
 .evc .evc-capa .arte{position:absolute;inset:0;z-index:-2;background-size:cover;background-position:center}
 /* esmaecimento igual ao do visual escuro: escurece o topo, deixa o meio limpo e
    dissolve a imagem por completo na base (o Lucas pediu de volta, 28/09) */
