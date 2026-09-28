@@ -20,7 +20,7 @@ import { useCart } from "@/lib/cart";
 import { feeUnit, round2 } from "@/lib/fees";
 import { sanitizeRichText } from "@/lib/sanitize";
 import type { EventItem, Tier } from "@/lib/events";
-import { FUNDO, ROTULO, dataExtensa, localCompleto } from "@/lib/evento-formato";
+import { FUNDO, dataExtensa, localCompleto } from "@/lib/evento-formato";
 
 const AuthModal = dynamic(() => import("@/components/marketing/auth-modal"), { ssr: false });
 
@@ -88,7 +88,6 @@ export default function EventoClaro({
   ].filter((p) => p && String(p).trim()).join(" · ");
   const buscaMapa = enderecoLinha ? `${event.venueCity} ${enderecoLinha}` : event.venueCity;
   const fundoCategoria = FUNDO[event.catLabel] ?? "g-show";
-  const rotulo = ROTULO[event.catLabel] ?? event.catLabel;
 
   const linhaLote = (t: Tier) => {
     const esgotado = t.available != null && t.available <= 0;
@@ -125,11 +124,6 @@ export default function EventoClaro({
         <div className={"arte " + (event.cover ? "" : fundoCategoria)} style={event.cover ? { backgroundImage: `url(${event.cover})` } : undefined} />
         <div className="veu" />
         <div className="wrap evc-capa-in">
-          <div className="etiquetas">
-            <span className="etiqueta cheia">{rotulo}</span>
-            {event.subcategoria && <span className="etiqueta">{event.subcategoria}</span>}
-            {tiers.some((t) => t.isHalf) && <span className="etiqueta">Meia-entrada</span>}
-          </div>
           <h1>{event.title}</h1>
           <ul className="evc-meta">
             <li>
