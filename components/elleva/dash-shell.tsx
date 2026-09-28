@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { clsx } from "clsx";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import Icon from "@/components/shared/icon";
-import { LogoElleva } from "@/components/elleva/logo";
+import { EllevaLogo } from "@/components/brand/EllevaLogo";
 
 export interface DashNavItem {
   href: string;
@@ -86,7 +86,7 @@ export function DashShell({
       {/* SIDEBAR — desktop */}
       <aside className="sticky top-0 hidden h-screen w-[248px] flex-shrink-0 flex-col border-r-[1.5px] border-tinta bg-white sm:flex">
         <Link href="/" className="flex items-center border-b-[1.5px] border-tinta px-5 py-4 text-tinta">
-          <LogoElleva />
+          <EllevaLogo variant="horizontal" tone="negativo" className="h-6 w-auto sm:h-8" />
         </Link>
         <p className="rotulo px-5 pb-1 pt-4 text-tinta-60">{area}</p>
         <nav className="flex flex-1 flex-col gap-1 px-3 pt-2">{items.map((i) => navLink(i))}</nav>
@@ -104,7 +104,7 @@ export function DashShell({
       <div className="flex min-w-0 flex-1 flex-col">
         {/* TOP BAR — mobile */}
         <div className="sticky top-0 z-30 flex items-center justify-between border-b-[1.5px] border-tinta bg-white px-4 py-3 sm:hidden">
-          <Link href="/" className="text-tinta"><LogoElleva /></Link>
+          <Link href="/" className="text-tinta"><EllevaLogo variant="horizontal" tone="negativo" className="h-6 w-auto sm:h-8" /></Link>
           <button
             type="button"
             aria-label="Abrir menu"

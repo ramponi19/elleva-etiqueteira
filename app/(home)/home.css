@@ -40,7 +40,7 @@
 .ehome nav.top{position:fixed;top:0;left:0;right:0;z-index:40;transition:background .3s,border-color .3s;border-bottom:1px solid transparent}
 .ehome nav.top.solid{background:rgba(8,7,10,.7);backdrop-filter:blur(16px);border-bottom:1px solid var(--line)}
 .ehome .nav-in{max-width:1240px;margin:0 auto;padding:0 30px;height:74px;display:flex;align-items:center;gap:28px}
-.ehome .brand{--elv-logo-size:26px;color:#F6F1E9;filter:drop-shadow(0 0 14px rgba(255,120,60,.22))}
+.ehome .brand{color:#F6F1E9}
 .ehome .nav-links{display:flex;gap:28px;margin-left:8px}
 .ehome .nav-links a{font-size:14px;font-weight:600;color:var(--muted);position:relative}
 .ehome .nav-links a::after{content:"";position:absolute;left:0;bottom:-6px;height:2px;width:0;background:var(--warm);transition:width .25s ease}
@@ -141,7 +141,7 @@
 /* FOOTER */
 .ehome footer{position:relative;z-index:3;border-top:1px solid var(--line);margin-top:90px;padding:60px 0 74px}
 .ehome .foot-grid{display:flex;justify-content:space-between;gap:44px;flex-wrap:wrap}
-.ehome .foot-brand{--elv-logo-size:32px;color:#F6F1E9;margin-bottom:14px;display:inline-block;filter:drop-shadow(0 0 13px rgba(255,120,60,.2))}
+.ehome .foot-brand{color:#F6F1E9;margin-bottom:14px;display:inline-block}
 .ehome .foot-brand p{max-width:32ch;color:var(--muted);font-size:14px;margin:0}
 /* rodapé: títulos das colunas e o © eram --dim #635a4f (≈2,9:1, abaixo do mínimo de 4,5:1 p/ texto). --muted #9A9082 = o secundário legível do visual, mesma cor da descrição dos lotes. */
 .ehome .foot-col h5{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin:0 0 14px}
@@ -214,7 +214,6 @@
      "Entrar" com 44px de área de toque. Sem isso a barra não encolhia (logo em 26px)
      e o botão laranja era cortado pelo overflow-x:hidden abaixo de ~400px. */
   .ehome .nav-in{gap:10px;padding:0 18px}.ehome .nav-right{gap:10px}
-  .ehome .brand{--elv-logo-size:20px}
   .ehome .nav-right .entrar{min-height:44px;display:inline-flex;align-items:center}
   .ehome .mini{white-space:nowrap;padding:9px 12px;font-size:11.5px}
   .ehome .wrap{padding:0 18px}.ehome .sec{padding:70px 0}

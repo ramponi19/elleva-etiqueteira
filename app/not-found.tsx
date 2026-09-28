@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { LogoElleva } from "@/components/elleva/logo";
+import { EllevaLogo } from "@/components/brand/EllevaLogo";
 
 export const metadata: Metadata = {
   title: "Página não encontrada | Elleva Tickets",
@@ -25,7 +25,7 @@ export default function NotFound() {
       />
       <div className="relative w-full max-w-[520px] text-center">
         <Link href="/" aria-label="Elleva Tickets — início" className="inline-block text-[#F6F1E9] [--elv-logo-size:24px]">
-          <LogoElleva />
+          <EllevaLogo variant="horizontal" tone="negativo" className="h-6 w-auto sm:h-8" />
         </Link>
         <p className="numero mt-10 text-[clamp(64px,14vw,120px)] leading-none text-[#FF5A1F]">404</p>
         <h1 className="display-2 mt-2">Essa página saiu de cartaz</h1>

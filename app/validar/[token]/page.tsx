@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { createServiceClient } from "@/lib/supabase/server";
 import { TicketValidatorElleva } from "@/components/elleva/ticket-validator";
-import { LogoElleva } from "@/components/elleva/logo";
+import { EllevaLogo } from "@/components/brand/EllevaLogo";
 
 export const metadata: Metadata = { title: "Check-in", robots: { index: false, follow: false } };
 
@@ -29,7 +29,7 @@ export default async function CheckinPorLink({
       <header className="border-b-[1.5px] border-tinta bg-white px-5 py-4">
         <div className="mx-auto flex max-w-[560px] items-center justify-between">
           <span className="text-tinta">
-            <LogoElleva />
+            <EllevaLogo variant="horizontal" className="h-6 w-auto sm:h-8" />
           </span>
           <span className="rotulo text-tinta-60">Check-in</span>
         </div>

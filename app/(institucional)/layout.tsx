@@ -1,7 +1,7 @@
 import "./institucional.css";
 import Link from "next/link";
 import { getContaResumo } from "@/lib/auth";
-import { LogoElleva } from "@/components/elleva/logo";
+import { EllevaLogo } from "@/components/brand/EllevaLogo";
 import { EntrarModal } from "@/components/elleva/entrar-modal";
 import { MenuConta } from "@/components/elleva/menu-conta";
 
@@ -12,7 +12,7 @@ export default async function InstitucionalLayout({ children }: { children: Reac
       <div className="amb" aria-hidden />
       <nav className="top">
         <div className="nav-in">
-          <Link className="brand" href="/" aria-label="Elleva Tickets"><LogoElleva /></Link>
+          <Link className="brand" href="/" aria-label="Elleva Tickets"><EllevaLogo variant="horizontal" tone="negativo" className="h-6 w-auto sm:h-8" /></Link>
           <div className="nav-links">
             <Link href="/agenda">Agenda</Link>
             <Link href="/produtores">Produtores</Link>
@@ -28,7 +28,7 @@ export default async function InstitucionalLayout({ children }: { children: Reac
 
       <footer>
         <div className="foot-grid">
-          <div className="foot-brand"><LogoElleva /></div>
+          <div className="foot-brand"><EllevaLogo variant="horizontal" tone="negativo" className="h-8 w-auto" /></div>
           <div className="foot-col"><h5>Elleva</h5><Link prefetch={false} href="/agenda">Agenda</Link><Link prefetch={false} href="/produtores">Produtores</Link><Link prefetch={false} href="/ajuda">Central de ajuda</Link></div>
           <div className="foot-col"><h5>Legal</h5><Link prefetch={false} href="/terms">Política de compras</Link><Link prefetch={false} href="/privacy">Privacidade</Link></div>
           <div className="foot-col"><h5>Contato</h5><a href="mailto:contato@ellevaeventos.com.br">contato@ellevaeventos.com.br</a></div>

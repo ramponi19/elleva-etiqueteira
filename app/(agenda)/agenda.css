@@ -20,7 +20,7 @@
 /* NAV */
 .eag nav.top{position:sticky;top:0;z-index:40;background:rgba(8,7,10,.72);backdrop-filter:blur(16px);border-bottom:1px solid var(--line)}
 .eag .nav-in{max-width:1240px;margin:0 auto;padding:0 30px;height:72px;display:flex;align-items:center;gap:28px}
-.eag .brand{--elv-logo-size:24px;color:#F6F1E9;filter:drop-shadow(0 0 14px rgba(255,120,60,.22))}
+.eag .brand{color:#F6F1E9}
 .eag .nav-links{display:flex;gap:26px;margin-left:6px}
 .eag .nav-links a{font-size:14px;font-weight:600;color:var(--muted)}
 .eag .nav-links a:hover{color:var(--ink)}
@@ -78,7 +78,7 @@
 /* FOOTER */
 .eag footer{border-top:1px solid var(--line);margin-top:80px;padding:52px 0 64px;position:relative;z-index:3}
 .eag .foot-grid{display:flex;justify-content:space-between;gap:40px;flex-wrap:wrap}
-.eag .foot-brand{--elv-logo-size:28px;color:#F6F1E9;margin-bottom:14px;display:inline-block;filter:drop-shadow(0 0 13px rgba(255,120,60,.2))}
+.eag .foot-brand{color:#F6F1E9;margin-bottom:14px;display:inline-block}
 .eag .foot-brand p{max-width:32ch;color:var(--muted);font-size:14px;margin:0}
 /* rodapé: títulos das colunas e o © eram --dim #635a4f (≈2,9:1, abaixo do mínimo de 4,5:1 p/ texto). --muted #9A9082 = o secundário legível do visual, mesma cor da descrição dos lotes. */
 .eag .foot-col h5{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin:0 0 12px}

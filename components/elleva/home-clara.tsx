@@ -9,7 +9,7 @@
 // client components.
 import Image from "next/image";
 import Link from "next/link";
-import { LogoElleva } from "@/components/elleva/logo";
+import { EllevaLogo } from "@/components/brand/EllevaLogo";
 import { EntrarModal } from "@/components/elleva/entrar-modal";
 import { MenuConta } from "@/components/elleva/menu-conta";
 import { Outdoor, type SlideOutdoor } from "@/components/elleva/outdoor";
@@ -72,7 +72,7 @@ export default function HomeClara({ events, conta }: { events: EventItem[]; cont
     <div className="eclara">
       <header className="topo">
         <div className="topo-in">
-          <Link className="marca" href="/" aria-label="Elleva Tickets — início"><LogoElleva /></Link>
+          <Link className="marca" href="/" aria-label="Elleva Tickets — início"><EllevaLogo variant="horizontal" className="h-6 w-auto sm:h-8" /></Link>
           <form className="busca" action="/agenda" role="search">
             <svg viewBox="0 0 24 24" aria-hidden><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
             <input type="search" name="q" placeholder="Buscar evento ou cidade" aria-label="Buscar eventos" />
@@ -125,7 +125,7 @@ export default function HomeClara({ events, conta }: { events: EventItem[]; cont
         <div className="wrap">
           <div className="rodape-grade">
             <div className="rodape-marca">
-              <LogoElleva />
+              <EllevaLogo variant="horizontal" className="h-8 w-auto" />
               <p>Ingressos para shows, festas, teatro, esporte e eventos corporativos no interior de SP e sul de MG.</p>
             </div>
             <div className="rodape-col">

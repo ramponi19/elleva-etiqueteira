@@ -30,7 +30,7 @@
 /* CABEÇALHO */
 .eclara .topo{position:sticky;top:0;z-index:40;background:#fff;border-bottom:1px solid var(--linha)}
 .eclara .topo-in{max-width:var(--largura);margin:0 auto;padding:0 30px;height:76px;display:flex;align-items:center;gap:28px}
-.eclara .marca{--elv-logo-size:23px;color:var(--ink);flex-shrink:0;display:inline-flex;min-height:44px;align-items:center}
+.eclara .marca{color:var(--ink);flex-shrink:0;display:inline-flex;min-height:44px;align-items:center}
 .eclara .busca{flex:1;max-width:560px;margin:0 auto;display:flex;align-items:center;height:46px;border:1px solid #DDD6CB;border-radius:999px;background:#FAF8F5;overflow:hidden;transition:border-color .15s}
 .eclara .busca:focus-within{border-color:var(--sol-btn);background:#fff}
 .eclara .busca svg{width:19px;height:19px;margin-left:16px;flex-shrink:0;fill:none;stroke:var(--texto-3);stroke-width:2}
@@ -118,7 +118,7 @@
 /* RODAPÉ */
 .eclara .rodape{margin-top:80px;padding:52px 0 40px;background:var(--fundo-2);border-top:1px solid var(--linha)}
 .eclara .rodape-grade{display:flex;justify-content:space-between;gap:40px;flex-wrap:wrap}
-.eclara .rodape-marca{--elv-logo-size:26px;color:var(--ink);max-width:320px}
+.eclara .rodape-marca{color:var(--ink);max-width:320px}
 .eclara .rodape-marca p{margin:14px 0 0;font-size:14px;color:var(--texto-2)}
 .eclara .rodape-col{display:flex;flex-direction:column;gap:4px}
 .eclara .rodape-col h3{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--texto-3);margin-bottom:6px}
@@ -137,7 +137,6 @@
 @media (max-width:760px){
   /* celular: busca vai pra uma 2ª linha, largura total */
   .eclara .topo-in{height:auto;flex-wrap:wrap;gap:8px 12px;padding:8px 16px 12px}
-  .eclara .marca{--elv-logo-size:20px}
   .eclara .topo-links{margin-left:auto;gap:14px}
   .eclara .busca{order:3;flex:1 0 100%;max-width:none;height:46px}
   .eclara .busca input{font-size:16px} /* 16px: o iOS não dá zoom ao focar */

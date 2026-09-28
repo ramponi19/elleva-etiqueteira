@@ -33,7 +33,7 @@
 .eev nav.top{position:fixed;top:0;left:0;right:0;z-index:40;transition:background .3s,border-color .3s;border-bottom:1px solid transparent}
 .eev nav.top.solid{background:rgba(8,7,10,.78);backdrop-filter:blur(16px);border-bottom:1px solid var(--line)}
 .eev .nav-in{max-width:1180px;margin:0 auto;padding:0 26px;height:72px;display:flex;align-items:center;gap:22px}
-.eev .brand{--elv-logo-size:24px;color:#F6F1E9;filter:drop-shadow(0 0 14px rgba(255,120,60,.22))}
+.eev .brand{color:#F6F1E9}
 .eev .nav-back{font-size:13px;font-weight:600;color:var(--muted)}
 .eev .nav-back:hover{color:var(--ink)}
 .eev .nav-right{margin-left:auto;display:flex;align-items:center;gap:16px}
@@ -137,7 +137,7 @@
 /* footer */
 .eev footer{border-top:1px solid var(--line);padding:48px 0 60px;position:relative;z-index:3}
 .eev .foot-grid{display:flex;justify-content:space-between;gap:40px;flex-wrap:wrap}
-.eev .foot-brand{--elv-logo-size:28px;color:#F6F1E9;margin-bottom:14px;display:inline-block;filter:drop-shadow(0 0 13px rgba(255,120,60,.2))}
+.eev .foot-brand{color:#F6F1E9;margin-bottom:14px;display:inline-block}
 .eev .foot-brand p{max-width:32ch;color:var(--muted);font-size:14px;margin:0}
 /* rodapé: títulos das colunas e o © eram --dim #635a4f (≈2,9:1, abaixo do mínimo de 4,5:1 p/ texto). --muted #9A9082 = o secundário legível do visual, mesma cor da descrição dos lotes. */
 .eev .foot-col h5{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin:0 0 12px}
@@ -167,7 +167,6 @@
   .eev .cover .meta{gap:18px}
   /* nav compacta: logo menor, sem "← Agenda", CTA numa linha só */
   .eev .nav-in{padding:0 18px;gap:12px;height:64px}
-  .eev .brand{--elv-logo-size:20px}
   .eev .nav-back{display:none}
   .eev .nav-right{gap:10px}
   .eev .nav-right .entrar{min-height:44px;display:inline-flex;align-items:center}
@@ -180,4 +179,4 @@
   .eev .body{padding:40px 0 32px}
 }
 /* telas bem estreitas: "Garantir ingresso" (162px) não cabe ao lado de logo + Entrar */
-@media (max-width:380px){.eev .mini .rot-lg{display:none}.eev .mini .rot-sm{display:inline}.eev .brand{--elv-logo-size:18px}}
+@media (max-width:380px){.eev .mini .rot-lg{display:none}.eev .mini .rot-sm{display:inline}}

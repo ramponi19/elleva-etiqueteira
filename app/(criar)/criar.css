@@ -21,7 +21,7 @@
 /* NAV limpa */
 .ecri nav.top{position:sticky;top:0;z-index:40;background:rgba(8,7,10,.72);backdrop-filter:blur(16px);border-bottom:1px solid rgba(246,241,233,.12)}
 .ecri .nav-in{max-width:900px;margin:0 auto;padding:0 24px;height:66px;display:flex;align-items:center;gap:18px}
-.ecri .brand{--elv-logo-size:22px;color:#F6F1E9;filter:drop-shadow(0 0 14px rgba(255,120,60,.22))}
+.ecri .brand{color:#F6F1E9}
 .ecri .nav-right{margin-left:auto;font-size:14px;font-weight:600}
 .ecri .content{position:relative;z-index:3}
 

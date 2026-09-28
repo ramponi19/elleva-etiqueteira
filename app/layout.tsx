@@ -23,6 +23,11 @@ export const metadata: Metadata = {
     "Compre ingressos para shows, festas, esporte, teatro e congressos no interior de SP e sul de MG. Rápido, seguro e sem fila.",
   keywords: ["ingressos", "eventos", "shows", "festas", "teatro", "interior de SP", "sul de MG"],
   authors: [{ name: "Elleva Tickets" }],
+  // logo Elleva Eventos (public/brand); substitui o antigo app/icon.svg
+  icons: {
+    icon: [{ url: "/brand/favicon-32.png", sizes: "32x32", type: "image/png" }],
+    apple: [{ url: "/brand/favicon-180.png", sizes: "180x180", type: "image/png" }],
+  },
   openGraph: {
     type: "website",
     locale: "pt_BR",

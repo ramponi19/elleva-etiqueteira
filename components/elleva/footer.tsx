@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { LogoElleva } from "@/components/elleva/logo";
+import { EllevaLogo } from "@/components/brand/EllevaLogo";
 import { CONTATO_EMAIL, sociaisLinks } from "@/lib/site";
 
 // Footer do sistema Cartaz (spec §7): tinta, colunas de links, régua
@@ -35,7 +35,7 @@ export default function Footer() {
     <footer className="bg-tinta text-papel">
       <div className="mx-auto max-w-[1320px] px-5 py-14 sm:px-10">
         <div className="flex flex-col justify-between gap-10 sm:flex-row">
-          <LogoElleva className="self-start" />
+          <EllevaLogo variant="horizontal" tone="negativo" className="h-8 w-auto self-start" />
           <div className="flex flex-wrap gap-x-16 gap-y-8">
             {COLUNAS.map((col) => (
               <div key={col.titulo} className="flex min-w-[140px] flex-col gap-2.5">

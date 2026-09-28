@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getCertificate } from "@/lib/certificates";
-import { LogoElleva } from "@/components/elleva/logo";
+import { EllevaLogo } from "@/components/brand/EllevaLogo";
 import { PrintButton } from "@/components/elleva/print-button";
 
 export const metadata: Metadata = {
@@ -31,7 +31,7 @@ export default async function CertificadoPage({
       {/* o certificado */}
       <div className="mx-auto max-w-[900px] border-[2px] border-tinta bg-white p-8 sm:p-14 print:border-0 print:shadow-none">
         <div className="flex items-center justify-between">
-          <span className="text-tinta"><LogoElleva /></span>
+          <span className="text-tinta"><EllevaLogo variant="horizontal" className="h-6 w-auto sm:h-8" /></span>
           <span className="rotulo text-tinta-60">{cert.dateLabel}</span>
         </div>
 

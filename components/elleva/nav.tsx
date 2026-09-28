@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import Icon from "@/components/shared/icon";
-import { LogoElleva } from "@/components/elleva/logo";
+import { EllevaLogo } from "@/components/brand/EllevaLogo";
 import { Button } from "@/components/ui/button";
 import { becomeProducerAndGo } from "@/lib/actions/producer";
 import type { Role } from "@/lib/auth";
@@ -76,7 +76,7 @@ export default function Nav({
         {/* ESQUERDA — logo + descoberta (desktop) */}
         <div className="flex items-center gap-7">
           <Link href="/" aria-label="Elleva Tickets — início" className="text-tinta">
-            <LogoElleva />
+            <EllevaLogo variant="horizontal" tone="negativo" className="h-6 w-auto sm:h-8" />
           </Link>
           <div className="hidden items-center gap-6 md:flex">
             {DESCOBERTA.map((d) => (
