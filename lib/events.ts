@@ -207,7 +207,7 @@ export async function getEvents(): Promise<EventItem[]> {
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("events")
-      .select("id, slug, title, description, category, subcategory, icon, venue, city, starts_at, status, cover_url, is_featured, featured_order, serial, service_fee_pct, ticket_tiers(price)")
+      .select("id, slug, title, description, category, subcategory, icon, venue, city, state, starts_at, status, cover_url, is_featured, featured_order, serial, service_fee_pct, ticket_tiers(price)")
       .in("status", ["published", "sold_out"])
       .or("visibility.eq.public,visibility.is.null") // privado só pelo link direto
       .gt("starts_at", new Date().toISOString()) // evento passado sai da vitrine (venda encerrada no servidor)

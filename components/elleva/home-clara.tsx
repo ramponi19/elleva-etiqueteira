@@ -19,9 +19,29 @@ import type { EventItem } from "@/lib/events";
 // cada lado, sem repetir evento (menos eventos = pilha menor)
 const MAX_OUTDOOR = 7;
 
-function cidadeDe(venueCity: string) {
-  const partes = venueCity.split(" · ");
-  return partes[partes.length - 1] ?? venueCity;
+/** "Mogi Guaçu - SP" (sem estado cadastrado: só a cidade) */
+function cidadeUF(e: EventItem) {
+  const partes = e.venueCity.split(" · ");
+  const cidade = e.endereco?.cidade || partes[partes.length - 1] || e.venueCity;
+  const uf = e.endereco?.uf?.trim().toUpperCase();
+  return uf ? `${cidade} - ${uf}` : cidade;
+}
+/** "Teatro Municipal, Mogi Guaçu - SP" */
+function localCompleto(e: EventItem) {
+  const local = e.venueCity.split(" · ")[0];
+  return local ? `${local}, ${cidadeUF(e)}` : cidadeUF(e);
+}
+
+// "Sábado, 21 de Nov às 21:00" — sempre no horário de Brasília (o servidor roda em UTC)
+const FMT_DIA = new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", weekday: "long", day: "numeric", month: "short" });
+const FMT_HORA = new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", hour: "2-digit", minute: "2-digit" });
+const maiuscula = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
+function dataExtensa(iso: string) {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const p = Object.fromEntries(FMT_DIA.formatToParts(d).map((x) => [x.type, x.value]));
+  const mes = maiuscula(String(p.month ?? "").replace(".", ""));
+  return `${maiuscula(String(p.weekday ?? ""))}, ${p.day} de ${mes} às ${FMT_HORA.format(d)}`;
 }
 
 const FUNDO: Record<string, string> = {
@@ -30,14 +50,6 @@ const FUNDO: Record<string, string> = {
 const ROTULO: Record<string, string> = {
   SHOW: "Show", FESTA: "Festa", ESPORTE: "Esporte", TEATRO: "Teatro", CORPORATIVO: "Corporativo", CURSO: "Curso",
 };
-
-const CATEGORIAS = [
-  { q: "show", nome: "Shows", emoji: "🎤", cls: "c-show" },
-  { q: "festa", nome: "Festas", emoji: "🪩", cls: "c-festa" },
-  { q: "teatro", nome: "Teatro", emoji: "🎭", cls: "c-teatro" },
-  { q: "esporte", nome: "Esporte", emoji: "⚽", cls: "c-esporte" },
-  { q: "corporativo", nome: "Corporativo", emoji: "💼", cls: "c-corp" },
-];
 
 export default function HomeClara({ events, conta }: { events: EventItem[]; conta: ContaResumo | null }) {
   // Destaques escolhidos no admin vêm primeiro; sem nenhum, os mais próximos.
@@ -49,9 +61,9 @@ export default function HomeClara({ events, conta }: { events: EventItem[]; cont
     title: e.title,
     cover: e.cover,
     catLabel: ROTULO[e.catLabel] ?? e.catLabel,
-    quando: `${e.dateFull} · ${e.time}`,
-    cidade: cidadeDe(e.venueCity),
-    local: e.venueCity,
+    quando: dataExtensa(e.startsAtISO),
+    cidade: cidadeUF(e),
+    local: cidadeUF(e),
     fundo: FUNDO[e.catLabel] ?? "g-show",
   }));
 
@@ -77,22 +89,9 @@ export default function HomeClara({ events, conta }: { events: EventItem[]; cont
         <Outdoor slides={slides} />
 
         <div className="wrap">
-          <nav className="categorias" aria-label="Categorias">
-            {CATEGORIAS.map((c) => (
-              <Link key={c.q} href={`/agenda?q=${c.q}`} className="cat">
-                <span className={"cat-ico " + c.cls} aria-hidden>{c.emoji}</span>
-                {c.nome}
-              </Link>
-            ))}
-            <Link href="/agenda" className="cat">
-              <span className="cat-ico c-todos" aria-hidden>＋</span>
-              Ver todos
-            </Link>
-          </nav>
-
           <section className="bloco" aria-labelledby="t-proximos">
             <div className="bloco-cab">
-              <h2 id="t-proximos">Próximos eventos</h2>
+              <h2 id="t-proximos">Eventos</h2>
               <Link href="/agenda" className="ver-tudo">Ver agenda completa</Link>
             </div>
             {events.length === 0 && (
@@ -110,10 +109,9 @@ export default function HomeClara({ events, conta }: { events: EventItem[]; cont
                     <span className="selo-data" aria-hidden><b>{e.d}</b>{e.mon}</span>
                     {e.soldOut && <span className="selo-esgotado">Esgotado</span>}
                   </span>
-                  <span className="card-cat">{ROTULO[e.catLabel] ?? e.catLabel}</span>
                   <strong className="card-titulo">{e.title}</strong>
-                  <span className="card-info">{e.dateFull} · {e.time}</span>
-                  <span className="card-info">{e.venueCity}</span>
+                  <span className="card-info">{localCompleto(e)}</span>
+                  <span className="card-info">{dataExtensa(e.startsAtISO)}</span>
                 </Link>
               ))}
               <div className="card-produtor">

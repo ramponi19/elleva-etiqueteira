@@ -80,14 +80,6 @@
 .eclara .pontos button::after{content:"";width:8px;height:8px;border-radius:999px;background:#D8D1C6;transition:width .2s,background .2s}
 .eclara .pontos button.on::after{width:22px;background:var(--sol-btn)}
 
-/* CATEGORIAS */
-.eclara .categorias{display:flex;gap:12px;margin-top:36px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
-.eclara .categorias::-webkit-scrollbar{display:none}
-.eclara .cat{flex:1 0 auto;display:flex;align-items:center;gap:12px;height:62px;padding:0 18px;border:1px solid var(--linha);border-radius:14px;font-size:15px;font-weight:600;background:#fff;transition:border-color .15s,color .15s}
-.eclara .cat:hover{border-color:var(--sol-btn);color:var(--sol-texto)}
-.eclara .cat-ico{display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:10px;font-size:18px}
-.eclara .c-show{background:#FDEBE3}.eclara .c-festa{background:#FDF3DD}.eclara .c-teatro{background:#EFE9FA}
-.eclara .c-esporte{background:#E3F5EC}.eclara .c-corp{background:#E6ECF5}.eclara .c-todos{background:#F1EEE9;color:#3D3530}
 
 /* BLOCOS */
 .eclara .bloco{margin-top:56px}
@@ -108,7 +100,6 @@
 .eclara .selo-data{position:absolute;left:10px;top:10px;display:flex;flex-direction:column;align-items:center;width:48px;padding:6px 0 5px;border-radius:10px;background:#fff;box-shadow:0 1px 6px rgba(0,0,0,.15);font-size:11px;font-weight:700;color:var(--sol-texto);line-height:1}
 .eclara .selo-data b{font-size:20px;font-weight:800;color:var(--ink);margin-bottom:3px}
 .eclara .selo-esgotado{position:absolute;right:10px;top:10px;padding:4px 10px;border-radius:999px;background:rgba(23,17,13,.82);color:#fff;font-size:12px;font-weight:600}
-.eclara .card-cat{margin-top:12px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--texto-3)}
 .eclara .card-titulo{margin-top:4px;font-size:17px;line-height:1.25;font-weight:700}
 .eclara .card:hover .card-titulo{color:var(--sol-texto)}
 .eclara .card-info{margin-top:4px;font-size:14px;color:var(--texto-2)}
@@ -169,9 +160,6 @@
   .eclara .legenda strong{font-size:18px}
   .eclara .seta{display:none} /* celular: arrasta com o dedo */
   .eclara .arte-gerada{padding:18px}
-  .eclara .categorias{margin:28px -16px 0;padding:0 16px 2px;gap:8px}
-  .eclara .cat{flex:0 0 auto;height:44px;padding:0 16px 0 6px;border-radius:999px;font-size:14px;gap:8px}
-  .eclara .cat-ico{width:32px;height:32px;border-radius:999px;font-size:15px}
   .eclara .bloco{margin-top:40px}
   .eclara .bloco h2{font-size:21px}
   .eclara .ver-tudo{font-size:14px}
