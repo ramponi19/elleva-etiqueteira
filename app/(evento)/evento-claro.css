@@ -5,11 +5,14 @@
    corpo branco com a caixa de ingressos fixa à direita (estilo Sympla).
    =========================================================== */
 
-/* TOPO com a capa esmaecida */
-.evc .evc-capa{position:relative;isolation:isolate;overflow:hidden;min-height:clamp(380px,58vh,600px);display:flex;align-items:flex-end;background:#0F0C0A;color:#fff}
+/* TOPO com a capa esmaecida — mesma altura do visual escuro (78% da tela no
+   computador, 64% no celular): o Lucas achou fino com 58% (28/09) */
+.evc .evc-capa{position:relative;isolation:isolate;overflow:hidden;min-height:max(420px,78vh);display:flex;align-items:flex-end;background:#100D15;color:#fff}
 .evc .evc-capa .arte{position:absolute;inset:0;z-index:-2;background-size:cover;background-position:center}
-.evc .evc-capa .veu{position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,rgba(15,12,10,.35) 0%,rgba(15,12,10,.15) 30%,rgba(15,12,10,.62) 66%,rgba(15,12,10,.9) 100%)}
-.evc .evc-capa-in{position:relative;width:100%;padding-top:48px;padding-bottom:44px}
+/* esmaecimento igual ao do visual escuro: escurece o topo, deixa o meio limpo e
+   dissolve a imagem por completo na base (o Lucas pediu de volta, 28/09) */
+.evc .evc-capa .veu{position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,rgba(8,7,10,.42) 0%,transparent 30%,rgba(8,7,10,.55) 66%,#100D15 100%)}
+.evc .evc-capa-in{width:100%;padding-top:48px;padding-bottom:44px}
 .evc .etiquetas{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
 .evc .etiqueta{font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:6px 12px;border:1px solid rgba(255,255,255,.55);border-radius:999px;backdrop-filter:blur(4px)}
 .evc .etiqueta.cheia{background:var(--sol-btn);border-color:var(--sol-btn)}
@@ -81,7 +84,7 @@
   .evc .evc-compra{position:static;order:-1;margin-bottom:36px}
 }
 @media (max-width:760px){
-  .evc .evc-capa{min-height:clamp(320px,52vh,440px)}
+  .evc .evc-capa{min-height:max(360px,64vh)}
   .evc .evc-capa-in{padding-bottom:28px}
   .evc .evc-capa h1{font-size:clamp(30px,9vw,44px)}
   .evc .evc-meta{flex-direction:column;gap:6px;font-size:15px}
