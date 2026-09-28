@@ -1,0 +1,115 @@
+/* ===========================================================
+   VISUAL CLARO — padrão de mercado (escopo .eclara)
+   Compartilhado pela home e pela página do evento: base, cabeçalho,
+   grade de eventos e rodapé. Fundo branco; a cor vem da arte dos
+   eventos; o laranja da marca fica nos botões e detalhes.
+   =========================================================== */
+:root:has(.eclara), body:has(.eclara){background:#fff}
+
+.eclara{
+  --ink:#17110D; --texto-2:#5B534B; --texto-3:#6B6258; --linha:#E8E2D9; --fundo-2:#F6F3EE;
+  /* largura da página: 1600 (era 1240) — em monitor grande/ultrawide o outdoor
+     e a grade ficavam acanhados, uma ilha no meio da tela (pedido do Lucas) */
+  --largura:1600px;
+  --sol:#E8481F; --sol-btn:#D63C12; --sol-btn-hover:#B8330E; --sol-texto:#C2380F;
+  background:#fff; color:var(--ink);
+  font-family:var(--font-archivo),system-ui,sans-serif; font-size:16px; line-height:1.5;
+  min-height:100dvh;
+  /* clip, não hidden: overflow-x:hidden transforma o .eclara em contêiner de
+     rolagem e o cabeçalho sticky deixa de grudar no topo ao rolar */
+  overflow-x:clip;
+}
+.eclara *{box-sizing:border-box}
+.eclara a{color:inherit;text-decoration:none}
+.eclara h1,.eclara h2,.eclara h3{margin:0;letter-spacing:-.01em;line-height:1.15}
+.eclara .wrap{max-width:var(--largura);margin:0 auto;padding:0 30px}
+.eclara :focus-visible{outline:2px solid var(--sol-btn);outline-offset:3px}
+
+.eclara .btn{display:inline-flex;align-items:center;justify-content:center;height:48px;padding:0 24px;border-radius:999px;background:var(--sol-btn);color:#fff;font-size:15px;font-weight:700;transition:background .15s}
+.eclara .btn:hover{background:var(--sol-btn-hover)}
+
+/* CABEÇALHO */
+.eclara .topo{position:sticky;top:0;z-index:40;background:#fff;border-bottom:1px solid var(--linha)}
+.eclara .topo-in{max-width:var(--largura);margin:0 auto;padding:0 30px;height:76px;display:flex;align-items:center;gap:28px}
+.eclara .marca{color:var(--ink);flex-shrink:0;display:inline-flex;min-height:44px;align-items:center}
+.eclara .busca{flex:1;max-width:560px;margin:0 auto;display:flex;align-items:center;height:46px;border:1px solid #DDD6CB;border-radius:999px;background:#FAF8F5;overflow:hidden;transition:border-color .15s}
+.eclara .busca:focus-within{border-color:var(--sol-btn);background:#fff}
+.eclara .busca svg{width:19px;height:19px;margin-left:16px;flex-shrink:0;fill:none;stroke:var(--texto-3);stroke-width:2}
+.eclara .busca input{flex:1;min-width:0;height:44px;border:0;background:transparent;padding:0 12px;font:inherit;font-size:15px;color:var(--ink);outline:none}
+.eclara .busca input::placeholder{color:#8A8178}
+.eclara .busca button{height:36px;margin-right:5px;padding:0 16px;border:0;border-radius:999px;background:var(--ink);color:#fff;font:inherit;font-size:14px;font-weight:600;cursor:pointer}
+.eclara .busca button:hover{background:#3D3530}
+.eclara .topo-links{display:flex;align-items:center;gap:22px;font-size:14px;font-weight:600;flex-shrink:0}
+.eclara .topo-links > a{color:#3D3530;display:inline-flex;align-items:center;min-height:44px}
+.eclara .topo-links > a:hover{color:var(--sol-texto)}
+.eclara .entrar{display:inline-flex;align-items:center;height:42px;padding:0 20px!important;border:1.5px solid var(--ink)!important;border-radius:999px;font-size:14px;font-weight:600;color:var(--ink)}
+.eclara .entrar:hover{background:var(--ink)!important;color:#fff}
+
+/* BLOCOS */
+.eclara .bloco{margin-top:56px}
+.eclara .bloco-cab{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:16px;margin-bottom:20px}
+.eclara .bloco h2{font-size:26px;font-weight:800}
+.eclara .ver-tudo{font-size:15px;font-weight:600;color:var(--sol-texto)!important;white-space:nowrap}
+.eclara .ver-tudo:hover{text-decoration:underline!important}
+.eclara .vazio{margin:0 0 20px;color:var(--texto-2)}
+.eclara .vazio a{color:var(--sol-texto);text-decoration:underline}
+
+/* GRADE DE EVENTOS */
+.eclara .grade{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:28px 24px}
+.eclara .card{display:flex;flex-direction:column;min-width:0}
+.eclara .capa{position:relative;display:block;aspect-ratio:1600/838;border-radius:14px;overflow:hidden;background:#EEE}
+.eclara .capa img{object-fit:cover;transition:transform .3s ease}
+.eclara .card:hover .capa img{transform:scale(1.04)}
+.eclara .capa-titulo{position:absolute;left:14px;right:14px;bottom:12px;color:#fff;font-size:19px;font-weight:800;line-height:1.1;text-wrap:balance}
+.eclara .selo-data{position:absolute;left:10px;top:10px;display:flex;flex-direction:column;align-items:center;width:48px;padding:6px 0 5px;border-radius:10px;background:#fff;box-shadow:0 1px 6px rgba(0,0,0,.15);font-size:11px;font-weight:700;color:var(--sol-texto);line-height:1}
+.eclara .selo-data b{font-size:20px;font-weight:800;color:var(--ink);margin-bottom:3px}
+.eclara .selo-esgotado{position:absolute;right:10px;top:10px;padding:4px 10px;border-radius:999px;background:rgba(23,17,13,.82);color:#fff;font-size:12px;font-weight:600}
+.eclara .card-titulo{margin-top:4px;font-size:17px;line-height:1.25;font-weight:700}
+.eclara .card:hover .card-titulo{color:var(--sol-texto)}
+.eclara .card-info{margin-top:4px;font-size:14px;color:var(--texto-2)}
+
+/* fundos gerados por categoria (evento sem capa) */
+.eclara .g-show{background:radial-gradient(90% 60% at 78% 12%,#ffd27a,transparent 55%),radial-gradient(70% 60% at 10% 90%,#ff2e6a,transparent 60%),linear-gradient(160deg,#FF5A1F,#4a0f2b)}
+.eclara .g-festa{background:radial-gradient(80% 55% at 22% 10%,#ff86c6,transparent 55%),radial-gradient(70% 60% at 90% 85%,#3ad2ff,transparent 60%),linear-gradient(160deg,#9C4BFF,#180a3e)}
+.eclara .g-esporte{background:radial-gradient(85% 60% at 82% 16%,#7dffcf,transparent 55%),radial-gradient(60% 50% at 10% 85%,#ffe14d,transparent 60%),linear-gradient(160deg,#12b981,#04241c)}
+.eclara .g-teatro{background:radial-gradient(85% 60% at 25% 84%,#ffb36b,transparent 55%),radial-gradient(60% 55% at 85% 8%,#ff5e7a,transparent 60%),linear-gradient(160deg,#c0341c,#2c0704)}
+.eclara .g-corp{background:radial-gradient(85% 60% at 80% 10%,#8fb6ff,transparent 55%),radial-gradient(60% 50% at 15% 90%,#5ce0ff,transparent 60%),linear-gradient(160deg,#243a66,#080e1c)}
+
+/* RODAPÉ */
+.eclara .rodape{margin-top:80px;padding:52px 0 40px;background:var(--fundo-2);border-top:1px solid var(--linha)}
+.eclara .rodape-grade{display:flex;justify-content:space-between;gap:40px;flex-wrap:wrap}
+.eclara .rodape-marca{color:var(--ink);max-width:320px}
+.eclara .rodape-col{display:flex;flex-direction:column;gap:4px}
+.eclara .rodape-col h3{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--texto-3);margin-bottom:6px}
+.eclara .rodape-col a{font-size:14px;min-height:28px;display:flex;align-items:center;width:fit-content}
+.eclara .rodape-col a:hover{color:var(--sol-texto)}
+.eclara .rodape-base{margin:36px 0 0;padding-top:20px;border-top:1px solid var(--linha);font-size:13px;color:var(--texto-3)}
+
+@media (prefers-reduced-motion:reduce){
+  .eclara *{transition-duration:.001s!important}
+}
+
+@media (max-width:1024px){
+  .eclara .grade{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .eclara .topo-links > a[href="/agenda"]{display:none}
+}
+
+@media (max-width:760px){
+  /* celular: busca vai pra uma 2ª linha, largura total */
+  .eclara .topo-in{height:auto;flex-wrap:wrap;gap:8px 12px;padding:8px 16px 12px}
+  .eclara .topo-links{margin-left:auto;gap:14px}
+  .eclara .busca{order:3;flex:1 0 100%;max-width:none;height:46px}
+  .eclara .busca input{font-size:16px} /* 16px: o iOS não dá zoom ao focar */
+  .eclara .entrar{height:40px;padding:0 16px!important}
+  .eclara .wrap{padding:0 16px}
+  .eclara .bloco{margin-top:40px}
+  .eclara .bloco h2{font-size:21px}
+  .eclara .ver-tudo{font-size:14px}
+  .eclara .grade{grid-template-columns:1fr;gap:26px}
+  .eclara .rodape{margin-top:56px;padding:36px 0 28px}
+}
+
+@media (max-width:380px){
+  .eclara .topo-links > a[href="/produtores"]{display:none}
+}
+

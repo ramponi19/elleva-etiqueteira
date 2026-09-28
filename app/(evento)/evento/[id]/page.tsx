@@ -8,7 +8,7 @@ import { toPlainText } from "@/lib/sanitize";
 import { EventTracking } from "@/components/elleva/event-tracking";
 import { JsonLd } from "@/components/seo/json-ld";
 import { SITE_URL } from "@/lib/site";
-import EventoNoite from "@/components/elleva/evento-noite";
+import EventoClaro from "@/components/elleva/evento-claro";
 
 export const dynamic = "force-dynamic"; // depende do login
 
@@ -38,7 +38,7 @@ export default async function EventoPage({ params }: { params: Promise<{ id: str
   if (!data) notFound();
   const { event, tiers } = data;
   const saleClosed = data.saleClosed ?? false;
-  const relacionados = todos.filter((e) => e.id !== event.id).slice(0, 3);
+  const relacionados = todos.filter((e) => e.id !== event.id).slice(0, 4);
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -68,7 +68,7 @@ export default async function EventoPage({ params }: { params: Promise<{ id: str
     <>
       <JsonLd data={jsonLd} />
       <EventTracking metaPixel={event.trackingMetaPixel} ga={event.trackingGa} />
-      <EventoNoite event={event} tiers={tiers} conta={conta} relacionados={relacionados} saleClosed={saleClosed} />
+      <EventoClaro event={event} tiers={tiers} conta={conta} relacionados={relacionados} saleClosed={saleClosed} />
     </>
   );
 }

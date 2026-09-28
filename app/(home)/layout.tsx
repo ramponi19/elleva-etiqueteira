@@ -1,3 +1,4 @@
+import "@/components/elleva/clara/clara.css";
 import "./home-clara.css";
 
 // A home tem cromo próprio (cabeçalho/rodapé dentro do componente),
