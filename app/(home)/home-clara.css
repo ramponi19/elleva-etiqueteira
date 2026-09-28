@@ -36,7 +36,7 @@
 .eclara .legenda svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2}
 .eclara .pontos{display:flex;align-items:center;gap:2px}
 .eclara .pontos button{width:24px;height:24px;border:0;background:transparent;padding:0;cursor:pointer;display:flex;align-items:center;justify-content:center}
-.eclara .pontos button::after{content:"";width:8px;height:8px;border-radius:999px;background:#D8D1C6;transition:width .2s,background .2s}
+.eclara .pontos button::after{content:"";width:8px;height:8px;border-radius:999px;background:#D4D4D4;transition:width .2s,background .2s}
 .eclara .pontos button.on::after{width:22px;background:var(--sol-btn)}
 
 @media (prefers-reduced-motion:reduce){

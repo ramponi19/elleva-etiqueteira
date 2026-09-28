@@ -144,14 +144,14 @@
 
 /* Variante clara (home de fundo branco): mesmas medidas, cores invertidas. */
 .claro .gatilho {
-  border-color: #ddd6cb;
+  border-color: #d9d9d9;
   background: #fff;
-  color: #17110d;
+  color: #141210;
 }
 .claro .gatilho:hover,
 .claro .gatilho[aria-expanded="true"] {
-  border-color: #17110d;
-  background: #faf8f5;
+  border-color: #141210;
+  background: #f7f7f7;
 }
 .claro .gatilho:focus-visible {
   outline-color: #d63c12;
@@ -161,30 +161,30 @@
   color: #fff;
 }
 .claro .seta {
-  color: #6b6258;
+  color: #666666;
 }
 .claro .painel {
-  border-color: #e8e2d9;
+  border-color: #e5e5e5;
   background: #fff;
   box-shadow: 0 18px 44px rgba(23, 17, 13, 0.16);
-  color: #17110d;
+  color: #141210;
 }
 .claro .cabeca,
 .claro .grupo + .grupo {
-  border-color: #ece7df;
+  border-color: #ebebeb;
 }
 .claro .cabecaEmail {
-  color: #6b6258;
+  color: #666666;
 }
 .claro .item {
-  color: #17110d;
+  color: #141210;
 }
 .claro .item:hover,
 .claro .item:focus-visible {
-  background: #f6f3ee;
+  background: #f5f5f5;
 }
 .claro .item svg {
-  color: #6b6258;
+  color: #666666;
 }
 .claro .item:hover svg {
   color: #c2380f;
