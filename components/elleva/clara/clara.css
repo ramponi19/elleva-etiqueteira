@@ -47,6 +47,8 @@
 
 /* BLOCOS */
 .eclara .bloco{margin-top:56px}
+/* linha bem clarinha separando seções (abaixo do outdoor na home; acima de "Outros eventos" no evento) */
+.eclara .divisa{margin-top:48px;padding-top:44px;border-top:1px solid #EBEBEB}
 .eclara .bloco-cab{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:16px;margin-bottom:20px}
 .eclara .bloco h2{font-size:26px;font-weight:800}
 .eclara .ver-tudo{font-size:15px;font-weight:600;color:var(--sol-texto)!important;white-space:nowrap}
@@ -104,6 +106,7 @@
   .eclara .entrar{height:40px;padding:0 16px!important}
   .eclara .wrap{padding:0 16px}
   .eclara .bloco{margin-top:40px}
+  .eclara .divisa{margin-top:32px;padding-top:32px}
   .eclara .bloco h2{font-size:21px}
   .eclara .ver-tudo{font-size:14px}
   .eclara .grade{grid-template-columns:1fr;gap:26px}

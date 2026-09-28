@@ -205,7 +205,7 @@ export default function EventoClaro({
         </div>
 
         {relacionados.length > 0 && (
-          <section className="bloco" aria-labelledby="t-outros">
+          <section className="bloco divisa" aria-labelledby="t-outros">
             <div className="bloco-cab">
               <h2 id="t-outros">Outros eventos</h2>
             </div>

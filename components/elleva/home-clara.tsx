@@ -45,7 +45,7 @@ export default function HomeClara({ events, conta }: { events: EventItem[]; cont
         <Outdoor slides={slides} />
 
         <div className="wrap">
-          <section className="bloco" aria-labelledby="t-proximos">
+          <section className="bloco divisa" aria-labelledby="t-proximos">
             <div className="bloco-cab">
               <h2 id="t-proximos">Eventos</h2>
               <Link href="/agenda" className="ver-tudo">Ver agenda completa</Link>
