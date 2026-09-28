@@ -1,0 +1,12 @@
+/* ===========================================================
+   CHECKOUT — visual claro (escopo .echk-claro + tema .eneutro)
+   Os tokens (papel, tinta, bordas, sombra) são trocados pelo .eneutro em
+   app/globals.css; aqui só a barra do topo e o fundo.
+   =========================================================== */
+:root:has(.echk-claro),body:has(.echk-claro){background:#fff}
+.echk-claro{min-height:100dvh;background:#fff;color:#141210}
+.echk-claro .echk-nav{display:flex;align-items:center;justify-content:space-between;gap:16px;
+  max-width:960px;margin:0 auto;padding:16px 24px;border-bottom:1px solid #E5E5E5}
+.echk-claro .echk-nav a{display:inline-flex;align-items:center;min-height:44px}
+.echk-claro .echk-nav .safe{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#4A4A4A;white-space:nowrap}
+.echk-claro .echk-nav .safe::before{content:"🔒";font-size:13px}

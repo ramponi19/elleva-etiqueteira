@@ -1,0 +1,8 @@
+/* ===========================================================
+   LOGIN / CADASTRO / SENHA — visual claro (escopo .eau-claro + tema .eneutro)
+   =========================================================== */
+:root:has(.eau-claro),body:has(.eau-claro){background:#F5F5F5}
+.eau-claro{min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:48px 20px;background:#F5F5F5;color:#141210}
+.eau-claro .marca{display:inline-flex;align-items:center;min-height:44px;margin-bottom:28px}
+.eau-claro .box{width:100%;max-width:420px}

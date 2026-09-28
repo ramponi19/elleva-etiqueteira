@@ -229,3 +229,25 @@ html.lenis, html.lenis body { height: auto; }
 .eauth [class*="bg-sol"]{color:#180a03}
 .eauth [class*="shadow-"]{box-shadow:0 24px 70px rgba(0,0,0,.55) !important}
 .eauth [class*="border-tinta"]{border-color:rgb(246 241 233 / 0.14)}
+
+/* ============================================================
+   TEMA NEUTRO CLARO (escopo .eneutro) — 28/09/2026
+   Login, cadastro, modal de entrar e checkout foram feitos com os tokens da
+   paleta antiga (papel creme #FAF5EC, bordas pretas grossas, sombra
+   deslocada "cartaz"). Aqui eles viram o visual claro do site: branco, cinza
+   neutro e o preto da marca, bordas finas cinza e sombra suave — sem bege
+   (pedido do Lucas). Mesma ideia dos escopos escuros: só troca tokens.
+   ============================================================ */
+.eneutro{
+  --color-papel:#FFFFFF; --color-papel-2:#F5F5F5; --color-tinta:#141210;
+  --color-tinta-60:rgb(20 18 16 / 0.64); --color-tinta-35:rgb(20 18 16 / 0.40);
+  --color-sol-escuro:#C2380F; --color-papel-inv:rgb(20 18 16 / 0.12);
+  --cor-fundo:#FFFFFF; --cor-texto:#141210; --cor-texto-suave:rgb(20 18 16 / 0.64);
+  --cor-borda:#D9D9D9; --cor-hover:#F5F5F5;
+}
+.eneutro [class*="border-tinta"]{border-color:#D9D9D9}
+.eneutro input:focus,.eneutro textarea:focus,.eneutro select:focus{border-color:#141210}
+.eneutro [class*="shadow-["]{box-shadow:0 18px 50px rgba(20,18,16,.14) !important}
+/* botão principal = o laranja dos botões das páginas claras (#D63C12, texto branco 4,6:1) */
+.eneutro .bg-sol{background-color:#D63C12;color:#fff}
+.eneutro .bg-sol:hover{background-color:#B8330E}
