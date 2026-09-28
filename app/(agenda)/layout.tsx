@@ -16,7 +16,6 @@ export default async function AgendaLayout({ children }: { children: React.React
           <div className="nav-links">
             <Link href="/agenda">Agenda</Link>
             <Link href="/produtores">Produtores</Link>
-            <Link href="/#como">Como funciona</Link>
           </div>
           <div className="nav-right">
             {conta ? <MenuConta conta={conta} /> : <EntrarModal className="entrar" />}

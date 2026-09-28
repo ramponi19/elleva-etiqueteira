@@ -2,8 +2,9 @@
 // Home clara — padrão de mercado (Seo Ingresso / Sympla / Ingresse)
 // ============================================================
 // Fundo branco; a cor vem da arte de cada evento. Ordem: cabeçalho com busca →
-// outdoor dos destaques → categorias → grade de próximos eventos → como
-// funciona → rodapé. Estilos em app/(home)/home-clara.css, escopo .eclara.
+// outdoor dos destaques → grade de eventos → rodapé ("menos é mais", 28/09:
+// saíram categorias, o card "Vai organizar um evento?" e "Como funciona").
+// Estilos em app/(home)/home-clara.css, escopo .eclara.
 // Componente de servidor: só o outdoor, o "Entrar" e o menu da conta são
 // client components.
 import Image from "next/image";
@@ -114,22 +115,9 @@ export default function HomeClara({ events, conta }: { events: EventItem[]; cont
                   <span className="card-info">{dataExtensa(e.startsAtISO)}</span>
                 </Link>
               ))}
-              <div className="card-produtor">
-                <strong>Vai organizar um evento na região?</strong>
-                <p>Publique, venda no Pix ou no cartão e faça a portaria pelo celular.</p>
-                <Link href="/criar-evento" className="btn">Criar meu evento</Link>
-              </div>
             </div>
           </section>
 
-          <section className="bloco como" id="como" aria-labelledby="t-como">
-            <h2 id="t-como">Como funciona</h2>
-            <ol className="passos">
-              <li><b>Escolha o ingresso</b><span>Pista, camarote ou o assento no mapa. O preço já aparece com a taxa somada.</span></li>
-              <li><b>Pague no Pix ou no cartão</b><span>No Pix a confirmação é na hora. No cartão, em até 12x.</span></li>
-              <li><b>Entre com o QR Code</b><span>O ingresso fica salvo na sua conta. Na portaria, é só apresentar.</span></li>
-            </ol>
-          </section>
         </div>
       </main>
 
@@ -144,7 +132,6 @@ export default function HomeClara({ events, conta }: { events: EventItem[]; cont
               <h3>Elleva</h3>
               <Link prefetch={false} href="/agenda">Agenda</Link>
               <Link prefetch={false} href="/produtores">Para produtores</Link>
-              <a href="#como">Como funciona</a>
               <Link prefetch={false} href="/ajuda">Central de ajuda</Link>
             </div>
             <div className="rodape-col">

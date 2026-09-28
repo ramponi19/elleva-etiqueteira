@@ -103,9 +103,6 @@
 .eclara .card-titulo{margin-top:4px;font-size:17px;line-height:1.25;font-weight:700}
 .eclara .card:hover .card-titulo{color:var(--sol-texto)}
 .eclara .card-info{margin-top:4px;font-size:14px;color:var(--texto-2)}
-.eclara .card-produtor{grid-column:span 2;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:12px;padding:30px 34px;border-radius:14px;background:#FBF1EA;border:1px solid #F3DCCB}
-.eclara .card-produtor strong{font-size:23px;line-height:1.2;font-weight:800;max-width:22ch}
-.eclara .card-produtor p{margin:0;color:var(--texto-2);max-width:44ch}
 
 /* fundos gerados por categoria (evento sem capa) */
 .eclara .g-show{background:radial-gradient(90% 60% at 78% 12%,#ffd27a,transparent 55%),radial-gradient(70% 60% at 10% 90%,#ff2e6a,transparent 60%),linear-gradient(160deg,#FF5A1F,#4a0f2b)}
@@ -114,14 +111,6 @@
 .eclara .g-teatro{background:radial-gradient(85% 60% at 25% 84%,#ffb36b,transparent 55%),radial-gradient(60% 55% at 85% 8%,#ff5e7a,transparent 60%),linear-gradient(160deg,#c0341c,#2c0704)}
 .eclara .g-corp{background:radial-gradient(85% 60% at 80% 10%,#8fb6ff,transparent 55%),radial-gradient(60% 50% at 15% 90%,#5ce0ff,transparent 60%),linear-gradient(160deg,#243a66,#080e1c)}
 
-/* COMO FUNCIONA */
-.eclara .como{margin-top:72px;padding:40px;border-radius:18px;background:var(--fundo-2)}
-.eclara .como h2{margin-bottom:24px}
-.eclara .passos{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,1fr);gap:28px;counter-reset:passo}
-.eclara .passos li{display:flex;flex-direction:column;gap:6px;counter-increment:passo}
-.eclara .passos li::before{content:counter(passo);display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;background:var(--sol-btn);color:#fff;font-weight:800;margin-bottom:6px}
-.eclara .passos b{font-size:17px}
-.eclara .passos span{font-size:15px;color:var(--texto-2)}
 
 /* RODAPÉ */
 .eclara .rodape{margin-top:80px;padding:52px 0 40px;background:var(--fundo-2);border-top:1px solid var(--linha)}
@@ -164,10 +153,6 @@
   .eclara .bloco h2{font-size:21px}
   .eclara .ver-tudo{font-size:14px}
   .eclara .grade{grid-template-columns:1fr;gap:26px}
-  .eclara .card-produtor{grid-column:auto;padding:24px 20px}
-  .eclara .card-produtor strong{font-size:20px}
-  .eclara .como{margin-top:48px;padding:28px 20px}
-  .eclara .passos{grid-template-columns:1fr;gap:20px}
   .eclara .rodape{margin-top:56px;padding:36px 0 28px}
 }
 @media (max-width:380px){
