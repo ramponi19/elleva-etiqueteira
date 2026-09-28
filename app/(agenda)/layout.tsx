@@ -1,41 +1,18 @@
-import "./agenda.css";
-import Link from "next/link";
+import "@/components/elleva/clara/clara.css";
+import "./agenda-clara.css";
 import { getContaResumo } from "@/lib/auth";
-import { EllevaLogo } from "@/components/brand/EllevaLogo";
-import { EntrarModal } from "@/components/elleva/entrar-modal";
-import { MenuConta } from "@/components/elleva/menu-conta";
+import { CabecalhoClaro } from "@/components/elleva/clara/cabecalho";
+import { RodapeClaro } from "@/components/elleva/clara/rodape";
 
+// Agenda no visual claro (28/09/2026): mesmo cabeçalho e rodapé da home e do
+// evento. A versão escura "A Noite" segue em agenda.css (e no git) para voltar.
 export default async function AgendaLayout({ children }: { children: React.ReactNode }) {
   const conta = await getContaResumo();
   return (
-    <div className="eag">
-      <div className="amb" aria-hidden />
-      <nav className="top">
-        <div className="nav-in">
-          <Link className="brand" href="/" aria-label="Elleva Tickets"><EllevaLogo variant="horizontal" tone="negativo" className="h-6 w-auto sm:h-8" /></Link>
-          <div className="nav-links">
-            <Link href="/agenda">Agenda</Link>
-            <Link href="/produtores">Produtores</Link>
-          </div>
-          <div className="nav-right">
-            {conta ? <MenuConta conta={conta} /> : <EntrarModal className="entrar" />}
-          </div>
-        </div>
-      </nav>
-
+    <div className="eclara eag-clara">
+      <CabecalhoClaro conta={conta} />
       {children}
-
-      <footer>
-        <div className="wrap">
-          <div className="foot-grid">
-            <div className="foot-brand"><EllevaLogo variant="horizontal" tone="negativo" className="h-8 w-auto" /></div>
-            <div className="foot-col"><h5>Elleva</h5><Link prefetch={false} href="/agenda">Agenda</Link><Link prefetch={false} href="/produtores">Produtores</Link><Link prefetch={false} href="/ajuda">Central de ajuda</Link></div>
-            <div className="foot-col"><h5>Legal</h5><Link prefetch={false} href="/terms">Política de compras</Link><Link prefetch={false} href="/privacy">Privacidade</Link></div>
-            <div className="foot-col"><h5>Contato</h5><a href="mailto:contato@ellevaeventos.com.br">contato@ellevaeventos.com.br</a></div>
-          </div>
-          <div className="foot-base">© 2026 Elleva Tickets</div>
-        </div>
-      </footer>
+      <RodapeClaro />
     </div>
   );
 }

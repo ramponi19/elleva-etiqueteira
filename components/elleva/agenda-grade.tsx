@@ -1,19 +1,19 @@
+// ============================================================
+// Agenda — visual claro (28/09/2026)
+// ============================================================
+// Mesmo cromo da home e do evento (cabeçalho/rodapé no layout da agenda).
+// Título, cidades em pílulas e os eventos agrupados por mês com o CardEvento
+// da home. A busca é a do cabeçalho (ela manda ?q= pra cá). A versão escura
+// "A Noite" está no histórico do git (antes de 28/09) e em agenda.css.
 import Link from "next/link";
 import { CIDADES } from "@/lib/cidades";
 import type { EventItem } from "@/lib/events";
+import { CardEvento } from "@/components/elleva/clara/card-evento";
 
 const MES_LONGO: Record<string, string> = {
   JAN: "Janeiro", FEV: "Fevereiro", MAR: "Março", ABR: "Abril", MAI: "Maio", JUN: "Junho",
   JUL: "Julho", AGO: "Agosto", SET: "Setembro", OUT: "Outubro", NOV: "Novembro", DEZ: "Dezembro",
 };
-function genre(label: string) {
-  const l = (label || "").toLowerCase();
-  if (/festa|balada/.test(l)) return "g-festa";
-  if (/esporte/.test(l)) return "g-esporte";
-  if (/teatro|cultura|espet/.test(l)) return "g-teatro";
-  if (/corp|congresso|curso|palestra|summit/.test(l)) return "g-corp";
-  return "g-show";
-}
 
 function agruparPorMes(events: EventItem[]): [string, EventItem[]][] {
   const grupos = new Map<string, EventItem[]>();
@@ -37,55 +37,35 @@ export function AgendaGrade({
 
   return (
     <main className="wrap">
-      <header className="head">
-        <div className="eyebrow">Agenda</div>
-        <h1>O que tá <span className="em">rolando</span> {destaqueHeader}</h1>
-
-        <div className="filters">
-          <div className="fsearch">
-            <form action="/agenda">
-              <input name="q" defaultValue={query ?? ""} placeholder="Buscar evento, artista ou cidade…" aria-label="Buscar evento" />
-              <button type="submit" aria-label="Buscar">→</button>
-            </form>
-          </div>
-          <div className="pills">
-            {pills.map((p) => (
-              <Link key={p.href} href={p.href} className={"pill" + (p.on ? " on" : "")}>{p.label}</Link>
-            ))}
-          </div>
-        </div>
-
-        {query && (
-          <p className="qinfo">Resultados para <strong>“{query}”</strong> — <Link href="/agenda">limpar busca</Link></p>
+      <header className="ag-cab">
+        <h1>Eventos {destaqueHeader}</h1>
+        {query ? (
+          <p className="ag-sub">
+            {events.length === 0 ? "Nenhum resultado" : events.length === 1 ? "1 resultado" : `${events.length} resultados`} para <strong>“{query}”</strong> · <Link href="/agenda">limpar busca</Link>
+          </p>
+        ) : (
+          <p className="ag-sub">{events.length === 1 ? "1 evento à venda" : `${events.length} eventos à venda`}</p>
         )}
+        <nav className="ag-cidades" aria-label="Cidades">
+          {pills.map((p) => (
+            <Link key={p.href} href={p.href} className={"ag-pilula" + (p.on ? " on" : "")} aria-current={p.on ? "page" : undefined}>{p.label}</Link>
+          ))}
+        </nav>
       </header>
 
       {grupos.length === 0 ? (
-        <p className="empty">Nada em cartaz por aqui ainda. Avisa um produtor ou <Link href="/#produtores">traz o seu evento</Link>.</p>
+        <p className="vazio ag-vazio">
+          {query ? "Nenhum evento encontrado com essa busca. Tente outro nome ou cidade." : "Nenhum evento à venda por aqui ainda."}{" "}
+          <Link href="/produtores">Quer publicar o seu?</Link>
+        </p>
       ) : (
-        grupos.map(([mes, lista]) => (
-          <section className="mes" key={mes}>
-            <h2>{MES_LONGO[mes] ?? mes}</h2>
-            <div className="grid">
-              {lista.map((e) => (
-                <Link className="card" key={e.id} href={`/evento/${e.id}`}>
-                  <div className={"bg " + (e.cover ? "" : genre(e.catLabel))} style={e.cover ? { backgroundImage: `url(${e.cover})` } : undefined} />
-                  {!e.cover && <span className="ghost">{e.catLabel.slice(0, 4)}</span>}
-                  <div className="scrim" />
-                  <div className="pc">
-                    <div>
-                      <span className="ptag">{e.catLabel}</span>
-                      {e.soldOut && <div className="esg">Esgotado</div>}
-                    </div>
-                    <div>
-                      <h3 className="ttl">{e.title}</h3>
-                      <div className="meta">
-                        <div><div className="when">{e.d} {e.mon} · {e.time}</div><div className="venue">{e.venueCity}</div></div>
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-              ))}
+        grupos.map(([mes, lista], i) => (
+          <section className={"bloco" + (i > 0 ? " divisa" : " ag-primeiro")} key={mes} aria-labelledby={`mes-${mes}`}>
+            <div className="bloco-cab">
+              <h2 id={`mes-${mes}`}>{MES_LONGO[mes] ?? mes}</h2>
+            </div>
+            <div className="grade">
+              {lista.map((e) => <CardEvento key={e.id} e={e} />)}
             </div>
           </section>
         ))
