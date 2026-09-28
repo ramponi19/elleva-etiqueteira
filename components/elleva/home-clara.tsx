@@ -126,7 +126,6 @@ export default function HomeClara({ events, conta }: { events: EventItem[]; cont
           <div className="rodape-grade">
             <div className="rodape-marca">
               <EllevaLogo variant="horizontal" className="h-8 w-auto" />
-              <p>Ingressos para shows, festas, teatro, esporte e eventos corporativos no interior de SP e sul de MG.</p>
             </div>
             <div className="rodape-col">
               <h3>Elleva</h3>
