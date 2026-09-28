@@ -76,14 +76,15 @@
 .eclara .g-corp{background:radial-gradient(85% 60% at 80% 10%,#8fb6ff,transparent 55%),radial-gradient(60% 50% at 15% 90%,#5ce0ff,transparent 60%),linear-gradient(160deg,#243a66,#080e1c)}
 
 /* RODAPÉ */
-.eclara .rodape{margin-top:80px;padding:52px 0 40px;background:var(--fundo-2);border-top:1px solid var(--linha)}
+/* rodapé preto (pedido do Lucas, 28/09 — era bege #F6F3EE): #141210 = a cor "tinta" da marca */
+.eclara .rodape{margin-top:80px;padding:52px 0 40px;background:#141210;color:#F5F1EC}
 .eclara .rodape-grade{display:flex;justify-content:space-between;gap:40px;flex-wrap:wrap}
-.eclara .rodape-marca{color:var(--ink);max-width:320px}
+.eclara .rodape-marca{max-width:320px}
 .eclara .rodape-col{display:flex;flex-direction:column;gap:4px}
-.eclara .rodape-col h3{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--texto-3);margin-bottom:6px}
+.eclara .rodape-col h3{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#A79E92;margin-bottom:6px}
 .eclara .rodape-col a{font-size:14px;min-height:28px;display:flex;align-items:center;width:fit-content}
-.eclara .rodape-col a:hover{color:var(--sol-texto)}
-.eclara .rodape-base{margin:36px 0 0;padding-top:20px;border-top:1px solid var(--linha);font-size:13px;color:var(--texto-3)}
+.eclara .rodape-col a:hover{color:#F26A2E}
+.eclara .rodape-base{margin:36px 0 0;padding-top:20px;border-top:1px solid rgba(245,241,236,.14);font-size:13px;color:#A79E92}
 
 @media (prefers-reduced-motion:reduce){
   .eclara *{transition-duration:.001s!important}

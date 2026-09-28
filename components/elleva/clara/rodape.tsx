@@ -1,4 +1,4 @@
-// Rodapé claro (home e página do evento). Estilos em clara.css.
+// Rodapé preto (home e página do evento), com o logo negativo. Estilos em clara.css.
 import Link from "next/link";
 import { EllevaLogo } from "@/components/brand/EllevaLogo";
 
@@ -8,7 +8,7 @@ export function RodapeClaro() {
       <div className="wrap">
         <div className="rodape-grade">
           <div className="rodape-marca">
-            <EllevaLogo variant="horizontal" className="h-8 w-auto" />
+            <EllevaLogo variant="horizontal" tone="negativo" className="h-8 w-auto" />
           </div>
           <div className="rodape-col">
             <h3>Elleva</h3>
