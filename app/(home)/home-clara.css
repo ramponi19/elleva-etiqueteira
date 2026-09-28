@@ -13,7 +13,10 @@
   --sol:#E8481F; --sol-btn:#D63C12; --sol-btn-hover:#B8330E; --sol-texto:#C2380F;
   background:#fff; color:var(--ink);
   font-family:var(--font-archivo),system-ui,sans-serif; font-size:16px; line-height:1.5;
-  min-height:100dvh; overflow-x:hidden;
+  min-height:100dvh;
+  /* clip, não hidden: overflow-x:hidden transforma o .eclara em contêiner de
+     rolagem e o cabeçalho sticky deixa de grudar no topo ao rolar */
+  overflow-x:clip;
 }
 .eclara *{box-sizing:border-box}
 .eclara a{color:inherit;text-decoration:none}
