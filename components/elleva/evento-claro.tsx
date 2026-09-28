@@ -41,7 +41,7 @@ export default function EventoClaro({
 }) {
   const router = useRouter();
   const loggedIn = !!conta;
-  const { addItems } = useCart();
+  const { addItems, clear } = useCart();
   const [qty, setQty] = useState<Record<string, number>>({});
   const [showAuth, setShowAuth] = useState(false);
   const [fav, setFav] = useState(false);
@@ -65,7 +65,10 @@ export default function EventoClaro({
   const taxa = absorve ? 0 : round2(selec.reduce((a, t) => a + qty[t.id] * feeUnit(t.price, event.feePct), 0));
   const total = round2(subtotal + taxa);
 
-  function proceed() {
+  // o carrinho vira exatamente a seleção desta página (sem somar com uma
+  // seleção anterior do mesmo evento, que duplicaria ingressos)
+  function guardarCarrinho() {
+    clear();
     addItems(
       selec.map((t) => ({
         eventId: event.uuid, eventSlug: event.id, eventTitle: event.title,
@@ -73,6 +76,9 @@ export default function EventoClaro({
         feePct: event.feePct, absorbFee: absorve, maxInstallments: maxParcelas,
       }))
     );
+  }
+  function proceed() {
+    guardarCarrinho();
     router.push("/checkout");
   }
   function prosseguir() {
@@ -218,7 +224,14 @@ export default function EventoClaro({
 
       <RodapeClaro />
 
-      {showAuth && <AuthModal onClose={() => setShowAuth(false)} onSuccess={proceed} />}
+      {showAuth && (
+        <AuthModal
+          onClose={() => setShowAuth(false)}
+          onSuccess={proceed}
+          destinoAposConfirmar="/checkout"
+          aoCriarContaSemSessao={guardarCarrinho}
+        />
+      )}
     </div>
   );
 }

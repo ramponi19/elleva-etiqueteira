@@ -14,11 +14,18 @@ export default function AuthModal({
   onClose,
   onSuccess,
   contexto = "compra",
+  destinoAposConfirmar,
+  aoCriarContaSemSessao,
 }: {
   onClose: () => void;
   onSuccess: () => void;
   /** "compra" = dentro do fluxo de ingresso; "geral" = botão Entrar do cabeçalho */
   contexto?: "compra" | "geral";
+  /** para onde o link de confirmação do e-mail leva (padrão: a página atual) */
+  destinoAposConfirmar?: string;
+  /** conta criada mas o Supabase pediu confirmação por e-mail (sem sessão ainda):
+   *  a página guarda a compra (carrinho) para retomar quando a pessoa voltar pelo link */
+  aoCriarContaSemSessao?: () => void;
 }) {
   const compra = contexto === "compra";
   const [mode, setMode] = useState<"login" | "signup">("login");
@@ -78,7 +85,12 @@ export default function AuthModal({
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        options: { data: { full_name: name } },
+        options: {
+          data: { full_name: name },
+          // o link do e-mail volta pelo /callback direto para o destino (no fluxo
+          // de compra: /checkout, com o carrinho já guardado neste aparelho)
+          emailRedirectTo: `${window.location.origin}/callback?next=${encodeURIComponent(destinoAposConfirmar ?? window.location.pathname)}`,
+        },
       });
       setLoading(false);
       if (error) {
@@ -93,7 +105,12 @@ export default function AuthModal({
       // que a sessão existir (agora, ou depois da confirmação por e-mail).
       try { sessionStorage.setItem(CADASTRO_NOVO_KEY, "1"); } catch { /* ignore */ }
       if (data.session) onSuccess();
-      else setInfo(compra ? "Conta criada! Confirme seu email para concluir a compra." : "Conta criada! Confirme seu email para entrar.");
+      else {
+        aoCriarContaSemSessao?.();
+        setInfo(compra
+          ? `Conta criada! Enviamos um link para ${email}. Abra o link neste aparelho: seus ingressos ficam guardados e você vai direto para o pagamento.`
+          : "Conta criada! Confirme seu email para entrar.");
+      }
     }
   }
 
