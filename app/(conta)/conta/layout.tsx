@@ -1,40 +1,27 @@
-import "./conta.css";
-import { requireAuth } from "@/lib/auth";
-import Nav from "@/components/elleva/nav";
-import Footer from "@/components/elleva/footer";
+import "@/components/elleva/clara/clara.css";
+import "./conta-clara.css";
+import { getContaResumo, requireAuth } from "@/lib/auth";
+import { CabecalhoClaro } from "@/components/elleva/clara/cabecalho";
+import { RodapeClaro } from "@/components/elleva/clara/rodape";
 import { ContaTabs } from "@/components/elleva/conta-tabs";
 
-function initialsFrom(name: string | null, email: string | null): string {
-  const n = (name ?? "").trim();
-  if (n) {
-    const parts = n.split(/\s+/);
-    const first = parts[0]?.[0] ?? "";
-    const last = parts.length > 1 ? parts[parts.length - 1][0] : "";
-    return (first + last).toUpperCase() || "?";
-  }
-  return (email?.[0] ?? "?").toUpperCase();
-}
-
+// Minha conta no visual claro (01/10/2026): cabeçalho e rodapé da home (num
+// .eclara com display:contents, para o CSS dele não atropelar o Tailwind do
+// conteúdo) e o conteúdo no tema neutro .eneutro (globals.css). A versão
+// escura segue em conta.css (e no git).
 export default async function ContaLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   // Qualquer usuário logado tem conta
-  const { user, role, fullName, avatarUrl } = await requireAuth();
+  await requireAuth();
+  const conta = await getContaResumo();
 
   return (
-    <div className="ect">
-      <div className="amb" aria-hidden />
-      <Nav
-        loggedIn={!!user}
-        role={role}
-        name={fullName ?? user.email ?? "Você"}
-        email={user.email ?? ""}
-        avatarUrl={avatarUrl}
-        initials={initialsFrom(fullName ?? null, user.email ?? null)}
-      />
-      <main className="min-h-[70vh]">
+    <div className="ect-claro">
+      <div className="eclara eclara-contents"><CabecalhoClaro conta={conta} /></div>
+      <main className="ect-conteudo eneutro min-h-[70vh]">
         <div className="mx-auto max-w-[1100px] px-5 py-10 sm:px-10">
           <h1 className="display-2 text-tinta">Minha conta</h1>
           <div className="mt-6">
@@ -43,7 +30,7 @@ export default async function ContaLayout({
           <div className="mt-8">{children}</div>
         </div>
       </main>
-      <Footer />
+      <div className="eclara eclara-contents"><RodapeClaro /></div>
     </div>
   );
 }

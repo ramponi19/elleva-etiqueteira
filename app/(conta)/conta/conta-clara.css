@@ -1,0 +1,11 @@
+/* ===========================================================
+   MINHA CONTA — visual claro (escopo .ect-claro + tema .eneutro)
+   =========================================================== */
+:root:has(.ect-claro),body:has(.ect-claro){background:#fff}
+.ect-claro{min-height:100dvh;display:flex;flex-direction:column;background:#fff;color:#141210;overflow-x:clip}
+.ect-claro .ect-conteudo{flex:1}
+/* furos/notches do ingresso mostram o fundo por trás do card */
+.ect-claro .eneutro{--cor-fundo:#fff}
+.ect-claro .rodape{margin-top:48px}
+/* o QR do ingresso continua num quadrado branco para escanear */
+.ect-claro img[alt*="QR"],.ect-claro img[alt*="qr"]{background:#fff;border-radius:6px}

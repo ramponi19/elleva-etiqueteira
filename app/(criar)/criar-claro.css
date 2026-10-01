@@ -1,0 +1,14 @@
+/* ===========================================================
+   CRIAR EVENTO — visual claro (escopo .ecri-claro + tema .eneutro)
+   Barra branca simples (foco no formulário), como o checkout.
+   A versão escura segue em criar.css (e no git).
+   =========================================================== */
+:root:has(.ecri-claro),body:has(.ecri-claro){background:#F7F7F7}
+.ecri-claro{min-height:100dvh;background:#F7F7F7;color:#141210}
+.ecri-claro nav.top{position:sticky;top:0;z-index:40;background:#fff;border-bottom:1px solid #E5E5E5}
+.ecri-claro .nav-in{max-width:900px;margin:0 auto;padding:0 24px;height:66px;display:flex;align-items:center;gap:18px}
+.ecri-claro .brand{display:inline-flex;align-items:center;min-height:44px}
+.ecri-claro .nav-right{margin-left:auto;font-size:14px;font-weight:600;color:#141210}
+.ecri-claro .nav-right:hover{color:#C2380F}
+.ecri-claro .bg-white:not(input):not(textarea):not(select){box-shadow:0 1px 2px rgba(20,18,16,.05)}
+.ecri-claro :focus-visible{outline:2px solid #D63C12;outline-offset:2px}

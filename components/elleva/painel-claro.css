@@ -1,0 +1,16 @@
+/* ===========================================================
+   PAINÉIS — produtor (/produtor) e admin (/admin), visual claro
+   (escopo .epainel-claro + tema .eneutro de app/globals.css)
+   01/10/2026: substitui o tema escuro painel-noite.css (mantido no repo
+   para voltar). O DashShell usa os tokens papel/tinta; o .eneutro os troca
+   por branco, cinza neutro e o preto da marca.
+   =========================================================== */
+:root:has(.epainel-claro),body:has(.epainel-claro){background:#F7F7F7}
+.epainel-claro{color:#141210}
+/* área de conteúdo cinza bem claro: os cards brancos descolam do fundo */
+.epainel-claro main{background:#F7F7F7}
+.epainel-claro .bg-white:not(input):not(textarea):not(select){box-shadow:0 1px 2px rgba(20,18,16,.05)}
+/* item de menu ativo e avatar: preto da marca com texto branco */
+.epainel-claro .bg-tinta{background-color:#141210}
+.epainel-claro .text-papel{color:#fff}
+.epainel-claro :focus-visible{outline:2px solid #D63C12;outline-offset:2px}

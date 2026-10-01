@@ -1,4 +1,4 @@
-import "@/components/elleva/painel-noite.css";
+import "@/components/elleva/painel-claro.css";
 import { requireRole } from "@/lib/auth";
 import { DashShell } from "@/components/elleva/dash-shell";
 
@@ -22,8 +22,8 @@ export default async function AdminLayout({
 }) {
   const { fullName, user } = await requireRole(["admin"]);
   return (
-    // mesmo tema escuro do painel do produtor (components/elleva/painel-noite.css)
-    <div className="epainel">
+    // mesmo tema claro do painel do produtor (components/elleva/painel-claro.css)
+    <div className="epainel-claro eneutro">
       <DashShell area="Administração" items={NAV} userName={fullName ?? user.email ?? "Admin"}>
         {children}
       </DashShell>
