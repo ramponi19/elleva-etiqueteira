@@ -11,8 +11,8 @@
    ============================================================ */
 @theme {
   /* ===== COR ===== */
-  --color-papel: #FAF5EC;        /* fundo dominante (60%) */
-  --color-papel-2: #F3ECDF;      /* papel sombreado: hovers, zebra, inputs */
+  --color-papel: #FFFFFF;        /* fundo dominante (60%) — branco desde 01/10/2026 (era creme #FAF5EC, fora da marca) */
+  --color-papel-2: #F5F5F5;      /* papel sombreado: hovers, zebra, inputs — cinza neutro (era #F3ECDF) */
   --color-tinta: #141210;        /* texto, bordas, blocos de contraste (30%) */
   --color-tinta-60: rgb(20 18 16 / 0.6);
   --color-tinta-35: rgb(20 18 16 / 0.35);
@@ -244,6 +244,9 @@ html.lenis, html.lenis body { height: auto; }
   --color-sol-escuro:#C2380F; --color-papel-inv:rgb(20 18 16 / 0.12);
   --cor-fundo:#FFFFFF; --cor-texto:#141210; --cor-texto-suave:rgb(20 18 16 / 0.64);
   --cor-borda:#D9D9D9; --cor-hover:#F5F5F5;
+  /* "cartaz" (amarelo-dourado #F2B324) da paleta antiga sai: destaque vira o laranja
+     da marca no tom do negativo (#F26A2E, 6:1 sobre a faixa preta) */
+  --color-cartaz:#F26A2E;
 }
 .eneutro [class*="border-tinta"]{border-color:#D9D9D9}
 .eneutro input:focus,.eneutro textarea:focus,.eneutro select:focus{border-color:#141210}

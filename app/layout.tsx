@@ -8,7 +8,7 @@ import { CompletarCadastroGate } from "@/components/elleva/completar-cadastro";
 import "./globals.css";
 
 export const viewport: Viewport = {
-  themeColor: "#FAF5EC",
+  themeColor: "#FFFFFF",
   width: "device-width",
   initialScale: 1,
 };

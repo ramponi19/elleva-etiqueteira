@@ -1,40 +1,22 @@
-import "./institucional.css";
-import Link from "next/link";
+import "@/components/elleva/clara/clara.css";
+import "./institucional-claro.css";
 import { getContaResumo } from "@/lib/auth";
-import { EllevaLogo } from "@/components/brand/EllevaLogo";
-import { EntrarModal } from "@/components/elleva/entrar-modal";
-import { MenuConta } from "@/components/elleva/menu-conta";
+import { CabecalhoClaro } from "@/components/elleva/clara/cabecalho";
+import { RodapeClaro } from "@/components/elleva/clara/rodape";
 
+// Produtores, Ajuda, Termos e Privacidade no visual claro (01/10/2026): mesmo
+// cabeçalho e rodapé da home. O conteúdo das páginas usa os tokens da paleta
+// antiga (Tailwind bg-papel/text-tinta…), trocados pelo tema neutro .eneutro
+// (globals.css). Cabeçalho e rodapé ficam num .eclara com display:contents:
+// pegam os estilos do clara.css sem que as regras dele (sem @layer) atropelem
+// os utilitários Tailwind do conteúdo. A versão escura segue em institucional.css.
 export default async function InstitucionalLayout({ children }: { children: React.ReactNode }) {
   const conta = await getContaResumo();
   return (
-    <div className="einst">
-      <div className="amb" aria-hidden />
-      <nav className="top">
-        <div className="nav-in">
-          <Link className="brand" href="/" aria-label="Elleva Tickets"><EllevaLogo variant="horizontal" tone="negativo" className="h-6 w-auto sm:h-8" /></Link>
-          <div className="nav-links">
-            <Link href="/agenda">Agenda</Link>
-            <Link href="/produtores">Produtores</Link>
-            <Link href="/ajuda">Ajuda</Link>
-          </div>
-          <div className="nav-right">
-            {conta ? <MenuConta conta={conta} /> : <EntrarModal className="entrar" />}
-          </div>
-        </div>
-      </nav>
-
-      <div className="content">{children}</div>
-
-      <footer>
-        <div className="foot-grid">
-          <div className="foot-brand"><EllevaLogo variant="horizontal" tone="negativo" className="h-8 w-auto" /></div>
-          <div className="foot-col"><h5>Elleva</h5><Link prefetch={false} href="/agenda">Agenda</Link><Link prefetch={false} href="/produtores">Produtores</Link><Link prefetch={false} href="/ajuda">Central de ajuda</Link></div>
-          <div className="foot-col"><h5>Legal</h5><Link prefetch={false} href="/terms">Política de compras</Link><Link prefetch={false} href="/privacy">Privacidade</Link></div>
-          <div className="foot-col"><h5>Contato</h5><a href="mailto:contato@ellevaeventos.com.br">contato@ellevaeventos.com.br</a></div>
-        </div>
-        <div className="foot-base">© 2026 Elleva Tickets</div>
-      </footer>
+    <div className="einst-claro">
+      <div className="eclara eclara-contents"><CabecalhoClaro conta={conta} /></div>
+      <div className="einst-conteudo eneutro">{children}</div>
+      <div className="eclara eclara-contents"><RodapeClaro /></div>
     </div>
   );
 }

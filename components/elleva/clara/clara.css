@@ -20,6 +20,9 @@
   overflow-x:clip;
 }
 .eclara *{box-sizing:border-box}
+/* só cabeçalho/rodapé claros em páginas de conteúdo Tailwind: o .eclara some
+   da caixa (o cabeçalho sticky continua grudando na página inteira) */
+.eclara.eclara-contents{display:contents}
 .eclara a{color:inherit;text-decoration:none}
 .eclara h1,.eclara h2,.eclara h3{margin:0;letter-spacing:-.01em;line-height:1.15}
 .eclara .wrap{max-width:var(--largura);margin:0 auto;padding:0 30px}

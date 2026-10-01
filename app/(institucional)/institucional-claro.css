@@ -1,0 +1,8 @@
+/* ===========================================================
+   INSTITUCIONAIS — visual claro (escopo .einst-claro + tema .eneutro)
+   =========================================================== */
+:root:has(.einst-claro),body:has(.einst-claro){background:#fff}
+.einst-claro{min-height:100dvh;display:flex;flex-direction:column;background:#fff;color:#141210;overflow-x:clip}
+.einst-claro .einst-conteudo{flex:1}
+/* o rodapé claro tem margem própria; aqui o conteúdo já dá o respiro */
+.einst-claro .rodape{margin-top:64px}
