@@ -15,5 +15,5 @@ export default async function AgendaPage({ searchParams }: { searchParams: Promi
   const filtrados = query
     ? events.filter((e) => `${e.title} ${e.venueCity} ${e.catLabel}`.toLowerCase().includes(query.toLowerCase()))
     : events;
-  return <AgendaGrade events={filtrados} destaqueHeader="no interior" query={query || undefined} />;
+  return <AgendaGrade events={filtrados} query={query || undefined} />;
 }

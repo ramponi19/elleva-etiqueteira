@@ -6,7 +6,6 @@
 // da home. A busca é a do cabeçalho (ela manda ?q= pra cá). A versão escura
 // "A Noite" está no histórico do git (antes de 28/09) e em agenda.css.
 import Link from "next/link";
-import { CIDADES } from "@/lib/cidades";
 import type { EventItem } from "@/lib/events";
 import { CardEvento } from "@/components/elleva/clara/card-evento";
 
@@ -22,35 +21,28 @@ function agruparPorMes(events: EventItem[]): [string, EventItem[]][] {
 }
 
 export function AgendaGrade({
-  events, destaqueHeader, cidadeAtiva, query,
+  events, destaqueHeader, query,
 }: {
   events: EventItem[];
-  destaqueHeader: string;
+  /** complemento do título ("em Mogi Guaçu"); na /agenda geral fica vazio */
+  destaqueHeader?: string;
   cidadeAtiva?: string;
   query?: string;
 }) {
   const grupos = agruparPorMes(events);
-  const pills = [
-    { label: "Todas", href: "/agenda", on: !cidadeAtiva },
-    ...CIDADES.map((c) => ({ label: c.nome, href: `/agenda/${c.slug}`, on: cidadeAtiva === c.slug })),
-  ];
 
   return (
     <main className="wrap">
       <header className="ag-cab">
-        <h1>Eventos {destaqueHeader}</h1>
-        {query ? (
+        {/* só "Eventos" (pedido do Lucas, 01/10): sem contagem e sem as pílulas de
+            cidade. Nas páginas /agenda/<cidade> (vindas do Google/sitemap) o
+            nome da cidade continua, para a lista filtrada fazer sentido. */}
+        <h1>Eventos{destaqueHeader ? ` ${destaqueHeader}` : ""}</h1>
+        {query && (
           <p className="ag-sub">
-            {events.length === 0 ? "Nenhum resultado" : events.length === 1 ? "1 resultado" : `${events.length} resultados`} para <strong>“{query}”</strong> · <Link href="/agenda">limpar busca</Link>
+            Resultados para <strong>“{query}”</strong> · <Link href="/agenda">limpar busca</Link>
           </p>
-        ) : (
-          <p className="ag-sub">{events.length === 1 ? "1 evento à venda" : `${events.length} eventos à venda`}</p>
         )}
-        <nav className="ag-cidades" aria-label="Cidades">
-          {pills.map((p) => (
-            <Link key={p.href} href={p.href} className={"ag-pilula" + (p.on ? " on" : "")} aria-current={p.on ? "page" : undefined}>{p.label}</Link>
-          ))}
-        </nav>
       </header>
 
       {grupos.length === 0 ? (

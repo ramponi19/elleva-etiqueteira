@@ -6,18 +6,10 @@
 .eag-clara .ag-cab h1{font-size:clamp(28px,3.4vw,40px);font-weight:800}
 .eag-clara .ag-sub{margin:8px 0 0;font-size:15px;color:var(--texto-2)}
 .eag-clara .ag-sub a{color:var(--sol-texto);text-decoration:underline;text-underline-offset:2px}
-.eag-clara .ag-cidades{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}
-.eag-clara .ag-pilula{display:inline-flex;align-items:center;height:40px;padding:0 18px;border:1px solid var(--linha);border-radius:999px;font-size:14px;font-weight:600;background:#fff;transition:border-color .15s,background .15s,color .15s}
-.eag-clara .ag-pilula:hover{border-color:var(--ink)}
-.eag-clara .ag-pilula.on{background:var(--ink);border-color:var(--ink);color:#fff}
 .eag-clara .ag-primeiro{margin-top:36px}
 .eag-clara .ag-vazio{margin-top:40px}
 
 @media (max-width:760px){
   .eag-clara .ag-cab{padding-top:24px}
-  /* celular: cidades numa linha só, arrastando para o lado */
-  .eag-clara .ag-cidades{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin:18px -16px 0;padding:0 16px 2px}
-  .eag-clara .ag-cidades::-webkit-scrollbar{display:none}
-  .eag-clara .ag-pilula{flex-shrink:0}
   .eag-clara .ag-primeiro{margin-top:28px}
 }
