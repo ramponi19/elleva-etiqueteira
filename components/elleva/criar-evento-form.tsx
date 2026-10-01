@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Modal, PromptDialog } from "@/components/ui/modal";
 import { createEvent, updateEvent } from "@/lib/actions/events";
 import { TEMAS } from "@/lib/arte";
+
+const MOSTRAR_TEMA = false;
 import { maskCEP } from "@/lib/format";
 import { createClient } from "@/lib/supabase/client";
 
@@ -441,24 +443,31 @@ export function CriarEventoForm({
           </div>
         </div>
 
-        <p className="rotulo mt-6 text-tinta-60">Tema da página</p>
-        <p className="corpo-suave mt-1">A cor que pinta a página do evento (o pôster). Automático segue a categoria.</p>
-        <div className="mt-3 flex flex-wrap gap-2">
-          {TEMAS.map((t) => (
-            <button
-              key={t.value || "auto"}
-              type="button"
-              onClick={() => set("theme", t.value)}
-              className={clsx(
-                "flex items-center gap-2 rounded-[var(--radius-pill)] border-[1.5px] px-3 py-2 text-[13px] font-medium transition-colors",
-                f.theme === t.value ? "border-sol bg-papel-2 text-tinta" : "border-tinta text-tinta hover:bg-papel-2"
-              )}
-            >
-              <span className="h-4 w-4 rounded-full border-[1.5px] border-tinta" style={{ background: t.swatch }} />
-              {t.label}
-            </button>
-          ))}
-        </div>
+        {/* "Tema da página" escondido desde 01/10/2026: a página clara do evento usa a
+            imagem do evento e cores neutras e ignora o tema. O campo segue salvo
+            (f.theme) — para voltar, reexibir o seletor de TEMAS (lib/arte). */}
+        {MOSTRAR_TEMA && (
+          <>
+            <p className="rotulo mt-6 text-tinta-60">Tema da página</p>
+            <p className="corpo-suave mt-1">A cor que pinta a página do evento (o pôster). Automático segue a categoria.</p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {TEMAS.map((t) => (
+                <button
+                  key={t.value || "auto"}
+                  type="button"
+                  onClick={() => set("theme", t.value)}
+                  className={clsx(
+                    "flex items-center gap-2 rounded-[var(--radius-pill)] border-[1.5px] px-3 py-2 text-[13px] font-medium transition-colors",
+                    f.theme === t.value ? "border-sol bg-papel-2 text-tinta" : "border-tinta text-tinta hover:bg-papel-2"
+                  )}
+                >
+                  <span className="h-4 w-4 rounded-full border-[1.5px] border-tinta" style={{ background: t.swatch }} />
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
       </section>
 
       {/* 2. Data e horário */}

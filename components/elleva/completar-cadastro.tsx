@@ -152,7 +152,7 @@ export function CompletarCadastroModal({
 
   return (
     <div
-      className="eauth fixed inset-0 z-[100] flex items-center justify-center bg-[rgb(8_7_10/0.72)] p-4"
+      className="eneutro fixed inset-0 z-[100] flex items-center justify-center bg-[rgb(20_18_16/0.55)] p-4"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
