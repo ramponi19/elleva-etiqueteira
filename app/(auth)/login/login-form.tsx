@@ -12,7 +12,8 @@ const input =
   "w-full rounded-[10px] border-[1.5px] border-tinta bg-white px-3.5 py-2.5 text-[16px] text-tinta outline-none placeholder:text-tinta-35 focus:border-sol";
 const label = "mb-1.5 block text-[12px] font-semibold uppercase tracking-wider text-tinta-60";
 
-export function LoginForm() {
+/** destino: para onde voltar depois de entrar (já validado pelo destinoSeguro) */
+export function LoginForm({ destino = "/" }: { destino?: string }) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -47,7 +48,7 @@ export function LoginForm() {
       setLoading(false);
       return;
     }
-    router.push("/");
+    router.push(destino);
     router.refresh();
   }
 
@@ -62,7 +63,7 @@ export function LoginForm() {
     const supabase = createClient();
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: `${window.location.origin}/callback` },
+      options: { emailRedirectTo: `${window.location.origin}/callback?next=${encodeURIComponent(destino)}` },
     });
     setLoading(false);
     if (error) setError("Não foi possível enviar o link. Tente novamente.");

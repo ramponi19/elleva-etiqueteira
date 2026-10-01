@@ -1,14 +1,13 @@
 import type { Metadata } from "next";
 import { createServiceClient } from "@/lib/supabase/server";
-import { getAuth } from "@/lib/auth";
+import { requireAuth } from "@/lib/auth";
 import { computeProducerFinance } from "@/lib/finance";
 import { FinanceiroProdutor, type PayoutView } from "@/components/elleva/financeiro-produtor";
 
 export const metadata: Metadata = { title: "Financeiro · Produtor" };
 
 export default async function ProdutorFinanceiro() {
-  const { user } = await getAuth();
-  if (!user) return null;
+  const { user } = await requireAuth();
 
   const svc = await createServiceClient();
   const fin = await computeProducerFinance(svc, user.id);

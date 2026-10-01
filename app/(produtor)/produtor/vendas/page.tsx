@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { createServiceClient } from "@/lib/supabase/server";
-import { getAuth } from "@/lib/auth";
+import { requireAuth } from "@/lib/auth";
 import { fmtBRL } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
 import { EmBreve } from "@/components/elleva/em-breve";
@@ -13,8 +13,7 @@ export const metadata: Metadata = { title: "Vendas · Produtor" };
 // os números paravam de crescer. Também filtra pelos eventos DO PRODUTOR (antes a
 // query de tickets/itens pegava, via RLS, o que ele havia COMPRADO de terceiros).
 export default async function ProdutorVendas() {
-  const { user, role } = await getAuth();
-  if (!user) return null;
+  const { user, role } = await requireAuth();
   const escopo = role === "admin" ? null : user.id; // admin ve a plataforma toda
   const svc = await createServiceClient();
 

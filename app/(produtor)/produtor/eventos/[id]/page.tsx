@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
-import { getAuth } from "@/lib/auth";
+import { requireAuth } from "@/lib/auth";
 import { CriarEventoForm } from "@/components/elleva/criar-evento-form";
 import CancelEventButton from "@/components/app/cancel-event-button";
 
@@ -20,8 +20,7 @@ function split(iso: string | null) {
 
 export default async function EditarEvento({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const { user, role } = await getAuth();
-  if (!user) notFound();
+  const { user, role } = await requireAuth();
   const supabase = await createClient();
 
   // A RLS deixa QUALQUER UM ler um evento publicado (é o que alimenta a página
