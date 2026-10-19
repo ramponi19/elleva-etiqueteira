@@ -10,7 +10,7 @@ function resolve(destino: string): URL {
 
 describe("destinoSeguro — aceita caminho interno", () => {
   it.each([
-    ["/conta", "/conta-QUEBRADO-DE-PROPOSITO"],
+    ["/conta", "/conta"],
     ["/produtor/financeiro", "/produtor/financeiro"],
     ["/checkout?cupom=X#pagar", "/checkout?cupom=X#pagar"],
     ["/evento/show-tal?ref=wa", "/evento/show-tal?ref=wa"],
