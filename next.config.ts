@@ -26,7 +26,13 @@ const CSP = [
   "img-src 'self' data: blob: https:",
   // api.iconify.design/simplesvg/unisvg: o @iconify/react baixa os SVGs dos
   // ícones em runtime — sem estes hosts a CSP deixaria o site sem ícone nenhum.
-  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.mercadopago.com https://*.mercadopago.com https://www.google-analytics.com https://*.facebook.com https://*.ingest.us.sentry.io https://api.iconify.design https://api.simplesvg.com https://api.unisvg.com https://viacep.com.br",
+  // www.mercadolibre.com / api.mercadolibre.com: o SDK do Mercado Pago no cartão
+  // manda a impressão digital do aparelho (antifraude) e a telemetria para lá.
+  // O MP não publica lista oficial de CSP; fonte: observado em produção em
+  // 19/10/2026 (bloqueado por connect-src) + código do SDK v2. Reconferir no
+  // console quando a credencial de PRODUÇÃO do MP entrar (o SDK pode carregar
+  // outros scripts nesse modo).
+  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.mercadopago.com https://*.mercadopago.com https://www.mercadolibre.com https://api.mercadolibre.com https://www.google-analytics.com https://*.facebook.com https://*.ingest.us.sentry.io https://api.iconify.design https://api.simplesvg.com https://api.unisvg.com https://viacep.com.br",
   "frame-src 'self' https://*.mercadopago.com https://www.google.com https://maps.google.com",
   "worker-src 'self' blob:",
   "object-src 'none'",
