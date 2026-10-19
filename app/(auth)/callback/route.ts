@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { destinoSeguro } from "@/lib/destino";
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
@@ -11,10 +12,9 @@ export async function GET(request: Request) {
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error && data.user) {
       // Após confirmar/entrar, o usuário permanece na home (estilo Sympla),
-      // salvo quando um destino explícito é passado em ?next=.
-      // ?next= só aceita caminho interno: "?next=@evil.com" viraria
-      // https://dominio@evil.com (host = evil.com) → open redirect/phishing.
-      const dest = next && next.startsWith("/") && !next.startsWith("//") ? next : "/";
+      // salvo quando um destino explícito é passado em ?next= (só caminho
+      // interno — a regra é a mesma do login e do proxy, em lib/destino.ts).
+      const dest = destinoSeguro(next);
       return NextResponse.redirect(`${origin}${dest}`);
     }
   }
