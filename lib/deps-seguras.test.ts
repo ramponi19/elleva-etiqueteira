@@ -38,4 +38,15 @@ describe("dependências com correção de segurança", () => {
     expect(versaoMaiorOuIgual(instalada("next"), "16.3.8")).toBe(true);
   });
 
+  // GHSA-v53p-9fqp-m79j, GHSA-6vj9-mwq6-2f5v, GHSA-8vvx-rff5-p5rq e os de <9.1.0
+  // (todos fechados até a 10.0.6).
+  it("nodemailer >= 10.0.6", () => {
+    expect(versaoMaiorOuIgual(instalada("nodemailer"), "10.0.6")).toBe(true);
+  });
+
+  // GHSA-rgj7-g3m4-5g8c (libheif) e GHSA-wq5f-xc86-pv6w (librsvg). O sharp vem
+  // do next e é fixado pelo "overrides" do package.json.
+  it("sharp >= 0.35.5", () => {
+    expect(versaoMaiorOuIgual(instalada("sharp"), "0.35.5")).toBe(true);
+  });
 });
