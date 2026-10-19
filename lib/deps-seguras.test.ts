@@ -38,10 +38,10 @@ describe("dependências com correção de segurança", () => {
     expect(versaoMaiorOuIgual(instalada("next"), "16.3.8")).toBe(true);
   });
 
-  // GHSA-v53p-9fqp-m79j, GHSA-6vj9-mwq6-2f5v, GHSA-8vvx-rff5-p5rq e os de <9.1.0
-  // (todos fechados até a 10.0.6).
-  it("nodemailer >= 10.0.6", () => {
-    expect(versaoMaiorOuIgual(instalada("nodemailer"), "10.0.6")).toBe(true);
+  // GHSA-v53p-9fqp-m79j, GHSA-6vj9-mwq6-2f5v, GHSA-8vvx-rff5-p5rq, os de <9.1.0
+  // e GHSA-g57g-f23g-4646 (>=9.1.0 <10.0.9): todos fechados na 10.0.9.
+  it("nodemailer >= 10.0.9", () => {
+    expect(versaoMaiorOuIgual(instalada("nodemailer"), "10.0.9")).toBe(true);
   });
 
   // GHSA-rgj7-g3m4-5g8c (libheif) e GHSA-wq5f-xc86-pv6w (librsvg). O sharp vem
