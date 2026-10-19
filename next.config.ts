@@ -35,12 +35,24 @@ const CSP = [
   "frame-ancestors 'none'",
 ].join("; ");
 
+// O otimizador de imagem só busca no bucket público do PRÓPRIO projeto Supabase.
+// Um curinga "*.supabase.co" aceitaria imagem de qualquer projeto de terceiros.
+const SUPABASE_HOST = (() => {
+  try {
+    return new URL(process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").hostname;
+  } catch {
+    return null;
+  }
+})();
+
 const nextConfig: NextConfig = {
   poweredByHeader: false, // não anuncia "X-Powered-By: Next.js"
   images: {
     formats: ["image/avif", "image/webp"],
     remotePatterns: [
-      { protocol: "https", hostname: "*.supabase.co" },
+      ...(SUPABASE_HOST
+        ? [{ protocol: "https" as const, hostname: SUPABASE_HOST, pathname: "/storage/v1/object/public/**" }]
+        : []),
       { protocol: "https", hostname: "avatars.githubusercontent.com" },
       { protocol: "https", hostname: "images.unsplash.com" }, // capas mock
     ],
