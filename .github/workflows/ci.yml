@@ -1,21 +1,23 @@
 name: CI
 
+# Roda em toda branch (inclusive claude/* e audit/*) e em todo pull request:
+# a main publica direto em produção, então o CI tem que passar ANTES do merge.
 on:
   push:
-    branches: [main, develop]
+    branches: ["**"]
   pull_request:
-    branches: [main]
 
 jobs:
   check:
     name: Lint & Typecheck
-    runs-on: ubuntu-latest
+    # Versão fixa do runner: o ubuntu-latest troca de imagem sem aviso.
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
 
       - run: npm ci
@@ -25,6 +27,9 @@ jobs:
 
       - name: ESLint
         run: npm run lint
+
+      - name: Testes
+        run: npm test
 
       - name: Build
         run: npm run build
